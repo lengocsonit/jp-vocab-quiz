@@ -59,8 +59,9 @@ function doPost(e) {
   var data = JSON.parse(e.postData.contents);
   var entries = data.entries || [];
   var duration = Number(data.durationSeconds) || 0;
+  var timestamp = new Date(); // dung 1 moc thoi gian cho ca luot choi, du co nhieu linh vuc
   entries.forEach(function (entry) {
-    appendHistory(data.name, data.direction, entry.field, entry.total, entry.correct, duration);
+    appendHistory(timestamp, data.name, data.direction, entry.field, entry.total, entry.correct, duration);
   });
   return jsonResponse(getLeaderboard());
 }
@@ -105,14 +106,14 @@ function getWords() {
   return words;
 }
 
-function appendHistory(name, direction, field, total, correct, durationSeconds) {
+function appendHistory(timestamp, name, direction, field, total, correct, durationSeconds) {
   var sheet = getHistorySheet();
   total = Number(total) || 0;
   correct = Number(correct) || 0;
   durationSeconds = Number(durationSeconds) || 0;
   var accuracy = total > 0 ? Math.round((correct / total) * 1000) / 10 : 0;
 
-  sheet.appendRow([new Date(), name, field, direction, total, correct, accuracy, durationSeconds]);
+  sheet.appendRow([timestamp, name, field, direction, total, correct, accuracy, durationSeconds]);
 }
 
 // fieldFilter rỗng/undefined => tính tổng tất cả lĩnh vực. Có giá trị => chỉ tính lĩnh vực đó.
@@ -146,29 +147,50 @@ function getLeaderboard(fieldFilter) {
   return list; // tra ve toan bo, frontend tu gioi han hien Top 5 + nut "Xem them"
 }
 
-// Lịch sử tất cả các lượt chơi của 1 tên, moi nhat truoc
+// Lịch sử tất cả các lượt chơi của 1 tên, moi nhat truoc.
+// 1 luot choi co the ghi nhieu dong (moi linh vuc 1 dong) neu chon nhieu linh vuc cung luc,
+// nen can gop lai theo cung 1 moc thoi gian de hien thi dung 1 dong / luot choi thuc te.
 function getHistoryForName(name) {
   var sheet = getHistorySheet();
   var values = sheet.getDataRange().getValues();
   values.shift(); // bỏ header
 
-  var sessions = values
+  var sessions = {};
+  values
     .filter(function (row) { return row[1] === name; })
-    .map(function (row) {
+    .forEach(function (row) {
       var ts = row[0];
-      return {
-        timestamp: ts instanceof Date ? ts.toISOString() : String(ts),
-        field: row[2],
-        direction: row[3],
-        total: Number(row[4]) || 0,
-        correct: Number(row[5]) || 0,
-        accuracy: Number(row[6]) || 0,
-        durationSeconds: Number(row[7]) || 0
-      };
+      var key = ts instanceof Date ? ts.toISOString() : String(ts);
+      if (!sessions[key]) {
+        sessions[key] = {
+          timestamp: key,
+          fields: [],
+          direction: row[3],
+          total: 0,
+          correct: 0,
+          durationSeconds: Number(row[7]) || 0
+        };
+      }
+      sessions[key].fields.push(row[2]);
+      sessions[key].total += Number(row[4]) || 0;
+      sessions[key].correct += Number(row[5]) || 0;
     });
 
-  sessions.sort(function (a, b) { return new Date(b.timestamp) - new Date(a.timestamp); });
-  return sessions;
+  var list = Object.keys(sessions).map(function (key) {
+    var s = sessions[key];
+    return {
+      timestamp: s.timestamp,
+      field: s.fields.join(', '),
+      direction: s.direction,
+      total: s.total,
+      correct: s.correct,
+      accuracy: s.total > 0 ? Math.round((s.correct / s.total) * 1000) / 10 : 0,
+      durationSeconds: s.durationSeconds
+    };
+  });
+
+  list.sort(function (a, b) { return new Date(b.timestamp) - new Date(a.timestamp); });
+  return list;
 }
 
 // Danh sách tên duy nhất đã từng chơi (dùng để gợi ý trong ô nhập tên)
