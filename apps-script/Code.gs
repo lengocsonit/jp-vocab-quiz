@@ -50,6 +50,7 @@ function doGet(e) {
   var action = e.parameter.action;
   if (action === 'fields') return jsonResponse(getFields());
   if (action === 'leaderboard') return jsonResponse(getLeaderboard(e.parameter.field));
+  if (action === 'names') return jsonResponse(getAllNames());
   return jsonResponse(getWords());
 }
 
@@ -131,6 +132,21 @@ function getLeaderboard(fieldFilter) {
 
   list.sort(function (a, b) { return b.score - a.score; });
   return list.slice(0, 10);
+}
+
+// Danh sách tên duy nhất đã từng chơi (dùng để gợi ý trong ô nhập tên)
+function getAllNames() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HISTORY_SHEET);
+  var values = sheet.getDataRange().getValues();
+  values.shift(); // bỏ header
+
+  var seen = {};
+  values.forEach(function (row) {
+    var name = row[1];
+    if (name) seen[name] = true;
+  });
+
+  return Object.keys(seen);
 }
 
 function jsonResponse(obj) {

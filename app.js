@@ -16,6 +16,7 @@ const state = {
 
 const el = {
   nameInput: document.getElementById('name-input'),
+  nameSuggestions: document.getElementById('name-suggestions'),
   nameError: document.getElementById('name-error'),
   groupList: document.getElementById('group-list'),
   countSelect: document.getElementById('count-select'),
@@ -65,6 +66,17 @@ async function init() {
 
   await loadWords();
   loadLeaderboard('all');
+  loadNameSuggestions();
+}
+
+async function loadNameSuggestions() {
+  try {
+    const res = await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=names`);
+    const names = await res.json();
+    el.nameSuggestions.innerHTML = names.map(n => `<option value="${escapeHtml(n)}"></option>`).join('');
+  } catch (err) {
+    // im lặng bỏ qua nếu chưa lấy được danh sách tên gợi ý
+  }
 }
 
 async function loadWords() {
@@ -328,6 +340,7 @@ async function submitResult() {
       }),
     });
     loadLeaderboard(el.leaderboardFilter.value);
+    loadNameSuggestions();
   } catch (err) {
     // không chặn người dùng nếu ghi lịch sử thất bại
   }

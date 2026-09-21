@@ -26,7 +26,8 @@
 
     <div class="field">
       <label for="name-input">Tên của bạn (chỉ chữ cái A-Z, a-z và số)</label>
-      <input type="text" id="name-input" maxlength="20" placeholder="vd: SonLN">
+      <input type="text" id="name-input" maxlength="20" placeholder="vd: SonLN" list="name-suggestions" autocomplete="off">
+      <datalist id="name-suggestions"></datalist>
       <p class="error-text" id="name-error"></p>
     </div>
 
@@ -102,6 +103,6 @@
 </main>
 
 <script src="config.js?v=2"></script>
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>
