@@ -140,7 +140,7 @@ function getLeaderboard(fieldFilter) {
   });
 
   list.sort(function (a, b) { return b.score - a.score; });
-  return list.slice(0, 10);
+  return list; // tra ve toan bo, frontend tu gioi han hien Top 5 + nut "Xem them"
 }
 
 // Danh sách tên duy nhất đã từng chơi (dùng để gợi ý trong ô nhập tên)

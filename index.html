@@ -4,21 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ôn từ vựng tiếng Nhật</title>
-<link rel="stylesheet" href="style.css?v=8">
+<link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
 
 <div id="leaderboard-widget" class="leaderboard-widget hidden">
   <div class="lb-header">
-    <h3>🏆 Top 10</h3>
-    <label class="lb-filter-label">
-      Xếp theo
-      <select id="leaderboard-filter">
-        <option value="all">Tổng</option>
-      </select>
-    </label>
+    <h3>🏆 Bảng xếp hạng</h3>
+    <select id="leaderboard-filter" class="lb-filter-select">
+      <option value="all">Tổng</option>
+    </select>
   </div>
   <ol id="leaderboard-list"></ol>
+  <button id="leaderboard-toggle" class="lb-toggle-btn hidden">Xem thêm</button>
 </div>
 
 <main class="container">
@@ -113,6 +111,6 @@
 </main>
 
 <script src="config.js?v=2"></script>
-<script src="app.js?v=8"></script>
+<script src="app.js?v=9"></script>
 </body>
 </html>

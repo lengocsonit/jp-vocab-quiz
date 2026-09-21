@@ -56,7 +56,12 @@ const el = {
   leaderboardWidget: document.getElementById('leaderboard-widget'),
   leaderboardList: document.getElementById('leaderboard-list'),
   leaderboardFilter: document.getElementById('leaderboard-filter'),
+  leaderboardToggle: document.getElementById('leaderboard-toggle'),
 };
+
+const LEADERBOARD_COLLAPSED_COUNT = 5;
+let leaderboardExpanded = false;
+let lastLeaderboardList = [];
 
 init();
 
@@ -68,7 +73,14 @@ async function init() {
   el.revealBtn.addEventListener('click', revealAnswers);
   el.nextBtn.addEventListener('click', nextQuestion);
   el.replayBtn.addEventListener('click', () => showScreen('setup'));
-  el.leaderboardFilter.addEventListener('change', () => loadLeaderboard(el.leaderboardFilter.value));
+  el.leaderboardFilter.addEventListener('change', () => {
+    leaderboardExpanded = false;
+    loadLeaderboard(el.leaderboardFilter.value);
+  });
+  el.leaderboardToggle.addEventListener('click', () => {
+    leaderboardExpanded = !leaderboardExpanded;
+    renderLeaderboard(lastLeaderboardList);
+  });
   el.toggleReadingBtn.addEventListener('click', toggleReading);
   el.autoAdvanceCheckbox.addEventListener('change', () => {
     state.autoAdvance = el.autoAdvanceCheckbox.checked;
@@ -122,15 +134,18 @@ async function loadLeaderboard(fieldFilter) {
 let hasLeaderboardData = false;
 
 function renderLeaderboard(list) {
-  hasLeaderboardData = !!(list && list.length > 0);
+  lastLeaderboardList = list || [];
+  hasLeaderboardData = lastLeaderboardList.length > 0;
   if (!hasLeaderboardData) {
     el.leaderboardList.innerHTML = '';
+    el.leaderboardToggle.classList.add('hidden');
     updateLeaderboardVisibility();
     return;
   }
   const crownColors = ['#e63946', '#c0c0c0', '#cd7f32']; // đỏ, bạc, đồng cho hạng 1-2-3
+  const visibleList = leaderboardExpanded ? lastLeaderboardList : lastLeaderboardList.slice(0, LEADERBOARD_COLLAPSED_COUNT);
 
-  el.leaderboardList.innerHTML = list.map((item, i) => `
+  el.leaderboardList.innerHTML = visibleList.map((item, i) => `
     <li>
       <span class="lb-left">
         ${crownColors[i] ? crownIcon(crownColors[i]) : `<span class="lb-rank">${i + 1}</span>`}
@@ -142,6 +157,14 @@ function renderLeaderboard(list) {
       </span>
     </li>
   `).join('');
+
+  if (lastLeaderboardList.length > LEADERBOARD_COLLAPSED_COUNT) {
+    el.leaderboardToggle.classList.remove('hidden');
+    el.leaderboardToggle.textContent = leaderboardExpanded ? 'Thu gọn' : 'Xem thêm';
+  } else {
+    el.leaderboardToggle.classList.add('hidden');
+  }
+
   updateLeaderboardVisibility();
 }
 
