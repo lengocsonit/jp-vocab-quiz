@@ -13,6 +13,7 @@ function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('Từ vựng')
     .addItem('➕ Thêm lĩnh vực mới', 'addNewField')
+    .addItem('📥 Import CSV vào lĩnh vực', 'showImportCsvDialog')
     .addToUi();
 }
 
@@ -44,6 +45,95 @@ function addNewField() {
   sheet.autoResizeColumns(1, FIELD_COLUMNS.length);
 
   ui.alert('Đã tạo lĩnh vực "' + name + '". Nhập từ vựng vào sheet này — trang web sẽ tự nhận lĩnh vực mới, không cần sửa code hay deploy lại.');
+}
+
+// Mở hộp thoại cho phép dán nội dung CSV (id,word,reading,meaning,example,example_meaning)
+// và import thẳng vào 1 lĩnh vực (tạo mới hoặc gộp vào lĩnh vực có sẵn).
+function showImportCsvDialog() {
+  var fields = getFields();
+  var optionsHtml = fields.map(function (f) {
+    var safe = String(f).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    return '<option value="' + safe + '">' + safe + '</option>';
+  }).join('');
+
+  var html = HtmlService.createHtmlOutput(
+    '<style>' +
+    'body{font-family:Arial,sans-serif;font-size:13px;padding:4px}' +
+    'label{display:block;margin-top:10px;font-weight:bold}' +
+    'select,input[type=text],textarea{width:100%;box-sizing:border-box;margin-top:4px;padding:6px;font-family:inherit;font-size:13px}' +
+    'textarea{height:220px;font-family:monospace}' +
+    'button{margin-top:12px;padding:8px 16px;cursor:pointer}' +
+    '#msg{margin-top:10px;font-weight:bold}' +
+    '</style>' +
+    '<label>Lĩnh vực</label>' +
+    '<select id="fieldSelect" onchange="toggleNewField()">' +
+    '<option value="__new__">+ Tạo lĩnh vực mới...</option>' +
+    optionsHtml +
+    '</select>' +
+    '<input type="text" id="newFieldName" placeholder="Tên lĩnh vực mới">' +
+    '<label>Dán nội dung CSV (dòng đầu là tiêu đề: id,word,reading,meaning,example,example_meaning)</label>' +
+    '<textarea id="csvContent" placeholder="id,word,reading,meaning,example,example_meaning"></textarea>' +
+    '<button onclick="doImport()">Import</button>' +
+    '<div id="msg"></div>' +
+    '<script>' +
+    'function toggleNewField(){' +
+    '  var sel = document.getElementById("fieldSelect").value;' +
+    '  document.getElementById("newFieldName").style.display = sel === "__new__" ? "block" : "none";' +
+    '}' +
+    'function doImport(){' +
+    '  var sel = document.getElementById("fieldSelect").value;' +
+    '  var newName = document.getElementById("newFieldName").value.trim();' +
+    '  var field = sel === "__new__" ? newName : sel;' +
+    '  var csv = document.getElementById("csvContent").value;' +
+    '  var msg = document.getElementById("msg");' +
+    '  if(!field){ msg.textContent = "Vui lòng nhập tên lĩnh vực."; return; }' +
+    '  if(!csv.trim()){ msg.textContent = "Vui lòng dán nội dung CSV."; return; }' +
+    '  msg.textContent = "Đang import...";' +
+    '  google.script.run.withSuccessHandler(function(res){ msg.textContent = res; })' +
+    '    .withFailureHandler(function(err){ msg.textContent = "Lỗi: " + err.message; })' +
+    '    .importCsvToField(field, csv);' +
+    '}' +
+    '</script>'
+  ).setWidth(480).setHeight(480);
+
+  SpreadsheetApp.getUi().showModalDialog(html, 'Import CSV vào lĩnh vực');
+}
+
+function importCsvToField(fieldName, csvText) {
+  fieldName = String(fieldName).trim();
+  if (!fieldName) throw new Error('Tên lĩnh vực không được để trống.');
+  if (fieldName === HISTORY_SHEET) throw new Error('Không thể import vào sheet History.');
+
+  var rows = Utilities.parseCsv(csvText);
+  if (!rows || rows.length === 0) throw new Error('Không đọc được nội dung CSV.');
+
+  var firstCell = String(rows[0][0] || '').trim().toLowerCase();
+  var dataRows = (firstCell === 'id' || firstCell === 'word') ? rows.slice(1) : rows;
+  if (dataRows.length === 0) throw new Error('Không có dòng dữ liệu nào để import.');
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(fieldName);
+  var isNewSheet = !sheet;
+
+  if (isNewSheet) {
+    sheet = ss.insertSheet(fieldName);
+    sheet.appendRow(FIELD_COLUMNS);
+    sheet.getRange(1, 1, 1, FIELD_COLUMNS.length).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+  }
+
+  var numCols = FIELD_COLUMNS.length;
+  var normalizedRows = dataRows.map(function (row) {
+    var r = row.slice(0, numCols);
+    while (r.length < numCols) r.push('');
+    return r;
+  });
+
+  var startRow = sheet.getLastRow() + 1;
+  sheet.getRange(startRow, 1, normalizedRows.length, numCols).setValues(normalizedRows);
+  sheet.autoResizeColumns(1, numCols);
+
+  return 'Đã import ' + normalizedRows.length + ' dòng vào lĩnh vực "' + fieldName + '"' + (isNewSheet ? ' (mới tạo)' : '') + '.';
 }
 
 function doGet(e) {
