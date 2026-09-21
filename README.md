@@ -35,6 +35,8 @@ const CONFIG = {
 };
 ```
 
+> Lưu ý: GitHub Pages cache file tĩnh khoảng 10 phút, trình duyệt cũng cache thêm. Mỗi lần sửa `config.js` (hoặc `app.js`), hãy tăng số `?v=` ở 2 dòng `<script src="config.js?v=...">` và `<script src="app.js?v=...">` trong [`index.html`](index.html) để đảm bảo người dùng luôn lấy bản mới nhất thay vì bị cache bản cũ.
+
 ## 4. Deploy web lên GitHub Pages
 
 Repo này đã sẵn sàng cho GitHub Pages:
