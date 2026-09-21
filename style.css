@@ -48,6 +48,19 @@ input[type="text"], select {
 
 .muted { color: #8a8d93; font-size: 13px; margin: 0; }
 
+.loading-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #8a8d93; }
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #d7dae0;
+  border-top-color: #2f6fed;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 .error-text { color: #d33; font-size: 13px; min-height: 18px; margin: 4px 0 0; }
 
 .primary-btn, .secondary-btn {
@@ -123,6 +136,7 @@ input[type="text"], select {
 }
 .lb-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
 .lb-header h3 { margin: 0; }
+.lb-filter-label { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 400; color: #8a8d93; margin: 0; }
 .lb-header select { padding: 3px 6px; font-size: 12px; border-radius: 6px; border: 1px solid #d7dae0; }
 .leaderboard-widget ol { margin: 0; padding: 0; list-style: none; }
 .leaderboard-widget li {
@@ -172,7 +186,8 @@ input[type="text"], select {
   .secondary-btn { background: #2a2c30; color: #e6e6e6; }
   .secondary-btn:hover { background: #34363b; }
   .answer-btn:hover { background: #303236; }
-  .muted, .question-reading, .lb-acc { color: #9a9ca1; }
+  .muted, .question-reading, .lb-acc, .loading-row { color: #9a9ca1; }
+  .spinner { border-color: #3a3c40; border-top-color: #5b8dfd; }
   .feedback { border-color: #3a3c40; }
   .leaderboard-widget li { border-color: #3a3c40; }
   .lb-rank { color: #6b6f76; }
