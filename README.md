@@ -8,9 +8,9 @@ Mỗi **lĩnh vực** (BJT, IT Passport, SG, FE, ...) là **1 sheet (tab) riêng
 
 1. Tạo 1 Google Sheet mới.
 2. Với mỗi lĩnh vực, tạo 1 tab mới, đặt tên tab đúng bằng tên lĩnh vực (ví dụ: `BJT`, `IT Passport`, `SG`, `FE`). Mỗi tab nhập các cột theo đúng thứ tự:
-   `word | reading | meaning | example | example_meaning`
-   (Có thể import file mẫu [`data/words-template.csv`](data/words-template.csv) vào từng tab qua File > Import > Insert new sheet(s)/Replace current sheet, rồi xoá dòng ví dụ và điền từ thật.)
-3. Muốn mở rộng thêm lĩnh vực mới sau này: sau khi đã deploy Apps Script ở Bước 2, mở lại Google Sheet sẽ thấy menu **"Từ vựng" > "➕ Thêm lĩnh vực mới"** — chỉ cần gõ tên lĩnh vực (vd: `FE`), hệ thống tự tạo tab mới với đúng cột `word | reading | meaning | example | example_meaning` (không cần tạo tay hay sửa code). Trang web sẽ tự nhận lĩnh vực mới ngay lần tải sau.
+   `id | word | reading | meaning | example | example_meaning`
+   (Có thể import file mẫu [`data/words-template.csv`](data/words-template.csv) vào từng tab qua File > Import > Insert new sheet(s)/Replace current sheet, rồi xoá dòng ví dụ và điền từ thật. Cột `id` chỉ cần đánh số thứ tự trong phạm vi tab đó, dùng để bạn tự quản lý/tra cứu từ, không bắt buộc phải duy nhất toàn bộ hệ thống.)
+3. Muốn mở rộng thêm lĩnh vực mới sau này: sau khi đã deploy Apps Script ở Bước 2, mở lại Google Sheet sẽ thấy menu **"Từ vựng" > "➕ Thêm lĩnh vực mới"** — chỉ cần gõ tên lĩnh vực (vd: `FE`), hệ thống tự tạo tab mới với đúng cột `id | word | reading | meaning | example | example_meaning` (không cần tạo tay hay sửa code). Trang web sẽ tự nhận lĩnh vực mới ngay lần tải sau.
 4. Tạo thêm 1 tab tên `History` (không được trùng tên với bất kỳ lĩnh vực nào), dòng đầu tiên nhập tiêu đề cột (chỉ để dễ đọc, script tự bỏ qua dòng này):
    `timestamp | name | field | direction | total | correct | accuracy`
 
@@ -46,6 +46,7 @@ Repo này đã sẵn sàng cho GitHub Pages:
 
 ## 5. Cách dùng
 
+- Mỗi câu hỏi mặc định ẩn 4 đáp án — bấm "Hiện đáp án" mới hiện ra để chọn. Ngay sau khi chọn 1 đáp án, hệ thống báo đúng/sai và tự động hiện kèm câu ví dụ + nghĩa của ví dụ của từ đó để củng cố.
 - Mỗi lần sửa/thêm từ mới, hoặc thêm lĩnh vực mới: chỉ cần sửa trực tiếp trên Google Sheet (thêm tab mới cho lĩnh vực mới), không cần sửa code hay deploy lại.
 - Mỗi lượt chơi tự ghi vào tab `History` — nếu 1 lượt chơi gồm nhiều lĩnh vực (chọn nhiều lĩnh vực cùng lúc), mỗi lĩnh vực được ghi thành 1 dòng riêng để tính điểm theo từng lĩnh vực chính xác.
 - Bảng xếp hạng Top 10 (góc phải trang chủ) cộng dồn điểm theo tên qua tất cả các lượt chơi. Mặc định xem theo **Tổng** (cộng dồn mọi lĩnh vực), có thể đổi dropdown để xem xếp hạng riêng theo từng lĩnh vực.

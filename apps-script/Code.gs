@@ -5,7 +5,7 @@
 
 var HISTORY_SHEET = 'History';
 var RESERVED_SHEETS = ['History'];
-var FIELD_COLUMNS = ['word', 'reading', 'meaning', 'example', 'example_meaning'];
+var FIELD_COLUMNS = ['id', 'word', 'reading', 'meaning', 'example', 'example_meaning'];
 
 // Thêm menu "Từ vựng" mỗi khi mở Google Sheet, để tạo lĩnh vực mới bằng 1 click
 // thay vì phải tự tạo tab và gõ tay đúng tên cột.
