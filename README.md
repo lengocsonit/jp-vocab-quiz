@@ -12,7 +12,7 @@ Mỗi **lĩnh vực** (BJT, IT Passport, SG, FE, ...) là **1 sheet (tab) riêng
    (Có thể import file mẫu [`data/words-template.csv`](data/words-template.csv) vào từng tab qua File > Import > Insert new sheet(s)/Replace current sheet, rồi xoá dòng ví dụ và điền từ thật. Cột `id` chỉ cần đánh số thứ tự trong phạm vi tab đó, dùng để bạn tự quản lý/tra cứu từ, không bắt buộc phải duy nhất toàn bộ hệ thống.)
 3. Muốn mở rộng thêm lĩnh vực mới sau này: sau khi đã deploy Apps Script ở Bước 2, mở lại Google Sheet sẽ thấy menu **"Từ vựng" > "➕ Thêm lĩnh vực mới"** — chỉ cần gõ tên lĩnh vực (vd: `FE`), hệ thống tự tạo tab mới với đúng cột `id | word | reading | meaning | example | example_meaning` (không cần tạo tay hay sửa code). Trang web sẽ tự nhận lĩnh vực mới ngay lần tải sau.
 4. Tạo thêm 1 tab tên `History` (không được trùng tên với bất kỳ lĩnh vực nào), dòng đầu tiên nhập tiêu đề cột (chỉ để dễ đọc, script tự bỏ qua dòng này):
-   `timestamp | name | field | direction | total | correct | accuracy`
+   `timestamp | name | field | direction | total | correct | accuracy | duration_seconds`
 
 ## 2. Deploy Google Apps Script (backend đọc/ghi dữ liệu)
 

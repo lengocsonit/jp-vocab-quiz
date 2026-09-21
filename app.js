@@ -57,6 +57,14 @@ const el = {
   leaderboardList: document.getElementById('leaderboard-list'),
   leaderboardFilter: document.getElementById('leaderboard-filter'),
   leaderboardToggle: document.getElementById('leaderboard-toggle'),
+
+  historyModal: document.getElementById('history-modal'),
+  historyModalTitle: document.getElementById('history-modal-title'),
+  historyModalClose: document.getElementById('history-modal-close'),
+  historyLoading: document.getElementById('history-loading'),
+  historyEmpty: document.getElementById('history-empty'),
+  historyTable: document.getElementById('history-table'),
+  historyTableBody: document.getElementById('history-table-body'),
 };
 
 const LEADERBOARD_COLLAPSED_COUNT = 5;
@@ -91,10 +99,64 @@ async function init() {
       startAutoAdvanceCountdown();
     }
   });
+  el.leaderboardList.addEventListener('click', (e) => {
+    const nameBtn = e.target.closest('.lb-name');
+    if (nameBtn) openHistoryModal(nameBtn.dataset.name);
+  });
+  el.historyModalClose.addEventListener('click', closeHistoryModal);
+  el.historyModal.addEventListener('click', (e) => {
+    if (e.target === el.historyModal) closeHistoryModal();
+  });
 
   await loadWords();
   loadLeaderboard('all');
   loadNameSuggestions();
+}
+
+async function openHistoryModal(name) {
+  el.historyModalTitle.textContent = `Lịch sử làm bài — ${name}`;
+  el.historyModal.classList.remove('hidden');
+  el.historyEmpty.classList.add('hidden');
+  el.historyTable.classList.add('hidden');
+  el.historyLoading.classList.remove('hidden');
+
+  try {
+    const res = await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=history&name=${encodeURIComponent(name)}`);
+    const sessions = await res.json();
+    el.historyLoading.classList.add('hidden');
+
+    if (!sessions || sessions.length === 0) {
+      el.historyEmpty.textContent = 'Chưa có lịch sử.';
+      el.historyEmpty.classList.remove('hidden');
+      return;
+    }
+
+    el.historyTableBody.innerHTML = sessions.map(s => `
+      <tr>
+        <td>${formatDateTime(s.timestamp)}</td>
+        <td>${escapeHtml(s.field || '')}</td>
+        <td>${s.correct}/${s.total}</td>
+        <td>${s.accuracy}%</td>
+        <td>${formatTime((s.durationSeconds || 0) * 1000)}</td>
+      </tr>
+    `).join('');
+    el.historyTable.classList.remove('hidden');
+  } catch (err) {
+    el.historyLoading.classList.add('hidden');
+    el.historyEmpty.textContent = 'Không tải được lịch sử.';
+    el.historyEmpty.classList.remove('hidden');
+  }
+}
+
+function closeHistoryModal() {
+  el.historyModal.classList.add('hidden');
+}
+
+function formatDateTime(isoString) {
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) return isoString;
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 async function loadNameSuggestions() {
@@ -149,7 +211,7 @@ function renderLeaderboard(list) {
     <li>
       <span class="lb-left">
         ${crownColors[i] ? crownIcon(crownColors[i]) : `<span class="lb-rank">${i + 1}</span>`}
-        <span class="lb-name">${escapeHtml(item.name)}</span>
+        <button class="lb-name" data-name="${escapeHtml(item.name)}">${escapeHtml(item.name)}</button>
       </span>
       <span class="lb-right">
         <span class="lb-score">🏆 ${item.score}</span>
@@ -415,10 +477,10 @@ async function finishQuiz() {
   }
 
   showScreen('result');
-  submitResult();
+  submitResult(Math.round(elapsedMs / 1000));
 }
 
-async function submitResult() {
+async function submitResult(durationSeconds) {
   const entries = Object.keys(state.fieldTally).map(field => ({
     field,
     total: state.fieldTally[field].total,
@@ -432,6 +494,7 @@ async function submitResult() {
       body: JSON.stringify({
         name: state.playerName,
         direction: document.querySelector('input[name="direction"]:checked').value,
+        durationSeconds,
         entries,
       }),
     });

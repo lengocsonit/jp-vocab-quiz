@@ -51,14 +51,16 @@ function doGet(e) {
   if (action === 'fields') return jsonResponse(getFields());
   if (action === 'leaderboard') return jsonResponse(getLeaderboard(e.parameter.field));
   if (action === 'names') return jsonResponse(getAllNames());
+  if (action === 'history') return jsonResponse(getHistoryForName(e.parameter.name));
   return jsonResponse(getWords());
 }
 
 function doPost(e) {
   var data = JSON.parse(e.postData.contents);
   var entries = data.entries || [];
+  var duration = Number(data.durationSeconds) || 0;
   entries.forEach(function (entry) {
-    appendHistory(data.name, data.direction, entry.field, entry.total, entry.correct);
+    appendHistory(data.name, data.direction, entry.field, entry.total, entry.correct, duration);
   });
   return jsonResponse(getLeaderboard());
 }
@@ -103,13 +105,14 @@ function getWords() {
   return words;
 }
 
-function appendHistory(name, direction, field, total, correct) {
+function appendHistory(name, direction, field, total, correct, durationSeconds) {
   var sheet = getHistorySheet();
   total = Number(total) || 0;
   correct = Number(correct) || 0;
+  durationSeconds = Number(durationSeconds) || 0;
   var accuracy = total > 0 ? Math.round((correct / total) * 1000) / 10 : 0;
 
-  sheet.appendRow([new Date(), name, field, direction, total, correct, accuracy]);
+  sheet.appendRow([new Date(), name, field, direction, total, correct, accuracy, durationSeconds]);
 }
 
 // fieldFilter rỗng/undefined => tính tổng tất cả lĩnh vực. Có giá trị => chỉ tính lĩnh vực đó.
@@ -141,6 +144,31 @@ function getLeaderboard(fieldFilter) {
 
   list.sort(function (a, b) { return b.score - a.score; });
   return list; // tra ve toan bo, frontend tu gioi han hien Top 5 + nut "Xem them"
+}
+
+// Lịch sử tất cả các lượt chơi của 1 tên, moi nhat truoc
+function getHistoryForName(name) {
+  var sheet = getHistorySheet();
+  var values = sheet.getDataRange().getValues();
+  values.shift(); // bỏ header
+
+  var sessions = values
+    .filter(function (row) { return row[1] === name; })
+    .map(function (row) {
+      var ts = row[0];
+      return {
+        timestamp: ts instanceof Date ? ts.toISOString() : String(ts),
+        field: row[2],
+        direction: row[3],
+        total: Number(row[4]) || 0,
+        correct: Number(row[5]) || 0,
+        accuracy: Number(row[6]) || 0,
+        durationSeconds: Number(row[7]) || 0
+      };
+    });
+
+  sessions.sort(function (a, b) { return new Date(b.timestamp) - new Date(a.timestamp); });
+  return sessions;
 }
 
 // Danh sách tên duy nhất đã từng chơi (dùng để gợi ý trong ô nhập tên)

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ôn từ vựng tiếng Nhật</title>
-<link rel="stylesheet" href="style.css?v=9">
+<link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
 
@@ -17,6 +17,27 @@
   </div>
   <ol id="leaderboard-list"></ol>
   <button id="leaderboard-toggle" class="lb-toggle-btn hidden">Xem thêm</button>
+</div>
+
+<div id="history-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="history-modal-title">Lịch sử làm bài</h3>
+      <button id="history-modal-close" class="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="history-loading" class="loading-row hidden"><span class="spinner"></span> Đang tải...</div>
+      <p id="history-empty" class="muted hidden">Chưa có lịch sử.</p>
+      <div class="table-scroll">
+        <table id="history-table" class="history-table hidden">
+          <thead>
+            <tr><th>Ngày giờ</th><th>Lĩnh vực</th><th>Đúng/Tổng</th><th>Tỉ lệ</th><th>Thời gian</th></tr>
+          </thead>
+          <tbody id="history-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
 <main class="container">
@@ -111,6 +132,6 @@
 </main>
 
 <script src="config.js?v=2"></script>
-<script src="app.js?v=9"></script>
+<script src="app.js?v=10"></script>
 </body>
 </html>
