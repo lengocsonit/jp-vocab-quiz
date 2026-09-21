@@ -100,13 +100,19 @@ function renderLeaderboard(list) {
     updateLeaderboardVisibility();
     return;
   }
-  el.leaderboardList.innerHTML = list.map(item => `
+  const crownColors = ['#e63946', '#c0c0c0', '#cd7f32']; // đỏ, bạc, đồng cho hạng 1-2-3
+
+  el.leaderboardList.innerHTML = list.map((item, i) => `
     <li>
-      <span class="lb-name">${escapeHtml(item.name)}</span>
+      <span class="lb-name">${crownColors[i] ? crownIcon(crownColors[i]) : ''}${escapeHtml(item.name)}</span>
       <span>${item.score}đ <span class="lb-acc">(${item.accuracy}%)</span></span>
     </li>
   `).join('');
   updateLeaderboardVisibility();
+}
+
+function crownIcon(color) {
+  return `<svg class="lb-crown" width="14" height="14" viewBox="0 0 24 24" fill="${color}" xmlns="http://www.w3.org/2000/svg"><path d="M2 20h20l-2-9-5 4-3-7-3 7-5-4-2 9z"/></svg>`;
 }
 
 function updateLeaderboardVisibility() {
@@ -114,7 +120,12 @@ function updateLeaderboardVisibility() {
 }
 
 function renderFields() {
-  const fields = [...new Set(state.allWords.map(w => w.field).filter(Boolean))];
+  const counts = {};
+  state.allWords.forEach(w => {
+    if (!w.field) return;
+    counts[w.field] = (counts[w.field] || 0) + 1;
+  });
+  const fields = Object.keys(counts);
 
   // Đổ danh sách lĩnh vực vào bộ lọc xếp hạng (giữ nguyên lựa chọn "Tổng" ở đầu)
   el.leaderboardFilter.innerHTML = '<option value="all">Tổng</option>' +
@@ -125,8 +136,8 @@ function renderFields() {
     return;
   }
 
-  const allOption = `<label><input type="checkbox" name="field" value="__all__" checked> Tất cả</label>`;
-  const fieldOptions = fields.map(f => `<label><input type="checkbox" name="field" value="${escapeHtml(f)}"> ${escapeHtml(f)}</label>`).join('');
+  const allOption = `<label><input type="checkbox" name="field" value="__all__" checked> Tất cả (${state.allWords.length} từ)</label>`;
+  const fieldOptions = fields.map(f => `<label><input type="checkbox" name="field" value="${escapeHtml(f)}"> ${escapeHtml(f)} (${counts[f]} từ)</label>`).join('');
   el.groupList.innerHTML = allOption + fieldOptions;
 
   const allCheckbox = el.groupList.querySelector('input[value="__all__"]');

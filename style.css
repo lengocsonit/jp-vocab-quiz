@@ -127,6 +127,7 @@ input[type="text"], select {
 .leaderboard-widget ol { margin: 0; padding-left: 18px; }
 .leaderboard-widget li { margin-bottom: 4px; display: flex; justify-content: space-between; gap: 6px; }
 .leaderboard-widget .lb-name { font-weight: 600; }
+.lb-crown { vertical-align: -2px; margin-right: 3px; }
 .leaderboard-widget .lb-acc { color: #8a8d93; }
 
 .hidden { display: none !important; }
