@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ôn từ vựng tiếng Nhật</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="leaderboard-widget" class="leaderboard-widget hidden">
+  <div class="lb-header">
+    <h3>🏆 Top 10</h3>
+    <select id="leaderboard-filter">
+      <option value="all">Tổng</option>
+    </select>
+  </div>
+  <ol id="leaderboard-list"></ol>
+</div>
+
+<main class="container">
+
+  <!-- SETUP SCREEN -->
+  <section id="setup-screen">
+    <h1>Ôn từ vựng tiếng Nhật</h1>
+
+    <div class="field">
+      <label for="name-input">Tên của bạn (chỉ chữ cái A-Z, a-z và số)</label>
+      <input type="text" id="name-input" maxlength="20" placeholder="vd: Son01">
+      <p class="error-text" id="name-error"></p>
+    </div>
+
+    <div class="field">
+      <label>Chọn lĩnh vực</label>
+      <div id="group-list" class="group-list">
+        <p class="muted">Đang tải danh sách từ...</p>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="count-select">Số từ muốn ôn</label>
+      <select id="count-select">
+        <option value="10">10 từ</option>
+        <option value="20">20 từ</option>
+        <option value="30">30 từ</option>
+        <option value="50">50 từ</option>
+        <option value="all">Toàn bộ lĩnh vực đã chọn</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Hướng câu hỏi</label>
+      <div class="radio-row">
+        <label><input type="radio" name="direction" value="jp2meaning" checked> Từ Nhật → Nghĩa</label>
+        <label><input type="radio" name="direction" value="meaning2jp"> Nghĩa → Từ Nhật</label>
+        <label><input type="radio" name="direction" value="mix"> Trộn cả hai</label>
+      </div>
+    </div>
+
+    <p class="error-text" id="setup-error"></p>
+    <button id="start-btn" class="primary-btn">Bắt đầu</button>
+  </section>
+
+  <!-- QUIZ SCREEN -->
+  <section id="quiz-screen" class="hidden">
+    <div class="quiz-progress" id="quiz-progress"></div>
+
+    <div class="question-card">
+      <div id="question-text" class="question-text"></div>
+      <div id="question-reading" class="question-reading"></div>
+    </div>
+
+    <button id="reveal-btn" class="secondary-btn">Hiện đáp án</button>
+
+    <div id="answers" class="answers hidden"></div>
+
+    <div id="feedback" class="feedback hidden">
+      <p id="feedback-result"></p>
+      <p id="feedback-example"></p>
+      <p id="feedback-example-meaning"></p>
+      <button id="next-btn" class="primary-btn">Câu tiếp theo</button>
+    </div>
+  </section>
+
+  <!-- RESULT SCREEN -->
+  <section id="result-screen" class="hidden">
+    <h1>Kết quả</h1>
+    <p id="result-name"></p>
+    <p id="result-score"></p>
+    <p id="result-accuracy"></p>
+
+    <div id="wrong-list-wrap" class="hidden">
+      <h3>Các từ trả lời sai</h3>
+      <ul id="wrong-list"></ul>
+    </div>
+
+    <button id="replay-btn" class="primary-btn">Chơi lại</button>
+  </section>
+
+</main>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
