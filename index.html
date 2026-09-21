@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ôn từ vựng tiếng Nhật</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 
@@ -26,7 +26,7 @@
 
     <div class="field">
       <label for="name-input">Tên của bạn (chỉ chữ cái A-Z, a-z và số)</label>
-      <input type="text" id="name-input" maxlength="20" placeholder="vd: Son01">
+      <input type="text" id="name-input" maxlength="20" placeholder="vd: SonLN">
       <p class="error-text" id="name-error"></p>
     </div>
 
@@ -65,6 +65,8 @@
   <section id="quiz-screen" class="hidden">
     <div class="quiz-progress" id="quiz-progress"></div>
 
+    <button id="toggle-reading-btn" class="link-btn">👁 Hiện cách đọc</button>
+
     <div class="question-card">
       <div id="question-text" class="question-text"></div>
       <div id="question-reading" class="question-reading"></div>
@@ -100,6 +102,6 @@
 </main>
 
 <script src="config.js?v=2"></script>
-<script src="app.js?v=2"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>

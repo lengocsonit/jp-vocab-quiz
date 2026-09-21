@@ -11,6 +11,7 @@ const state = {
   wrongList: [],
   playerName: '',
   fieldTally: {}, // { fieldName: { correct, total } }
+  showReading: false,
 };
 
 const el = {
@@ -26,6 +27,7 @@ const el = {
   resultScreen: document.getElementById('result-screen'),
 
   quizProgress: document.getElementById('quiz-progress'),
+  toggleReadingBtn: document.getElementById('toggle-reading-btn'),
   questionText: document.getElementById('question-text'),
   questionReading: document.getElementById('question-reading'),
   revealBtn: document.getElementById('reveal-btn'),
@@ -59,6 +61,7 @@ async function init() {
   el.nextBtn.addEventListener('click', nextQuestion);
   el.replayBtn.addEventListener('click', () => showScreen('setup'));
   el.leaderboardFilter.addEventListener('change', () => loadLeaderboard(el.leaderboardFilter.value));
+  el.toggleReadingBtn.addEventListener('click', toggleReading);
 
   await loadWords();
   loadLeaderboard('all');
@@ -107,8 +110,7 @@ function renderLeaderboard(list) {
 }
 
 function updateLeaderboardVisibility() {
-  const onSetupScreen = !el.setupScreen.classList.contains('hidden');
-  el.leaderboardWidget.classList.toggle('hidden', !hasLeaderboardData || !onSetupScreen);
+  el.leaderboardWidget.classList.toggle('hidden', !hasLeaderboardData);
 }
 
 function renderFields() {
@@ -198,13 +200,21 @@ function renderQuestion() {
   el.feedback.classList.add('hidden');
   el.revealBtn.classList.remove('hidden');
 
-  if (item.direction === 'jp2meaning') {
-    el.questionText.textContent = item.word.word;
-    el.questionReading.textContent = item.word.reading || '';
-  } else {
-    el.questionText.textContent = item.word.meaning;
-    el.questionReading.textContent = '';
-  }
+  el.questionText.textContent = item.direction === 'jp2meaning' ? item.word.word : item.word.meaning;
+  updateReadingDisplay();
+}
+
+function toggleReading() {
+  state.showReading = !state.showReading;
+  el.toggleReadingBtn.textContent = state.showReading ? '🙈 Ẩn cách đọc' : '👁 Hiện cách đọc';
+  updateReadingDisplay();
+}
+
+function updateReadingDisplay() {
+  const item = state.quizQueue[state.currentIndex];
+  if (!item) return;
+  const isJp2Meaning = item.direction === 'jp2meaning';
+  el.questionReading.textContent = isJp2Meaning && state.showReading ? (item.word.reading || '') : '';
 }
 
 function revealAnswers() {

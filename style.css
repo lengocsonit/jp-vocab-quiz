@@ -67,6 +67,18 @@ input[type="text"], select {
 
 .quiz-progress { font-size: 13px; color: #8a8d93; margin-bottom: 8px; }
 
+.link-btn {
+  display: inline-block;
+  background: none;
+  border: none;
+  color: #2f6fed;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 0 10px;
+}
+.link-btn:hover { text-decoration: underline; }
+
 .question-card {
   background: #f5f7fb;
   border-radius: 10px;
