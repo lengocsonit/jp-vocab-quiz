@@ -12,6 +12,10 @@ const state = {
   playerName: '',
   fieldTally: {}, // { fieldName: { correct, total } }
   showReading: false,
+  autoAdvance: true,
+  quizStartTime: 0,
+  timerInterval: null,
+  autoAdvanceTimer: null,
 };
 
 const el = {
@@ -27,7 +31,9 @@ const el = {
   quizScreen: document.getElementById('quiz-screen'),
   resultScreen: document.getElementById('result-screen'),
 
-  quizProgress: document.getElementById('quiz-progress'),
+  quizProgressText: document.getElementById('quiz-progress-text'),
+  quizTimer: document.getElementById('quiz-timer'),
+  autoAdvanceCheckbox: document.getElementById('auto-advance-checkbox'),
   toggleReadingBtn: document.getElementById('toggle-reading-btn'),
   questionText: document.getElementById('question-text'),
   questionReading: document.getElementById('question-reading'),
@@ -42,6 +48,7 @@ const el = {
   resultName: document.getElementById('result-name'),
   resultScore: document.getElementById('result-score'),
   resultAccuracy: document.getElementById('result-accuracy'),
+  resultTime: document.getElementById('result-time'),
   wrongListWrap: document.getElementById('wrong-list-wrap'),
   wrongList: document.getElementById('wrong-list'),
   replayBtn: document.getElementById('replay-btn'),
@@ -214,20 +221,47 @@ function startQuiz() {
   state.answeredCount = 0;
   state.wrongList = [];
   state.fieldTally = {};
+  state.autoAdvance = el.autoAdvanceCheckbox.checked;
 
+  startTimer();
   showScreen('quiz');
   renderQuestion();
+}
+
+function startTimer() {
+  state.quizStartTime = Date.now();
+  updateTimerDisplay();
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  state.timerInterval = setInterval(updateTimerDisplay, 1000);
+}
+
+function stopTimer() {
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  state.timerInterval = null;
+  return Date.now() - state.quizStartTime;
+}
+
+function updateTimerDisplay() {
+  el.quizTimer.textContent = `⏱ ${formatTime(Date.now() - state.quizStartTime)}`;
+}
+
+function formatTime(ms) {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+  const seconds = String(totalSeconds % 60).padStart(2, '0');
+  return `${minutes}:${seconds}`;
 }
 
 function renderQuestion() {
   const total = state.quizQueue.length;
   const item = state.quizQueue[state.currentIndex];
-  el.quizProgress.textContent = `Câu ${state.currentIndex + 1} / ${total} — Điểm: ${state.correctCount}`;
+  el.quizProgressText.textContent = `Câu ${state.currentIndex + 1} / ${total} — Điểm: ${state.correctCount}`;
 
   el.answers.classList.add('hidden');
   el.answers.innerHTML = '';
   el.feedback.classList.add('hidden');
   el.revealBtn.classList.remove('hidden');
+  el.nextBtn.textContent = 'Câu tiếp theo';
 
   el.questionText.textContent = item.direction === 'jp2meaning' ? item.word.word : item.word.meaning;
   updateReadingDisplay();
@@ -299,9 +333,31 @@ function selectAnswer(choice, correctValue, btnEl) {
   el.feedbackExample.textContent = item.word.example ? `Ví dụ: ${item.word.example}` : '';
   el.feedbackExampleMeaning.textContent = item.word.example_meaning ? `Nghĩa: ${item.word.example_meaning}` : '';
   el.feedback.classList.remove('hidden');
+
+  if (state.autoAdvance) startAutoAdvanceCountdown();
+}
+
+function startAutoAdvanceCountdown() {
+  let remaining = 3;
+  el.nextBtn.textContent = `Câu tiếp theo (${remaining})`;
+  state.autoAdvanceTimer = setInterval(() => {
+    remaining -= 1;
+    if (remaining <= 0) {
+      clearAutoAdvanceTimer();
+      nextQuestion();
+    } else {
+      el.nextBtn.textContent = `Câu tiếp theo (${remaining})`;
+    }
+  }, 1000);
+}
+
+function clearAutoAdvanceTimer() {
+  if (state.autoAdvanceTimer) clearInterval(state.autoAdvanceTimer);
+  state.autoAdvanceTimer = null;
 }
 
 function nextQuestion() {
+  clearAutoAdvanceTimer();
   state.currentIndex += 1;
   if (state.currentIndex >= state.quizQueue.length) {
     finishQuiz();
@@ -311,11 +367,13 @@ function nextQuestion() {
 }
 
 async function finishQuiz() {
+  const elapsedMs = stopTimer();
   const accuracy = state.answeredCount > 0 ? Math.round((state.correctCount / state.answeredCount) * 1000) / 10 : 0;
 
   el.resultName.textContent = `Người chơi: ${state.playerName}`;
   el.resultScore.textContent = `Điểm lượt này: ${state.correctCount}`;
   el.resultAccuracy.textContent = `Tỉ lệ chính xác lượt này: ${accuracy}%`;
+  el.resultTime.textContent = `Thời gian làm bài: ${formatTime(elapsedMs)}`;
 
   if (state.wrongList.length > 0) {
     el.wrongListWrap.classList.remove('hidden');

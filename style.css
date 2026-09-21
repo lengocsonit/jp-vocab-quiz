@@ -46,6 +46,8 @@ input[type="text"], select {
 .radio-row { display: flex; flex-direction: column; gap: 6px; }
 .radio-row label { display: flex; align-items: center; gap: 8px; font-weight: 400; font-size: 14px; }
 
+.checkbox-row { display: flex; align-items: center; gap: 8px; font-weight: 400; font-size: 14px; }
+
 .muted { color: #8a8d93; font-size: 13px; margin: 0; }
 
 .loading-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #8a8d93; }
@@ -78,7 +80,7 @@ input[type="text"], select {
 .secondary-btn { background: #eef1f6; color: #1c1e21; margin-bottom: 14px; }
 .secondary-btn:hover { background: #dfe3ea; }
 
-.quiz-progress { font-size: 13px; color: #8a8d93; margin-bottom: 8px; }
+.quiz-progress { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #8a8d93; margin-bottom: 8px; }
 
 .link-btn {
   display: inline-block;
