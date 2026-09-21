@@ -179,18 +179,12 @@ async function loadNameSuggestions() {
 
 let allFieldsWithCounts = [];
 
-// Tên sheet theo quy ước "Môn - Bài" (vd "BJT - Bài 1") hoặc "Môn_Bài" (vd "BJT_P1_S3")
-// sẽ được nhóm theo Môn. Sheet không có dấu phân cách thì tự nó là 1 môn với đúng 1 bài trùng tên.
+// Chỉ cần tên sheet có dấu "-" là được coi là "Môn-Bài": phần trước dấu "-" đầu tiên
+// là Môn, phần sau là tên Bài. Sheet không có dấu "-" thì tự nó là 1 môn với đúng 1 bài trùng tên.
 function parseFieldName(field) {
-  const dashIdx = field.indexOf(' - ');
-  if (dashIdx !== -1) {
-    return { subject: field.slice(0, dashIdx).trim(), lesson: field.slice(dashIdx + 3).trim() };
-  }
-  const underscoreIdx = field.indexOf('_');
-  if (underscoreIdx !== -1) {
-    return { subject: field.slice(0, underscoreIdx).trim(), lesson: field.slice(underscoreIdx + 1).trim() };
-  }
-  return { subject: field, lesson: field };
+  const idx = field.indexOf('-');
+  if (idx === -1) return { subject: field, lesson: field };
+  return { subject: field.slice(0, idx).trim(), lesson: field.slice(idx + 1).trim() };
 }
 
 async function loadFieldCounts() {
@@ -298,10 +292,10 @@ function renderFieldCheckboxes() {
     const subjectTotal = lessons.reduce((sum, l) => sum + l.count, 0);
     html += `
       <div class="subject-group">
-        <div class="field-row subject-row">
+        <div class="field-row subject-row" data-subject="${escapeHtml(subject)}">
           <input type="checkbox" class="subject-checkbox" data-subject="${escapeHtml(subject)}">
           <span class="subject-label">${escapeHtml(subject)} (${subjectTotal} từ)</span>
-          <button type="button" class="expand-btn" data-subject="${escapeHtml(subject)}">▸</button>
+          <button type="button" class="expand-btn" data-subject="${escapeHtml(subject)}" tabindex="-1">▸</button>
         </div>
         <div class="lesson-list hidden" data-lessons-for="${escapeHtml(subject)}">
           ${lessons.map(l => `<label class="field-row lesson-row"><input type="checkbox" name="field" value="${escapeHtml(l.field)}" class="lesson-checkbox" data-subject="${escapeHtml(subject)}"><span>${escapeHtml(l.lesson)} (${l.count} từ)</span></label>`).join('')}
@@ -321,13 +315,15 @@ function bindFieldListEvents() {
     el.groupList.querySelectorAll('input[name="field"], input.subject-checkbox').forEach(cb => { cb.checked = false; });
   });
 
-  el.groupList.querySelectorAll('.expand-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const subject = btn.dataset.subject;
+  el.groupList.querySelectorAll('.subject-row').forEach(row => {
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('.subject-checkbox')) return; // để checkbox tự xử lý chọn/bỏ chọn, không đụng tới việc xổ danh sách
+      const subject = row.dataset.subject;
       const list = el.groupList.querySelector(`[data-lessons-for="${CSS.escape(subject)}"]`);
+      const btn = row.querySelector('.expand-btn');
       const willExpand = list.classList.contains('hidden');
       list.classList.toggle('hidden');
-      btn.textContent = willExpand ? '▾' : '▸';
+      if (btn) btn.textContent = willExpand ? '▾' : '▸';
     });
   });
 

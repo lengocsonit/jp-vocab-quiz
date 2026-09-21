@@ -21,7 +21,7 @@ function addNewField() {
   var ui = SpreadsheetApp.getUi();
   var response = ui.prompt(
     'Thêm lĩnh vực mới',
-    'Nhập tên lĩnh vực. Nếu môn học có nhiều bài, đặt tên dạng "Môn - Bài" hoặc "Môn_Bài" (vd: BJT - Bài 1, BJT_Bài2) để web tự nhóm theo môn:',
+    'Nhập tên lĩnh vực. Nếu môn học có nhiều bài, đặt tên có dấu "-" (vd: BJT - Bài 1) để web tự nhóm theo môn:',
     ui.ButtonSet.OK_CANCEL
   );
   if (response.getSelectedButton() !== ui.Button.OK) return;
@@ -223,13 +223,11 @@ function appendHistory(timestamp, name, direction, field, total, correct, durati
   sheet.appendRow([timestamp, name, field, direction, total, correct, accuracy, durationSeconds]);
 }
 
-// Tach ten Mon tu ten sheet, dung quy uoc "Mon - Bai" hoac "Mon_Bai" (khop voi parseFieldName ben frontend)
+// Tach ten Mon tu ten sheet: chi can co dau "-" la duoc coi la "Mon-Bai" (khop voi parseFieldName ben frontend)
 function getSubjectFromField(field) {
-  var dashIdx = field.indexOf(' - ');
-  if (dashIdx !== -1) return field.slice(0, dashIdx).trim();
-  var underscoreIdx = field.indexOf('_');
-  if (underscoreIdx !== -1) return field.slice(0, underscoreIdx).trim();
-  return field;
+  var idx = field.indexOf('-');
+  if (idx === -1) return field;
+  return field.slice(0, idx).trim();
 }
 
 // fieldFilter rỗng/undefined => tính tổng tất cả lĩnh vực. Có giá trị => tính theo MÔN (gộp mọi bài cùng môn).
