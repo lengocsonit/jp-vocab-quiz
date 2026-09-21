@@ -63,11 +63,20 @@ function doPost(e) {
   return jsonResponse(getLeaderboard());
 }
 
-// Danh sách lĩnh vực = danh sách tên sheet, trừ sheet History
+// Tìm sheet History dù tên tab lỡ có khoảng trắng thừa (vd "History " thay vì "History")
+function getHistorySheet() {
+  var sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets();
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].getName().trim() === HISTORY_SHEET) return sheets[i];
+  }
+  return null;
+}
+
+// Danh sách lĩnh vực = danh sách tên sheet, trừ sheet History (cung khoan dung khoang trang thua)
 function getFields() {
   return SpreadsheetApp.getActiveSpreadsheet().getSheets()
     .map(function (s) { return s.getName(); })
-    .filter(function (name) { return RESERVED_SHEETS.indexOf(name) === -1; });
+    .filter(function (name) { return RESERVED_SHEETS.indexOf(name.trim()) === -1; });
 }
 
 // Gộp từ vựng từ tất cả các sheet lĩnh vực, mỗi từ được gắn thêm field = tên sheet
@@ -95,7 +104,7 @@ function getWords() {
 }
 
 function appendHistory(name, direction, field, total, correct) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HISTORY_SHEET);
+  var sheet = getHistorySheet();
   total = Number(total) || 0;
   correct = Number(correct) || 0;
   var accuracy = total > 0 ? Math.round((correct / total) * 1000) / 10 : 0;
@@ -105,7 +114,7 @@ function appendHistory(name, direction, field, total, correct) {
 
 // fieldFilter rỗng/undefined => tính tổng tất cả lĩnh vực. Có giá trị => chỉ tính lĩnh vực đó.
 function getLeaderboard(fieldFilter) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HISTORY_SHEET);
+  var sheet = getHistorySheet();
   var values = sheet.getDataRange().getValues();
   values.shift(); // bỏ header
 
@@ -136,7 +145,7 @@ function getLeaderboard(fieldFilter) {
 
 // Danh sách tên duy nhất đã từng chơi (dùng để gợi ý trong ô nhập tên)
 function getAllNames() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HISTORY_SHEET);
+  var sheet = getHistorySheet();
   var values = sheet.getDataRange().getValues();
   values.shift(); // bỏ header
 
