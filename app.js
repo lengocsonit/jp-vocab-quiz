@@ -116,8 +116,14 @@ function renderLeaderboard(list) {
 
   el.leaderboardList.innerHTML = list.map((item, i) => `
     <li>
-      <span class="lb-name">${crownColors[i] ? crownIcon(crownColors[i]) : ''}${escapeHtml(item.name)}</span>
-      <span>${item.score}đ <span class="lb-acc">(${item.accuracy}%)</span></span>
+      <span class="lb-left">
+        ${crownColors[i] ? crownIcon(crownColors[i]) : `<span class="lb-rank">${i + 1}</span>`}
+        <span class="lb-name">${escapeHtml(item.name)}</span>
+      </span>
+      <span class="lb-right">
+        <span class="lb-score">🏆 ${item.score}</span>
+        <span class="lb-acc">${item.accuracy}%</span>
+      </span>
     </li>
   `).join('');
   updateLeaderboardVisibility();
