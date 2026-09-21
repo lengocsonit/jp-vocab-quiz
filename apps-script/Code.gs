@@ -19,7 +19,11 @@ function onOpen() {
 
 function addNewField() {
   var ui = SpreadsheetApp.getUi();
-  var response = ui.prompt('Thêm lĩnh vực mới', 'Nhập tên lĩnh vực (vd: BJT, IT Passport, SG, FE):', ui.ButtonSet.OK_CANCEL);
+  var response = ui.prompt(
+    'Thêm lĩnh vực mới',
+    'Nhập tên lĩnh vực. Nếu môn học có nhiều bài, đặt tên dạng "Môn - Bài" (vd: BJT - Bài 1, IT Passport - Bài 2) để web tự nhóm theo môn:',
+    ui.ButtonSet.OK_CANCEL
+  );
   if (response.getSelectedButton() !== ui.Button.OK) return;
 
   var name = response.getResponseText().trim();
@@ -70,7 +74,7 @@ function showImportCsvDialog() {
     '<option value="__new__">+ Tạo lĩnh vực mới...</option>' +
     optionsHtml +
     '</select>' +
-    '<input type="text" id="newFieldName" placeholder="Tên lĩnh vực mới">' +
+    '<input type="text" id="newFieldName" placeholder="Tên lĩnh vực mới, vd: BJT - Bài 3">' +
     '<label>Dán nội dung CSV (dòng đầu là tiêu đề: id,word,reading,meaning,example,example_meaning)</label>' +
     '<textarea id="csvContent" placeholder="id,word,reading,meaning,example,example_meaning"></textarea>' +
     '<button onclick="doImport()">Import</button>' +

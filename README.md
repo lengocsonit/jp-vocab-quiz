@@ -6,6 +6,8 @@ Web tĩnh (HTML/CSS/JS), miễn phí, dữ liệu lưu trên Google Sheet, deplo
 
 Mỗi **lĩnh vực** (BJT, IT Passport, SG, FE, ...) là **1 sheet (tab) riêng** — tên tab chính là tên lĩnh vực hiển thị trên web.
 
+**Nếu 1 môn có nhiều bài** (vd BJT chia làm nhiều bài học), đặt tên tab theo quy ước `Môn - Bài` (vd: `BJT - Bài 1`, `BJT - Bài 2`, `IT Passport - Bài 1`). Web sẽ tự nhận diện phần trước dấu `-` là **môn**, và nhóm các bài lại — màn hình thiết lập sẽ có 1 dropdown chọn môn trước, sau đó mới hiện danh sách bài của môn đó, đỡ bị dài khi có nhiều bài. Tab đặt tên không theo quy ước này (vd `SG`, `FE`) vẫn hoạt động bình thường, chỉ là tự nó là 1 môn có đúng 1 bài trùng tên.
+
 1. Tạo 1 Google Sheet mới.
 2. Với mỗi lĩnh vực, tạo 1 tab mới, đặt tên tab đúng bằng tên lĩnh vực (ví dụ: `BJT`, `IT Passport`, `SG`, `FE`). Mỗi tab nhập các cột theo đúng thứ tự:
    `id | word | reading | meaning | example | example_meaning`

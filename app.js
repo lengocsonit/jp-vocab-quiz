@@ -21,6 +21,7 @@ const el = {
   nameInput: document.getElementById('name-input'),
   nameSuggestions: document.getElementById('name-suggestions'),
   nameError: document.getElementById('name-error'),
+  subjectSelect: document.getElementById('subject-select'),
   groupList: document.getElementById('group-list'),
   countSelect: document.getElementById('count-select'),
   setupError: document.getElementById('setup-error'),
@@ -106,6 +107,7 @@ async function init() {
   el.historyModal.addEventListener('click', (e) => {
     if (e.target === el.historyModal) closeHistoryModal();
   });
+  el.subjectSelect.addEventListener('change', renderFieldCheckboxes);
 
   await loadFieldCounts();
   loadLeaderboard('all');
@@ -168,14 +170,31 @@ async function loadNameSuggestions() {
   }
 }
 
+let allFieldsWithCounts = [];
+
+// Tên sheet theo quy ước "Môn - Bài" (vd "BJT - Bài 1") sẽ được nhóm theo Môn.
+// Sheet không có " - " thì tự nó là 1 môn với đúng 1 bài trùng tên.
+function parseFieldName(field) {
+  const idx = field.indexOf(' - ');
+  if (idx === -1) return { subject: field, lesson: field };
+  return { subject: field.slice(0, idx).trim(), lesson: field.slice(idx + 3).trim() };
+}
+
 async function loadFieldCounts() {
   try {
     const res = await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=fieldCounts`);
-    const data = await res.json();
-    renderFields(data);
+    allFieldsWithCounts = await res.json();
+    renderSubjectSelect();
+    renderFieldCheckboxes();
   } catch (err) {
     el.groupList.innerHTML = '<p class="error-text">Không tải được danh sách lĩnh vực. Kiểm tra lại APPS_SCRIPT_URL trong config.js.</p>';
   }
+}
+
+function renderSubjectSelect() {
+  const subjects = [...new Set(allFieldsWithCounts.map(f => parseFieldName(f.field).subject))];
+  el.subjectSelect.innerHTML = '<option value="__all_subjects__">Tất cả các môn</option>' +
+    subjects.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
 }
 
 async function loadLeaderboard(fieldFilter) {
@@ -236,19 +255,27 @@ function updateLeaderboardVisibility() {
   el.leaderboardWidget.classList.toggle('hidden', !hasLeaderboardData);
 }
 
-function renderFields(fieldsWithCounts) {
-  // Đổ danh sách lĩnh vực vào bộ lọc xếp hạng (giữ nguyên lựa chọn "Tổng" ở đầu)
+function renderFieldCheckboxes() {
+  // Bộ lọc xếp hạng luôn liệt kê TOÀN BỘ lĩnh vực, không phụ thuộc môn đang chọn ở đây
   el.leaderboardFilter.innerHTML = '<option value="all">Tổng</option>' +
-    fieldsWithCounts.map(f => `<option value="${escapeHtml(f.field)}">${escapeHtml(f.field)}</option>`).join('');
+    allFieldsWithCounts.map(f => `<option value="${escapeHtml(f.field)}">${escapeHtml(f.field)}</option>`).join('');
 
-  if (fieldsWithCounts.length === 0) {
+  if (allFieldsWithCounts.length === 0) {
     el.groupList.innerHTML = '<p class="muted">Chưa có dữ liệu từ vựng.</p>';
     return;
   }
 
-  const totalCount = fieldsWithCounts.reduce((sum, f) => sum + f.count, 0);
+  const subjectFilter = el.subjectSelect.value;
+  const visibleFields = subjectFilter === '__all_subjects__'
+    ? allFieldsWithCounts
+    : allFieldsWithCounts.filter(f => parseFieldName(f.field).subject === subjectFilter);
+
+  const totalCount = visibleFields.reduce((sum, f) => sum + f.count, 0);
   const allOption = `<label><input type="checkbox" name="field" value="__all__" checked> Tất cả (${totalCount} từ)</label>`;
-  const fieldOptions = fieldsWithCounts.map(f => `<label><input type="checkbox" name="field" value="${escapeHtml(f.field)}"> ${escapeHtml(f.field)} (${f.count} từ)</label>`).join('');
+  const fieldOptions = visibleFields.map(f => {
+    const label = subjectFilter === '__all_subjects__' ? f.field : parseFieldName(f.field).lesson;
+    return `<label><input type="checkbox" name="field" value="${escapeHtml(f.field)}"> ${escapeHtml(label)} (${f.count} từ)</label>`;
+  }).join('');
   el.groupList.innerHTML = allOption + fieldOptions;
 
   const allCheckbox = el.groupList.querySelector('input[value="__all__"]');
@@ -266,7 +293,15 @@ function renderFields(fieldsWithCounts) {
 
 function getSelectedFields() {
   const allCheckbox = el.groupList.querySelector('input[value="__all__"]');
-  if (!allCheckbox || allCheckbox.checked) return null; // null = tất cả lĩnh vực
+  const subjectFilter = el.subjectSelect.value;
+
+  if (!allCheckbox || allCheckbox.checked) {
+    if (subjectFilter === '__all_subjects__') return null; // null = tất cả lĩnh vực trên toàn hệ thống
+    // "Tất cả" trong phạm vi 1 môn -> chỉ lấy các bài thuộc môn đó
+    return allFieldsWithCounts
+      .filter(f => parseFieldName(f.field).subject === subjectFilter)
+      .map(f => f.field);
+  }
   return [...el.groupList.querySelectorAll('input[name="field"]:checked')].map(cb => cb.value);
 }
 
