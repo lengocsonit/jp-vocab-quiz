@@ -21,7 +21,6 @@ const el = {
   nameInput: document.getElementById('name-input'),
   nameSuggestions: document.getElementById('name-suggestions'),
   nameError: document.getElementById('name-error'),
-  subjectSelect: document.getElementById('subject-select'),
   groupList: document.getElementById('group-list'),
   countSelect: document.getElementById('count-select'),
   setupError: document.getElementById('setup-error'),
@@ -107,7 +106,6 @@ async function init() {
   el.historyModal.addEventListener('click', (e) => {
     if (e.target === el.historyModal) closeHistoryModal();
   });
-  el.subjectSelect.addEventListener('change', renderFieldCheckboxes);
 
   await loadFieldCounts();
   loadLeaderboard('all');
@@ -190,17 +188,10 @@ async function loadFieldCounts() {
   try {
     const res = await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=fieldCounts`);
     allFieldsWithCounts = await res.json();
-    renderSubjectSelect();
     renderFieldCheckboxes();
   } catch (err) {
     el.groupList.innerHTML = '<p class="error-text">Không tải được danh sách lĩnh vực. Kiểm tra lại APPS_SCRIPT_URL trong config.js.</p>';
   }
-}
-
-function renderSubjectSelect() {
-  const subjects = [...new Set(allFieldsWithCounts.map(f => parseFieldName(f.field).subject))];
-  el.subjectSelect.innerHTML = '<option value="__all_subjects__">Tất cả các môn</option>' +
-    subjects.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
 }
 
 async function loadLeaderboard(fieldFilter) {
@@ -262,7 +253,7 @@ function updateLeaderboardVisibility() {
 }
 
 function renderFieldCheckboxes() {
-  // Bộ lọc xếp hạng liệt kê theo MÔN (gộp điểm mọi bài cùng môn), không phụ thuộc môn đang chọn ở đây
+  // Bộ lọc xếp hạng liệt kê theo MÔN (gộp điểm mọi bài cùng môn)
   const subjectsForLeaderboard = [...new Set(allFieldsWithCounts.map(f => parseFieldName(f.field).subject))];
   el.leaderboardFilter.innerHTML = '<option value="all">Tổng</option>' +
     subjectsForLeaderboard.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
@@ -272,43 +263,83 @@ function renderFieldCheckboxes() {
     return;
   }
 
-  const subjectFilter = el.subjectSelect.value;
-  const visibleFields = subjectFilter === '__all_subjects__'
-    ? allFieldsWithCounts
-    : allFieldsWithCounts.filter(f => parseFieldName(f.field).subject === subjectFilter);
+  // Nhóm các lĩnh vực (sheet) theo Môn — mỗi môn hiện 1 dòng gộp, bấm vào mới xổ ra các bài bên trong
+  const groups = new Map();
+  allFieldsWithCounts.forEach(f => {
+    const { subject, lesson } = parseFieldName(f.field);
+    if (!groups.has(subject)) groups.set(subject, []);
+    groups.get(subject).push({ field: f.field, lesson, count: f.count });
+  });
 
-  const totalCount = visibleFields.reduce((sum, f) => sum + f.count, 0);
-  const allOption = `<label><input type="checkbox" name="field" value="__all__" checked> Tất cả (${totalCount} từ)</label>`;
-  const fieldOptions = visibleFields.map(f => {
-    const label = subjectFilter === '__all_subjects__' ? f.field : parseFieldName(f.field).lesson;
-    return `<label><input type="checkbox" name="field" value="${escapeHtml(f.field)}"> ${escapeHtml(label)} (${f.count} từ)</label>`;
-  }).join('');
-  el.groupList.innerHTML = allOption + fieldOptions;
+  const totalCount = allFieldsWithCounts.reduce((sum, f) => sum + f.count, 0);
+  let html = `<label class="field-row field-all"><input type="checkbox" value="__all__" checked><span>Tất cả (${totalCount} từ)</span></label>`;
 
+  groups.forEach((lessons, subject) => {
+    if (lessons.length === 1) {
+      const l = lessons[0];
+      html += `<label class="field-row"><input type="checkbox" name="field" value="${escapeHtml(l.field)}"><span>${escapeHtml(subject)} (${l.count} từ)</span></label>`;
+      return;
+    }
+
+    const subjectTotal = lessons.reduce((sum, l) => sum + l.count, 0);
+    html += `
+      <div class="subject-group">
+        <div class="field-row subject-row">
+          <input type="checkbox" class="subject-checkbox" data-subject="${escapeHtml(subject)}">
+          <span class="subject-label">${escapeHtml(subject)} (${subjectTotal} từ)</span>
+          <button type="button" class="expand-btn" data-subject="${escapeHtml(subject)}">▸</button>
+        </div>
+        <div class="lesson-list hidden" data-lessons-for="${escapeHtml(subject)}">
+          ${lessons.map(l => `<label class="field-row lesson-row"><input type="checkbox" name="field" value="${escapeHtml(l.field)}" class="lesson-checkbox" data-subject="${escapeHtml(subject)}"><span>${escapeHtml(l.lesson)} (${l.count} từ)</span></label>`).join('')}
+        </div>
+      </div>`;
+  });
+
+  el.groupList.innerHTML = html;
+  bindFieldListEvents();
+}
+
+function bindFieldListEvents() {
   const allCheckbox = el.groupList.querySelector('input[value="__all__"]');
-  const fieldCheckboxes = () => [...el.groupList.querySelectorAll('input[name="field"]:not([value="__all__"])')];
 
   allCheckbox.addEventListener('change', () => {
-    if (allCheckbox.checked) fieldCheckboxes().forEach(cb => cb.checked = false);
+    if (!allCheckbox.checked) return;
+    el.groupList.querySelectorAll('input[name="field"], input.subject-checkbox').forEach(cb => { cb.checked = false; });
   });
-  fieldCheckboxes().forEach(cb => {
+
+  el.groupList.querySelectorAll('.expand-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const subject = btn.dataset.subject;
+      const list = el.groupList.querySelector(`[data-lessons-for="${CSS.escape(subject)}"]`);
+      const willExpand = list.classList.contains('hidden');
+      list.classList.toggle('hidden');
+      btn.textContent = willExpand ? '▾' : '▸';
+    });
+  });
+
+  el.groupList.querySelectorAll('.subject-checkbox').forEach(subCb => {
+    subCb.addEventListener('change', () => {
+      const subject = subCb.dataset.subject;
+      el.groupList.querySelectorAll(`.lesson-checkbox[data-subject="${CSS.escape(subject)}"]`).forEach(c => { c.checked = subCb.checked; });
+      if (subCb.checked) allCheckbox.checked = false;
+    });
+  });
+
+  el.groupList.querySelectorAll('input[name="field"]').forEach(cb => {
     cb.addEventListener('change', () => {
       if (cb.checked) allCheckbox.checked = false;
+      const subject = cb.dataset.subject;
+      if (!subject) return;
+      const siblings = [...el.groupList.querySelectorAll(`.lesson-checkbox[data-subject="${CSS.escape(subject)}"]`)];
+      const subCb = el.groupList.querySelector(`.subject-checkbox[data-subject="${CSS.escape(subject)}"]`);
+      if (subCb) subCb.checked = siblings.every(s => s.checked);
     });
   });
 }
 
 function getSelectedFields() {
   const allCheckbox = el.groupList.querySelector('input[value="__all__"]');
-  const subjectFilter = el.subjectSelect.value;
-
-  if (!allCheckbox || allCheckbox.checked) {
-    if (subjectFilter === '__all_subjects__') return null; // null = tất cả lĩnh vực trên toàn hệ thống
-    // "Tất cả" trong phạm vi 1 môn -> chỉ lấy các bài thuộc môn đó
-    return allFieldsWithCounts
-      .filter(f => parseFieldName(f.field).subject === subjectFilter)
-      .map(f => f.field);
-  }
+  if (!allCheckbox || allCheckbox.checked) return null; // null = tất cả lĩnh vực
   return [...el.groupList.querySelectorAll('input[name="field"]:checked')].map(cb => cb.value);
 }
 
