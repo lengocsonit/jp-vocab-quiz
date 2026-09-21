@@ -139,10 +139,11 @@ function importCsvToField(fieldName, csvText) {
 function doGet(e) {
   var action = e.parameter.action;
   if (action === 'fields') return jsonResponse(getFields());
+  if (action === 'fieldCounts') return jsonResponse(getFieldCounts());
   if (action === 'leaderboard') return jsonResponse(getLeaderboard(e.parameter.field));
   if (action === 'names') return jsonResponse(getAllNames());
   if (action === 'history') return jsonResponse(getHistoryForName(e.parameter.name));
-  return jsonResponse(getWords());
+  return jsonResponse(getWords(e.parameter.field));
 }
 
 function doPost(e) {
@@ -172,13 +173,25 @@ function getFields() {
     .filter(function (name) { return RESERVED_SHEETS.indexOf(name.trim()) === -1; });
 }
 
-// Gộp từ vựng từ tất cả các sheet lĩnh vực, mỗi từ được gắn thêm field = tên sheet
-function getWords() {
-  var fields = getFields();
+// So luong tu theo tung linh vuc (chi doc so dong, khong doc noi dung) de man hinh thiet lap tai nhanh
+function getFieldCounts() {
+  return getFields().map(function (fieldName) {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(fieldName);
+    return { field: fieldName, count: Math.max(sheet.getLastRow() - 1, 0) };
+  });
+}
+
+// Gộp từ vựng từ các sheet lĩnh vực được chọn (fieldFilter dạng "A,B"), hoặc tất cả nếu không truyền.
+// Chỉ đọc đúng sheet cần dùng để tải nhanh hơn khi chỉ chọn 1-2 lĩnh vực.
+function getWords(fieldFilter) {
+  var fields = fieldFilter
+    ? fieldFilter.split(',').map(function (f) { return f.trim(); }).filter(Boolean)
+    : getFields();
   var words = [];
 
   fields.forEach(function (fieldName) {
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(fieldName);
+    if (!sheet) return;
     var values = sheet.getDataRange().getValues();
     if (values.length === 0) return;
 

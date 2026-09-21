@@ -136,8 +136,8 @@ input[type="text"], select {
   cursor: pointer;
 }
 .answer-btn:hover { background: #f5f7fb; }
-.answer-btn.correct { background: #e5f6ea; border-color: #34a853; }
-.answer-btn.wrong { background: #fdecea; border-color: #d33; }
+.answer-btn.correct { border-color: #f2b705; border-width: 2px; padding: 11px; }
+.answer-btn.wrong { border-color: #d33; border-width: 2px; padding: 11px; }
 .answer-btn[disabled] { cursor: default; }
 
 .feedback { border-top: 1px solid #eee; padding-top: 14px; }

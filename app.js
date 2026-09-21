@@ -2,7 +2,6 @@ const NAME_STORAGE_KEY = 'jpquiz_name';
 const NAME_PATTERN = /^[A-Za-z0-9]+$/;
 
 const state = {
-  allWords: [],
   filteredWords: [],
   quizQueue: [],
   currentIndex: 0,
@@ -108,7 +107,7 @@ async function init() {
     if (e.target === el.historyModal) closeHistoryModal();
   });
 
-  await loadWords();
+  await loadFieldCounts();
   loadLeaderboard('all');
   loadNameSuggestions();
 }
@@ -169,14 +168,13 @@ async function loadNameSuggestions() {
   }
 }
 
-async function loadWords() {
+async function loadFieldCounts() {
   try {
-    const res = await fetch(CONFIG.APPS_SCRIPT_URL);
+    const res = await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=fieldCounts`);
     const data = await res.json();
-    state.allWords = data.filter(w => w.word && w.meaning);
-    renderFields();
+    renderFields(data);
   } catch (err) {
-    el.groupList.innerHTML = '<p class="error-text">Không tải được danh sách từ. Kiểm tra lại APPS_SCRIPT_URL trong config.js.</p>';
+    el.groupList.innerHTML = '<p class="error-text">Không tải được danh sách lĩnh vực. Kiểm tra lại APPS_SCRIPT_URL trong config.js.</p>';
   }
 }
 
@@ -238,25 +236,19 @@ function updateLeaderboardVisibility() {
   el.leaderboardWidget.classList.toggle('hidden', !hasLeaderboardData);
 }
 
-function renderFields() {
-  const counts = {};
-  state.allWords.forEach(w => {
-    if (!w.field) return;
-    counts[w.field] = (counts[w.field] || 0) + 1;
-  });
-  const fields = Object.keys(counts);
-
+function renderFields(fieldsWithCounts) {
   // Đổ danh sách lĩnh vực vào bộ lọc xếp hạng (giữ nguyên lựa chọn "Tổng" ở đầu)
   el.leaderboardFilter.innerHTML = '<option value="all">Tổng</option>' +
-    fields.map(f => `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`).join('');
+    fieldsWithCounts.map(f => `<option value="${escapeHtml(f.field)}">${escapeHtml(f.field)}</option>`).join('');
 
-  if (fields.length === 0) {
+  if (fieldsWithCounts.length === 0) {
     el.groupList.innerHTML = '<p class="muted">Chưa có dữ liệu từ vựng.</p>';
     return;
   }
 
-  const allOption = `<label><input type="checkbox" name="field" value="__all__" checked> Tất cả (${state.allWords.length} từ)</label>`;
-  const fieldOptions = fields.map(f => `<label><input type="checkbox" name="field" value="${escapeHtml(f)}"> ${escapeHtml(f)} (${counts[f]} từ)</label>`).join('');
+  const totalCount = fieldsWithCounts.reduce((sum, f) => sum + f.count, 0);
+  const allOption = `<label><input type="checkbox" name="field" value="__all__" checked> Tất cả (${totalCount} từ)</label>`;
+  const fieldOptions = fieldsWithCounts.map(f => `<label><input type="checkbox" name="field" value="${escapeHtml(f.field)}"> ${escapeHtml(f.field)} (${f.count} từ)</label>`).join('');
   el.groupList.innerHTML = allOption + fieldOptions;
 
   const allCheckbox = el.groupList.querySelector('input[value="__all__"]');
@@ -278,7 +270,7 @@ function getSelectedFields() {
   return [...el.groupList.querySelectorAll('input[name="field"]:checked')].map(cb => cb.value);
 }
 
-function startQuiz() {
+async function startQuiz() {
   const name = el.nameInput.value.trim();
   el.nameError.textContent = '';
   el.setupError.textContent = '';
@@ -289,7 +281,27 @@ function startQuiz() {
   }
 
   const selectedFields = getSelectedFields();
-  const pool = selectedFields ? state.allWords.filter(w => selectedFields.includes(w.field)) : state.allWords.slice();
+
+  el.startBtn.disabled = true;
+  el.startBtn.textContent = 'Đang tải câu hỏi...';
+
+  let pool;
+  try {
+    const url = selectedFields
+      ? `${CONFIG.APPS_SCRIPT_URL}?field=${encodeURIComponent(selectedFields.join(','))}`
+      : CONFIG.APPS_SCRIPT_URL;
+    const res = await fetch(url);
+    const data = await res.json();
+    pool = data.filter(w => w.word && w.meaning);
+  } catch (err) {
+    el.startBtn.disabled = false;
+    el.startBtn.textContent = 'Bắt đầu';
+    el.setupError.textContent = 'Không tải được câu hỏi, vui lòng thử lại.';
+    return;
+  }
+
+  el.startBtn.disabled = false;
+  el.startBtn.textContent = 'Bắt đầu';
 
   if (pool.length < 4) {
     el.setupError.textContent = 'Cần ít nhất 4 từ trong lĩnh vực đã chọn để tạo câu hỏi trắc nghiệm.';
