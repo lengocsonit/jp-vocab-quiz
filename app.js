@@ -172,12 +172,18 @@ async function loadNameSuggestions() {
 
 let allFieldsWithCounts = [];
 
-// Tên sheet theo quy ước "Môn - Bài" (vd "BJT - Bài 1") sẽ được nhóm theo Môn.
-// Sheet không có " - " thì tự nó là 1 môn với đúng 1 bài trùng tên.
+// Tên sheet theo quy ước "Môn - Bài" (vd "BJT - Bài 1") hoặc "Môn_Bài" (vd "BJT_P1_S3")
+// sẽ được nhóm theo Môn. Sheet không có dấu phân cách thì tự nó là 1 môn với đúng 1 bài trùng tên.
 function parseFieldName(field) {
-  const idx = field.indexOf(' - ');
-  if (idx === -1) return { subject: field, lesson: field };
-  return { subject: field.slice(0, idx).trim(), lesson: field.slice(idx + 3).trim() };
+  const dashIdx = field.indexOf(' - ');
+  if (dashIdx !== -1) {
+    return { subject: field.slice(0, dashIdx).trim(), lesson: field.slice(dashIdx + 3).trim() };
+  }
+  const underscoreIdx = field.indexOf('_');
+  if (underscoreIdx !== -1) {
+    return { subject: field.slice(0, underscoreIdx).trim(), lesson: field.slice(underscoreIdx + 1).trim() };
+  }
+  return { subject: field, lesson: field };
 }
 
 async function loadFieldCounts() {
@@ -256,9 +262,10 @@ function updateLeaderboardVisibility() {
 }
 
 function renderFieldCheckboxes() {
-  // Bộ lọc xếp hạng luôn liệt kê TOÀN BỘ lĩnh vực, không phụ thuộc môn đang chọn ở đây
+  // Bộ lọc xếp hạng liệt kê theo MÔN (gộp điểm mọi bài cùng môn), không phụ thuộc môn đang chọn ở đây
+  const subjectsForLeaderboard = [...new Set(allFieldsWithCounts.map(f => parseFieldName(f.field).subject))];
   el.leaderboardFilter.innerHTML = '<option value="all">Tổng</option>' +
-    allFieldsWithCounts.map(f => `<option value="${escapeHtml(f.field)}">${escapeHtml(f.field)}</option>`).join('');
+    subjectsForLeaderboard.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
 
   if (allFieldsWithCounts.length === 0) {
     el.groupList.innerHTML = '<p class="muted">Chưa có dữ liệu từ vựng.</p>';
