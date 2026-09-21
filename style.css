@@ -178,26 +178,17 @@ input[type="text"], select {
   box-shadow: 0 4px 16px rgba(0,0,0,0.1);
   font-size: 13px;
 }
-.lb-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.lb-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
 .lb-header h3 { margin: 0; font-size: 14px; white-space: nowrap; }
-
-.lb-filter-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-.lb-pill {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
+.lb-filter-select {
+  padding: 4px 8px;
   font-size: 11px;
-  font-weight: 600;
   border-radius: 20px;
   border: 1px solid #d7dae0;
   background: #f5f7fb;
   color: #565a61;
-  cursor: pointer;
-  white-space: nowrap;
+  max-width: 110px;
 }
-.lb-pill input { margin: 0; }
-.lb-pill:has(input:checked) { background: #2f6fed; border-color: #2f6fed; color: #fff; }
 .leaderboard-widget ol { margin: 0; padding: 0; list-style: none; }
 .leaderboard-widget li {
   display: flex;
@@ -322,8 +313,6 @@ input[type="text"], select {
   .lb-rank { color: #6b6f76; }
   .lb-toggle-btn { border-color: #3a3c40; }
   .lb-toggle-btn:hover { background: #26282c; }
-  .lb-pill { background: #26282c; border-color: #3a3c40; color: #cfd2d8; }
-  .lb-pill:has(input:checked) { background: #2f6fed; border-color: #2f6fed; color: #fff; }
   .modal-box { background: #1f2023; }
   .history-table th, .history-table td { border-color: #3a3c40; }
   .history-table th { color: #9a9ca1; }

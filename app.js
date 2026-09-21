@@ -80,18 +80,9 @@ async function init() {
   el.revealBtn.addEventListener('click', revealAnswers);
   el.nextBtn.addEventListener('click', nextQuestion);
   el.replayBtn.addEventListener('click', () => showScreen('setup'));
-  el.leaderboardFilter.addEventListener('change', (e) => {
-    const target = e.target;
-    if (!target.matches('input[type="checkbox"]')) return;
-    if (!target.checked) {
-      target.checked = true; // luôn phải có đúng 1 lựa chọn đang bật
-      return;
-    }
-    [...el.leaderboardFilter.querySelectorAll('input[type="checkbox"]')].forEach(cb => {
-      if (cb !== target) cb.checked = false;
-    });
+  el.leaderboardFilter.addEventListener('change', () => {
     leaderboardExpanded = false;
-    loadLeaderboard(target.value);
+    loadLeaderboard(el.leaderboardFilter.value);
   });
   el.leaderboardToggle.addEventListener('click', () => {
     leaderboardExpanded = !leaderboardExpanded;
@@ -210,11 +201,6 @@ async function loadLeaderboard(fieldFilter) {
   }
 }
 
-function getSelectedLeaderboardFilter() {
-  const checked = el.leaderboardFilter.querySelector('input[type="checkbox"]:checked');
-  return checked ? checked.value : 'all';
-}
-
 let hasLeaderboardData = false;
 
 function renderLeaderboard(list) {
@@ -261,10 +247,10 @@ function updateLeaderboardVisibility() {
 }
 
 function renderFieldCheckboxes() {
-  // Bộ lọc xếp hạng liệt kê theo MÔN (gộp điểm mọi bài cùng môn), dạng checkbox dán hàng ngang
+  // Bộ lọc xếp hạng liệt kê theo MÔN (gộp điểm mọi bài cùng môn)
   const subjectsForLeaderboard = [...new Set(allFieldsWithCounts.map(f => parseFieldName(f.field).subject))];
-  el.leaderboardFilter.innerHTML = '<label class="lb-pill"><input type="checkbox" value="all" checked> Tổng</label>' +
-    subjectsForLeaderboard.map(s => `<label class="lb-pill"><input type="checkbox" value="${escapeHtml(s)}"> ${escapeHtml(s)}</label>`).join('');
+  el.leaderboardFilter.innerHTML = '<option value="all">Tổng</option>' +
+    subjectsForLeaderboard.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
 
   if (allFieldsWithCounts.length === 0) {
     el.groupList.innerHTML = '<p class="muted">Chưa có dữ liệu từ vựng.</p>';
@@ -593,7 +579,7 @@ async function submitResult(durationSeconds) {
         entries,
       }),
     });
-    loadLeaderboard(getSelectedLeaderboardFilter());
+    loadLeaderboard(el.leaderboardFilter.value);
     loadNameSuggestions();
   } catch (err) {
     // không chặn người dùng nếu ghi lịch sử thất bại

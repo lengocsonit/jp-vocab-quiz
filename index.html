@@ -5,16 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ôn từ vựng tiếng Nhật</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
-<link rel="stylesheet" href="style.css?v=15">
+<link rel="stylesheet" href="style.css?v=16">
 </head>
 <body>
 
 <div id="leaderboard-widget" class="leaderboard-widget hidden">
   <div class="lb-header">
     <h3>🏆 Bảng xếp hạng</h3>
-  </div>
-  <div id="leaderboard-filter" class="lb-filter-pills">
-    <label class="lb-pill"><input type="checkbox" value="all" checked> Tổng</label>
+    <select id="leaderboard-filter" class="lb-filter-select">
+      <option value="all">Tổng</option>
+    </select>
   </div>
   <ol id="leaderboard-list"></ol>
   <button id="leaderboard-toggle" class="lb-toggle-btn hidden">Xem thêm</button>
@@ -133,6 +133,6 @@
 </main>
 
 <script src="config.js?v=2"></script>
-<script src="app.js?v=16"></script>
+<script src="app.js?v=17"></script>
 </body>
 </html>
