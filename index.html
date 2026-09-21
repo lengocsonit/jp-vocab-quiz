@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ôn từ vựng tiếng Nhật</title>
-<link rel="stylesheet" href="style.css?v=7">
+<link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 
@@ -61,10 +61,6 @@
       </div>
     </div>
 
-    <div class="field">
-      <label class="checkbox-row"><input type="checkbox" id="auto-advance-checkbox" checked> Tự động chuyển câu sau 3 giây khi đã trả lời</label>
-    </div>
-
     <p class="error-text" id="setup-error"></p>
     <button id="start-btn" class="primary-btn">Bắt đầu</button>
   </section>
@@ -76,7 +72,10 @@
       <span id="quiz-timer">⏱ 00:00</span>
     </div>
 
-    <button id="toggle-reading-btn" class="link-btn">👁 Hiện cách đọc</button>
+    <div class="quiz-settings-row">
+      <button id="toggle-reading-btn" class="link-btn">👁 Hiện cách đọc</button>
+      <label class="checkbox-row small"><input type="checkbox" id="auto-advance-checkbox" checked> Tự động chuyển câu (3s)</label>
+    </div>
 
     <div class="question-card">
       <div id="question-text" class="question-text"></div>
@@ -114,6 +113,6 @@
 </main>
 
 <script src="config.js?v=2"></script>
-<script src="app.js?v=7"></script>
+<script src="app.js?v=8"></script>
 </body>
 </html>

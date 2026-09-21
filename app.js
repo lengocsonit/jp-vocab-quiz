@@ -70,6 +70,15 @@ async function init() {
   el.replayBtn.addEventListener('click', () => showScreen('setup'));
   el.leaderboardFilter.addEventListener('change', () => loadLeaderboard(el.leaderboardFilter.value));
   el.toggleReadingBtn.addEventListener('click', toggleReading);
+  el.autoAdvanceCheckbox.addEventListener('change', () => {
+    state.autoAdvance = el.autoAdvanceCheckbox.checked;
+    if (!state.autoAdvance && state.autoAdvanceTimer) {
+      clearAutoAdvanceTimer();
+      el.nextBtn.textContent = 'Câu tiếp theo';
+    } else if (state.autoAdvance && !el.feedback.classList.contains('hidden') && !state.autoAdvanceTimer) {
+      startAutoAdvanceCountdown();
+    }
+  });
 
   await loadWords();
   loadLeaderboard('all');

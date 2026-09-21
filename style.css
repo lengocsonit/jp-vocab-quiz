@@ -47,6 +47,17 @@ input[type="text"], select {
 .radio-row label { display: flex; align-items: center; gap: 8px; font-weight: 400; font-size: 14px; }
 
 .checkbox-row { display: flex; align-items: center; gap: 8px; font-weight: 400; font-size: 14px; }
+.checkbox-row.small { font-size: 13px; gap: 6px; }
+
+.quiz-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.quiz-settings-row .link-btn { padding: 0; margin: 0; }
 
 .muted { color: #8a8d93; font-size: 13px; margin: 0; }
 
