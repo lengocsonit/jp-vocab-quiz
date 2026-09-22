@@ -1,6 +1,6 @@
 const NAME_STORAGE_KEY = 'jpquiz_name';
 const NAME_PATTERN = /^[A-Za-z0-9]+$/;
-const MARKED_WORD_WEIGHT = 3; // từ đã đánh dấu "ôn lại" có xác suất được chọn cao gấp ~3 lần
+const MAX_PRIORITY_SHARE = 0.3; // từ trong danh sách ưu tiên chiếm tối đa 30% số câu 1 lượt chơi, tránh độc chiếm cả bài
 
 const state = {
   filteredWords: [],
@@ -402,7 +402,7 @@ async function startQuiz() {
   const count = countValue === 'all' ? pool.length : Math.min(Number(countValue), pool.length);
 
   const direction = document.querySelector('input[name="direction"]:checked').value;
-  const selected = weightedSample(pool, count, word => state.markedWords.has(wordMarkKey(word)), MARKED_WORD_WEIGHT);
+  const selected = buildQuizSelection(pool, count, word => state.markedWords.has(wordMarkKey(word)));
   state.quizQueue = selected.map(word => ({
     word,
     direction: direction === 'mix' ? (Math.random() < 0.5 ? 'jp2meaning' : 'meaning2jp') : direction,
@@ -499,6 +499,32 @@ async function toggleMarkCurrentWord() {
   }
 }
 
+// Ghi nhan ket qua tra loi de cap nhat danh sach uu tien phia server: sai -> tu dong vao danh sach
+// (reset streak); dung -> neu dang trong danh sach thi tang streak, du 3 lan dung lien tiep thi tu dong go ra.
+async function recordAnswerForPriority(word, isCorrect) {
+  const key = wordMarkKey(word);
+  try {
+    const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        type: 'recordAnswer',
+        name: state.playerName,
+        field: word.field,
+        wordId: word.id,
+        correct: isCorrect,
+      }),
+    });
+    const result = await res.json();
+    if (result.inPriority) state.markedWords.add(key); else state.markedWords.delete(key);
+
+    const currentItem = state.quizQueue[state.currentIndex];
+    if (currentItem && currentItem.word === word) updateMarkButtonDisplay();
+  } catch (err) {
+    // lỗi mạng thì thôi, không chặn người dùng làm tiếp
+  }
+}
+
 function toggleReading() {
   state.showReading = !state.showReading;
   el.toggleReadingBtn.textContent = state.showReading ? '🙈 Ẩn cách đọc' : '👁 Hiện cách đọc';
@@ -565,6 +591,8 @@ function selectAnswer(choice, correctValue, btnEl) {
   el.feedbackExample.textContent = item.word.example ? `Ví dụ: ${item.word.example}` : '';
   el.feedbackExampleMeaning.textContent = item.word.example_meaning ? `Nghĩa: ${item.word.example_meaning}` : '';
   el.feedback.classList.remove('hidden');
+
+  recordAnswerForPriority(item.word, isCorrect);
 
   if (state.autoAdvance) startAutoAdvanceCountdown();
 }
@@ -658,15 +686,21 @@ function shuffle(arr) {
   return arr;
 }
 
-// Lay ngau nhien "count" phan tu tu "items", uu tien nhung phan tu co trong so cao hon
-// (thuat toan A-Res: moi phan tu gan key = random^(1/trong so), sap giam dan, lay top-k).
-function weightedSample(items, count, isPriorityFn, priorityWeight) {
-  const keyed = items.map(item => {
-    const weight = isPriorityFn(item) ? priorityWeight : 1;
-    return { item, key: Math.pow(Math.random(), 1 / weight) };
-  });
-  keyed.sort((a, b) => b.key - a.key);
-  return keyed.slice(0, count).map(k => k.item);
+// Chon "count" tu de tao cau hoi, uu tien tu trong danh sach uu tien nhung KHONG QUA
+// MAX_PRIORITY_SHARE (mac dinh 50%) tong so cau, tranh viec chung chiem het ca bai.
+// Trong pham vi gioi han do, tu nao duoc chon van hoan toan ngau nhien (khong co dinh).
+function buildQuizSelection(items, count, isPriorityFn) {
+  const priorityItems = items.filter(isPriorityFn);
+  const normalItems = items.filter(item => !isPriorityFn(item));
+
+  const maxPriorityCount = Math.floor(count * MAX_PRIORITY_SHARE);
+  const priorityCount = Math.min(priorityItems.length, maxPriorityCount, count);
+
+  const chosenPriority = shuffle(priorityItems.slice()).slice(0, priorityCount);
+  const remaining = count - chosenPriority.length;
+  const chosenNormal = shuffle(normalItems.slice()).slice(0, remaining);
+
+  return shuffle([...chosenPriority, ...chosenNormal]);
 }
 
 function escapeHtml(str) {

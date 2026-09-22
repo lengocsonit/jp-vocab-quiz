@@ -56,7 +56,10 @@ Repo này đã sẵn sàng cho GitHub Pages:
 - Mỗi lượt chơi tự ghi vào tab `History` — nếu 1 lượt chơi gồm nhiều lĩnh vực (chọn nhiều lĩnh vực cùng lúc), mỗi lĩnh vực được ghi thành 1 dòng riêng để tính điểm theo từng lĩnh vực chính xác.
 - Bảng xếp hạng Top 10 (góc phải trang chủ) cộng dồn điểm theo tên qua tất cả các lượt chơi. Mặc định xem theo **Tổng** (cộng dồn mọi lĩnh vực), có thể đổi dropdown để xem xếp hạng riêng theo từng lĩnh vực.
 - Tên người chơi chỉ chấp nhận chữ cái A-Z, a-z và số.
-- Ở mỗi câu, có nút **"☆ Đánh dấu ôn lại"** — bấm để đánh dấu từ đó là khó nhớ. Ở các lượt chơi sau (cùng tên), từ đã đánh dấu có xác suất được chọn ra cao hơn (~3 lần) so với từ chưa đánh dấu, giúp lặp lại nhiều hơn những từ hay quên. Bấm lại nút để bỏ đánh dấu. Dữ liệu này tự lưu vào tab `MarkedWords` (tự tạo, không cần thiết lập gì thêm), theo từng tên riêng.
+- **Danh sách ưu tiên (ôn lại từ khó nhớ)**, lưu riêng theo từng tên vào tab `MarkedWords` (tự tạo, không cần thiết lập gì thêm):
+  - Một từ vào danh sách ưu tiên theo 2 cách: **tự động** khi trả lời sai, hoặc **thủ công** bấm nút "☆ Đánh dấu ôn lại" ở mỗi câu.
+  - Trả lời **đúng liên tiếp 3 lần** một từ đang trong danh sách ưu tiên → tự động gỡ khỏi danh sách (coi như đã thuộc). Trả lời **sai** bất kỳ lúc nào → về lại từ đầu (cần đúng thêm 3 lần liên tiếp nữa).
+  - Ở các lượt chơi sau, từ trong danh sách ưu tiên được ưu tiên chọn ra nhiều hơn, nhưng **tối đa chỉ chiếm 30% số câu** trong 1 lượt chơi — tránh việc chúng chiếm hết cả bài, phần còn lại luôn là từ bình thường được chọn ngẫu nhiên.
 
 ## Cấu trúc thư mục
 

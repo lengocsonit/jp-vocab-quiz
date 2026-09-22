@@ -158,6 +158,9 @@ function doPost(e) {
   if (data.type === 'toggleMark') {
     return jsonResponse(toggleMark(data.name, data.field, data.wordId));
   }
+  if (data.type === 'recordAnswer') {
+    return jsonResponse(recordAnswerForPriority(data.name, data.field, data.wordId, !!data.correct));
+  }
 
   var entries = data.entries || [];
   var duration = Number(data.durationSeconds) || 0;
@@ -329,32 +332,75 @@ function getAllNames() {
   return Object.keys(seen);
 }
 
-// Sheet luu danh sach tu duoc danh dau "on lai" theo tung ten, tu tao neu chua co
+// Sheet luu danh sach tu uu tien "on lai" theo tung ten, tu tao neu chua co.
+// Cot: name | field | word_id | updated_at | correct_streak
+// Mot tu vao danh sach nay do: (a) nguoi dung tu bam nut danh dau, hoac (b) tra loi sai tu dong them vao.
+// Tra loi dung lien tiep 3 lan (correct_streak dat 3) trong khi dang o danh sach uu tien -> tu dong go ra.
+// Tra loi sai bat ky luc nao -> reset correct_streak ve 0 (van nam trong danh sach).
 function getMarkedSheet() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(MARKED_SHEET);
   if (!sheet) {
     sheet = ss.insertSheet(MARKED_SHEET);
-    sheet.appendRow(['name', 'field', 'word_id', 'marked_at']);
+    sheet.appendRow(['name', 'field', 'word_id', 'updated_at', 'correct_streak']);
     sheet.setFrozenRows(1);
   }
   return sheet;
 }
 
-// Bat/tat danh dau 1 tu cho 1 ten. Da danh dau -> bo danh dau; chua co -> them vao.
+function findMarkedRow(values, name, field, wordId) {
+  for (var i = 1; i < values.length; i++) {
+    if (values[i][0] === name && values[i][1] === field && String(values[i][2]) === String(wordId)) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+// Bat/tat danh dau tay 1 tu cho 1 ten. Da co trong danh sach -> go ra; chua co -> them vao (streak = 0).
 function toggleMark(name, field, wordId) {
   var sheet = getMarkedSheet();
   var values = sheet.getDataRange().getValues();
+  var rowIndex = findMarkedRow(values, name, field, wordId);
 
-  for (var i = 1; i < values.length; i++) {
-    if (values[i][0] === name && values[i][1] === field && String(values[i][2]) === String(wordId)) {
-      sheet.deleteRow(i + 1);
-      return { marked: false };
-    }
+  if (rowIndex !== -1) {
+    sheet.deleteRow(rowIndex + 1);
+    return { marked: false };
   }
 
-  sheet.appendRow([name, field, wordId, new Date()]);
+  sheet.appendRow([name, field, wordId, new Date(), 0]);
   return { marked: true };
+}
+
+// Ghi nhan ket qua tra loi 1 tu de cap nhat danh sach uu tien.
+// Sai -> dam bao tu co mat trong danh sach, reset streak ve 0.
+// Dung -> neu tu dang trong danh sach thi tang streak; dat 3 thi go ra (da thanh thao).
+function recordAnswerForPriority(name, field, wordId, isCorrect) {
+  var sheet = getMarkedSheet();
+  var values = sheet.getDataRange().getValues();
+  var rowIndex = findMarkedRow(values, name, field, wordId);
+
+  if (!isCorrect) {
+    if (rowIndex === -1) {
+      sheet.appendRow([name, field, wordId, new Date(), 0]);
+    } else {
+      sheet.getRange(rowIndex + 1, 4, 1, 2).setValues([[new Date(), 0]]);
+    }
+    return { inPriority: true };
+  }
+
+  if (rowIndex === -1) {
+    return { inPriority: false }; // tu binh thuong, khong o trong danh sach uu tien
+  }
+
+  var newStreak = (Number(values[rowIndex][4]) || 0) + 1;
+  if (newStreak >= 3) {
+    sheet.deleteRow(rowIndex + 1);
+    return { inPriority: false };
+  }
+
+  sheet.getRange(rowIndex + 1, 4, 1, 2).setValues([[new Date(), newStreak]]);
+  return { inPriority: true };
 }
 
 // Danh sach {field, wordId} da duoc 1 ten danh dau "on lai", dung de tang xac suat xuat hien
