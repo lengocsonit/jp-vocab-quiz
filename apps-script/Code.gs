@@ -7,6 +7,7 @@ var HISTORY_SHEET = 'History';
 var MARKED_SHEET = 'MarkedWords';
 var RESERVED_SHEETS = ['History', 'MarkedWords'];
 var FIELD_COLUMNS = ['id', 'word', 'reading', 'meaning', 'example', 'example_meaning'];
+var PRIORITY_GRADUATE_STREAK = 2; // dung lien tiep bao nhieu lan thi tu dong go khoi danh sach uu tien
 
 // Thêm menu "Từ vựng" mỗi khi mở Google Sheet, để tạo lĩnh vực mới bằng 1 click
 // thay vì phải tự tạo tab và gõ tay đúng tên cột.
@@ -335,7 +336,7 @@ function getAllNames() {
 // Sheet luu danh sach tu uu tien "on lai" theo tung ten, tu tao neu chua co.
 // Cot: name | field | word_id | updated_at | correct_streak
 // Mot tu vao danh sach nay do: (a) nguoi dung tu bam nut danh dau, hoac (b) tra loi sai tu dong them vao.
-// Tra loi dung lien tiep 3 lan (correct_streak dat 3) trong khi dang o danh sach uu tien -> tu dong go ra.
+// Tra loi dung lien tiep PRIORITY_GRADUATE_STREAK lan trong khi dang o danh sach uu tien -> tu dong go ra.
 // Tra loi sai bat ky luc nao -> reset correct_streak ve 0 (van nam trong danh sach).
 function getMarkedSheet() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -374,7 +375,7 @@ function toggleMark(name, field, wordId) {
 
 // Ghi nhan ket qua tra loi 1 tu de cap nhat danh sach uu tien.
 // Sai -> dam bao tu co mat trong danh sach, reset streak ve 0.
-// Dung -> neu tu dang trong danh sach thi tang streak; dat 3 thi go ra (da thanh thao).
+// Dung -> neu tu dang trong danh sach thi tang streak; dat PRIORITY_GRADUATE_STREAK thi go ra (da thanh thao).
 function recordAnswerForPriority(name, field, wordId, isCorrect) {
   var sheet = getMarkedSheet();
   var values = sheet.getDataRange().getValues();
@@ -394,7 +395,7 @@ function recordAnswerForPriority(name, field, wordId, isCorrect) {
   }
 
   var newStreak = (Number(values[rowIndex][4]) || 0) + 1;
-  if (newStreak >= 3) {
+  if (newStreak >= PRIORITY_GRADUATE_STREAK) {
     sheet.deleteRow(rowIndex + 1);
     return { inPriority: false };
   }

@@ -58,7 +58,7 @@ Repo này đã sẵn sàng cho GitHub Pages:
 - Tên người chơi chỉ chấp nhận chữ cái A-Z, a-z và số.
 - **Danh sách ưu tiên (ôn lại từ khó nhớ)**, lưu riêng theo từng tên vào tab `MarkedWords` (tự tạo, không cần thiết lập gì thêm):
   - Một từ vào danh sách ưu tiên theo 2 cách: **tự động** khi trả lời sai, hoặc **thủ công** bấm nút "☆ Đánh dấu ôn lại" ở mỗi câu.
-  - Trả lời **đúng liên tiếp 3 lần** một từ đang trong danh sách ưu tiên → tự động gỡ khỏi danh sách (coi như đã thuộc). Trả lời **sai** bất kỳ lúc nào → về lại từ đầu (cần đúng thêm 3 lần liên tiếp nữa).
+  - Trả lời **đúng liên tiếp 2 lần** một từ đang trong danh sách ưu tiên → tự động gỡ khỏi danh sách (coi như đã thuộc). Trả lời **sai** bất kỳ lúc nào → về lại từ đầu (cần đúng thêm 2 lần liên tiếp nữa).
   - Ở các lượt chơi sau, từ trong danh sách ưu tiên được ưu tiên chọn ra nhiều hơn, nhưng **tối đa chỉ chiếm 30% số câu** trong 1 lượt chơi — tránh việc chúng chiếm hết cả bài, phần còn lại luôn là từ bình thường được chọn ngẫu nhiên.
 
 ## Cấu trúc thư mục
