@@ -56,6 +56,7 @@ Repo này đã sẵn sàng cho GitHub Pages:
 - Mỗi lượt chơi tự ghi vào tab `History` — nếu 1 lượt chơi gồm nhiều lĩnh vực (chọn nhiều lĩnh vực cùng lúc), mỗi lĩnh vực được ghi thành 1 dòng riêng để tính điểm theo từng lĩnh vực chính xác.
 - Bảng xếp hạng Top 10 (góc phải trang chủ) cộng dồn điểm theo tên qua tất cả các lượt chơi. Mặc định xem theo **Tổng** (cộng dồn mọi lĩnh vực), có thể đổi dropdown để xem xếp hạng riêng theo từng lĩnh vực.
 - Tên người chơi chỉ chấp nhận chữ cái A-Z, a-z và số.
+- Ở mỗi câu, có nút **"☆ Đánh dấu ôn lại"** — bấm để đánh dấu từ đó là khó nhớ. Ở các lượt chơi sau (cùng tên), từ đã đánh dấu có xác suất được chọn ra cao hơn (~3 lần) so với từ chưa đánh dấu, giúp lặp lại nhiều hơn những từ hay quên. Bấm lại nút để bỏ đánh dấu. Dữ liệu này tự lưu vào tab `MarkedWords` (tự tạo, không cần thiết lập gì thêm), theo từng tên riêng.
 
 ## Cấu trúc thư mục
 

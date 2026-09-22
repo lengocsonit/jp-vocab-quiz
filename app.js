@@ -1,5 +1,6 @@
 const NAME_STORAGE_KEY = 'jpquiz_name';
 const NAME_PATTERN = /^[A-Za-z0-9]+$/;
+const MARKED_WORD_WEIGHT = 3; // từ đã đánh dấu "ôn lại" có xác suất được chọn cao gấp ~3 lần
 
 const state = {
   filteredWords: [],
@@ -15,6 +16,7 @@ const state = {
   quizStartTime: 0,
   timerInterval: null,
   autoAdvanceTimer: null,
+  markedWords: new Set(), // key = `${field}|${wordId}`
 };
 
 const el = {
@@ -34,6 +36,7 @@ const el = {
   quizTimer: document.getElementById('quiz-timer'),
   autoAdvanceCheckbox: document.getElementById('auto-advance-checkbox'),
   toggleReadingBtn: document.getElementById('toggle-reading-btn'),
+  markWordBtn: document.getElementById('mark-word-btn'),
   questionText: document.getElementById('question-text'),
   questionReading: document.getElementById('question-reading'),
   revealBtn: document.getElementById('reveal-btn'),
@@ -89,6 +92,7 @@ async function init() {
     renderLeaderboard(lastLeaderboardList);
   });
   el.toggleReadingBtn.addEventListener('click', toggleReading);
+  el.markWordBtn.addEventListener('click', toggleMarkCurrentWord);
   el.autoAdvanceCheckbox.addEventListener('change', () => {
     state.autoAdvance = el.autoAdvanceCheckbox.checked;
     if (!state.autoAdvance && state.autoAdvanceTimer) {
@@ -165,6 +169,17 @@ async function loadNameSuggestions() {
     el.nameSuggestions.innerHTML = names.map(n => `<option value="${escapeHtml(n)}"></option>`).join('');
   } catch (err) {
     // im lặng bỏ qua nếu chưa lấy được danh sách tên gợi ý
+  }
+}
+
+// Lay danh sach tu (field+id) ma "name" nay da danh dau "on lai" o cac lan choi truoc
+async function loadMarkedWords(name) {
+  try {
+    const res = await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=markedWords&name=${encodeURIComponent(name)}`);
+    const marked = await res.json();
+    return new Set(marked.map(m => `${m.field}|${m.wordId}`));
+  } catch (err) {
+    return new Set();
   }
 }
 
@@ -381,12 +396,14 @@ async function startQuiz() {
   state.playerName = name;
   state.filteredWords = pool;
 
+  state.markedWords = await loadMarkedWords(name);
+
   const countValue = el.countSelect.value;
   const count = countValue === 'all' ? pool.length : Math.min(Number(countValue), pool.length);
 
   const direction = document.querySelector('input[name="direction"]:checked').value;
-  const shuffled = shuffle(pool.slice()).slice(0, count);
-  state.quizQueue = shuffled.map(word => ({
+  const selected = weightedSample(pool, count, word => state.markedWords.has(wordMarkKey(word)), MARKED_WORD_WEIGHT);
+  state.quizQueue = selected.map(word => ({
     word,
     direction: direction === 'mix' ? (Math.random() < 0.5 ? 'jp2meaning' : 'meaning2jp') : direction,
   }));
@@ -440,6 +457,46 @@ function renderQuestion() {
 
   el.questionText.textContent = item.direction === 'jp2meaning' ? item.word.word : item.word.meaning;
   updateReadingDisplay();
+  updateMarkButtonDisplay();
+}
+
+function wordMarkKey(word) {
+  return `${word.field}|${word.id}`;
+}
+
+function updateMarkButtonDisplay() {
+  const item = state.quizQueue[state.currentIndex];
+  if (!item) return;
+  const marked = state.markedWords.has(wordMarkKey(item.word));
+  el.markWordBtn.textContent = marked ? '★ Đã đánh dấu ôn lại' : '☆ Đánh dấu ôn lại';
+  el.markWordBtn.classList.toggle('marked', marked);
+}
+
+async function toggleMarkCurrentWord() {
+  const item = state.quizQueue[state.currentIndex];
+  if (!item) return;
+  const key = wordMarkKey(item.word);
+  const willMark = !state.markedWords.has(key);
+
+  el.markWordBtn.disabled = true;
+  try {
+    await fetch(CONFIG.APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        type: 'toggleMark',
+        name: state.playerName,
+        field: item.word.field,
+        wordId: item.word.id,
+      }),
+    });
+    if (willMark) state.markedWords.add(key); else state.markedWords.delete(key);
+    updateMarkButtonDisplay();
+  } catch (err) {
+    // lỗi mạng thì thôi, không chặn người dùng làm tiếp
+  } finally {
+    el.markWordBtn.disabled = false;
+  }
 }
 
 function toggleReading() {
@@ -599,6 +656,17 @@ function shuffle(arr) {
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;
+}
+
+// Lay ngau nhien "count" phan tu tu "items", uu tien nhung phan tu co trong so cao hon
+// (thuat toan A-Res: moi phan tu gan key = random^(1/trong so), sap giam dan, lay top-k).
+function weightedSample(items, count, isPriorityFn, priorityWeight) {
+  const keyed = items.map(item => {
+    const weight = isPriorityFn(item) ? priorityWeight : 1;
+    return { item, key: Math.pow(Math.random(), 1 / weight) };
+  });
+  keyed.sort((a, b) => b.key - a.key);
+  return keyed.slice(0, count).map(k => k.item);
 }
 
 function escapeHtml(str) {

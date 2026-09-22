@@ -136,6 +136,9 @@ input[type="text"], select {
 }
 .link-btn:hover { text-decoration: underline; }
 
+.mark-btn { display: block; margin-bottom: 12px; color: #8a8d93; }
+.mark-btn.marked { color: #d6a018; }
+
 .question-card {
   background: #f5f7fb;
   border-radius: 10px;

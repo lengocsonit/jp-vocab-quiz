@@ -4,7 +4,8 @@
 // Ngoài ra cần 1 sheet tên "History" để lưu lịch sử làm bài (xem README).
 
 var HISTORY_SHEET = 'History';
-var RESERVED_SHEETS = ['History'];
+var MARKED_SHEET = 'MarkedWords';
+var RESERVED_SHEETS = ['History', 'MarkedWords'];
 var FIELD_COLUMNS = ['id', 'word', 'reading', 'meaning', 'example', 'example_meaning'];
 
 // Thêm menu "Từ vựng" mỗi khi mở Google Sheet, để tạo lĩnh vực mới bằng 1 click
@@ -147,11 +148,17 @@ function doGet(e) {
   if (action === 'leaderboard') return jsonResponse(getLeaderboard(e.parameter.field));
   if (action === 'names') return jsonResponse(getAllNames());
   if (action === 'history') return jsonResponse(getHistoryForName(e.parameter.name));
+  if (action === 'markedWords') return jsonResponse(getMarkedWordsForName(e.parameter.name));
   return jsonResponse(getWords(e.parameter.field));
 }
 
 function doPost(e) {
   var data = JSON.parse(e.postData.contents);
+
+  if (data.type === 'toggleMark') {
+    return jsonResponse(toggleMark(data.name, data.field, data.wordId));
+  }
+
   var entries = data.entries || [];
   var duration = Number(data.durationSeconds) || 0;
   var timestamp = new Date(); // dung 1 moc thoi gian cho ca luot choi, du co nhieu linh vuc
@@ -320,6 +327,45 @@ function getAllNames() {
   });
 
   return Object.keys(seen);
+}
+
+// Sheet luu danh sach tu duoc danh dau "on lai" theo tung ten, tu tao neu chua co
+function getMarkedSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(MARKED_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(MARKED_SHEET);
+    sheet.appendRow(['name', 'field', 'word_id', 'marked_at']);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+// Bat/tat danh dau 1 tu cho 1 ten. Da danh dau -> bo danh dau; chua co -> them vao.
+function toggleMark(name, field, wordId) {
+  var sheet = getMarkedSheet();
+  var values = sheet.getDataRange().getValues();
+
+  for (var i = 1; i < values.length; i++) {
+    if (values[i][0] === name && values[i][1] === field && String(values[i][2]) === String(wordId)) {
+      sheet.deleteRow(i + 1);
+      return { marked: false };
+    }
+  }
+
+  sheet.appendRow([name, field, wordId, new Date()]);
+  return { marked: true };
+}
+
+// Danh sach {field, wordId} da duoc 1 ten danh dau "on lai", dung de tang xac suat xuat hien
+function getMarkedWordsForName(name) {
+  var sheet = getMarkedSheet();
+  var values = sheet.getDataRange().getValues();
+  values.shift(); // bo header
+
+  return values
+    .filter(function (row) { return row[0] === name; })
+    .map(function (row) { return { field: row[1], wordId: String(row[2]) }; });
 }
 
 function jsonResponse(obj) {
