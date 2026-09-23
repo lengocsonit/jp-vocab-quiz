@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ôn từ vựng tiếng Nhật</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
-<link rel="stylesheet" href="style.css?v=18">
+<link rel="stylesheet" href="style.css?v=19">
 </head>
 <body>
 
@@ -55,6 +55,14 @@
     </div>
 
     <div class="field">
+      <label>Chế độ</label>
+      <div class="radio-row mode-row">
+        <label><input type="radio" name="mode" value="vocab" checked> 📚 Ôn từ vựng</label>
+        <label><input type="radio" name="mode" value="test"> 📝 Làm bài test</label>
+      </div>
+    </div>
+
+    <div class="field">
       <label>Chọn lĩnh vực</label>
       <div id="group-list" class="group-list">
         <div class="loading-row"><span class="spinner"></span> Đang tải danh sách từ...</div>
@@ -62,17 +70,17 @@
     </div>
 
     <div class="field">
-      <label for="count-select">Số từ muốn ôn</label>
+      <label id="count-label" for="count-select">Số từ muốn ôn</label>
       <select id="count-select">
-        <option value="10">10 từ</option>
-        <option value="20">20 từ</option>
-        <option value="30">30 từ</option>
-        <option value="50">50 từ</option>
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="30">30</option>
+        <option value="50">50</option>
         <option value="all">Toàn bộ lĩnh vực đã chọn</option>
       </select>
     </div>
 
-    <div class="field">
+    <div class="field" id="direction-field">
       <label>Hướng câu hỏi</label>
       <div class="radio-row">
         <label><input type="radio" name="direction" value="jp2meaning" checked> Từ Nhật → Nghĩa</label>
@@ -125,7 +133,7 @@
     <p id="result-time"></p>
 
     <div id="wrong-list-wrap" class="hidden">
-      <h3>Các từ trả lời sai</h3>
+      <h3 id="wrong-list-title">Các từ trả lời sai</h3>
       <ul id="wrong-list"></ul>
     </div>
 
@@ -135,6 +143,6 @@
 </main>
 
 <script src="config.js?v=2"></script>
-<script src="app.js?v=19"></script>
+<script src="app.js?v=20"></script>
 </body>
 </html>

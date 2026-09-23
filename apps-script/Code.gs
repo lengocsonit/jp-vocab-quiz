@@ -1,12 +1,15 @@
 // Dán toàn bộ file này vào Apps Script (Extensions > Apps Script) của Google Sheet
 // Mỗi lĩnh vực (BJT, IT Passport, SG, FE, ...) là 1 sheet riêng, tên sheet = tên lĩnh vực.
-// Mỗi sheet lĩnh vực cần cột: word | reading | meaning | example | example_meaning
+// Có 2 loại sheet, tự nhận diện qua dòng tiêu đề (không cần đặt tên theo quy ước riêng):
+//   - Sheet Từ vựng: cột word | reading | meaning | example | example_meaning
+//   - Sheet Test trắc nghiệm: cột question | choice1 | choice2 | choice3 | choice4 | correct | explanation
 // Ngoài ra cần 1 sheet tên "History" để lưu lịch sử làm bài (xem README).
 
 var HISTORY_SHEET = 'History';
 var MARKED_SHEET = 'MarkedWords';
 var RESERVED_SHEETS = ['History', 'MarkedWords'];
 var FIELD_COLUMNS = ['id', 'word', 'reading', 'meaning', 'example', 'example_meaning'];
+var TEST_COLUMNS = ['id', 'question', 'choice1', 'choice2', 'choice3', 'choice4', 'correct', 'explanation'];
 var PRIORITY_GRADUATE_STREAK = 2; // dung lien tiep bao nhieu lan thi tu dong go khoi danh sach uu tien
 
 // Thêm menu "Từ vựng" mỗi khi mở Google Sheet, để tạo lĩnh vực mới bằng 1 click
@@ -44,13 +47,22 @@ function addNewField() {
     return;
   }
 
-  var sheet = ss.insertSheet(name);
-  sheet.appendRow(FIELD_COLUMNS);
-  sheet.getRange(1, 1, 1, FIELD_COLUMNS.length).setFontWeight('bold');
-  sheet.setFrozenRows(1);
-  sheet.autoResizeColumns(1, FIELD_COLUMNS.length);
+  var typeResponse = ui.prompt(
+    'Loại lĩnh vực',
+    'Gõ "1" cho Từ vựng, "2" cho Test trắc nghiệm (để trống = Từ vựng):',
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (typeResponse.getSelectedButton() !== ui.Button.OK) return;
+  var isTest = typeResponse.getResponseText().trim() === '2';
+  var columns = isTest ? TEST_COLUMNS : FIELD_COLUMNS;
 
-  ui.alert('Đã tạo lĩnh vực "' + name + '". Nhập từ vựng vào sheet này — trang web sẽ tự nhận lĩnh vực mới, không cần sửa code hay deploy lại.');
+  var sheet = ss.insertSheet(name);
+  sheet.appendRow(columns);
+  sheet.getRange(1, 1, 1, columns.length).setFontWeight('bold');
+  sheet.setFrozenRows(1);
+  sheet.autoResizeColumns(1, columns.length);
+
+  ui.alert('Đã tạo lĩnh vực "' + name + '" (' + (isTest ? 'Test trắc nghiệm' : 'Từ vựng') + '). Nhập dữ liệu vào sheet này — trang web sẽ tự nhận lĩnh vực mới, không cần sửa code hay deploy lại.');
 }
 
 // Mở hộp thoại cho phép dán nội dung CSV (id,word,reading,meaning,example,example_meaning)
@@ -77,7 +89,7 @@ function showImportCsvDialog() {
     optionsHtml +
     '</select>' +
     '<input type="text" id="newFieldName" placeholder="Tên lĩnh vực mới, vd: BJT - Bài 3">' +
-    '<label>Dán nội dung CSV (dòng đầu là tiêu đề: id,word,reading,meaning,example,example_meaning)</label>' +
+    '<label>Dán nội dung CSV — Từ vựng: id,word,reading,meaning,example,example_meaning — hoặc Test: id,question,choice1,choice2,choice3,choice4,correct,explanation (tự nhận diện qua dòng tiêu đề)</label>' +
     '<textarea id="csvContent" placeholder="id,word,reading,meaning,example,example_meaning"></textarea>' +
     '<button onclick="doImport()">Import</button>' +
     '<div id="msg"></div>' +
@@ -113,22 +125,25 @@ function importCsvToField(fieldName, csvText) {
   var rows = Utilities.parseCsv(csvText);
   if (!rows || rows.length === 0) throw new Error('Không đọc được nội dung CSV.');
 
-  var firstCell = String(rows[0][0] || '').trim().toLowerCase();
-  var dataRows = (firstCell === 'id' || firstCell === 'word') ? rows.slice(1) : rows;
+  var headerRow = rows[0].map(function (h) { return String(h).trim().toLowerCase(); });
+  var isTestCsv = headerRow.indexOf('question') !== -1;
+  var firstCell = headerRow[0];
+  var dataRows = (firstCell === 'id' || firstCell === 'word' || firstCell === 'question') ? rows.slice(1) : rows;
   if (dataRows.length === 0) throw new Error('Không có dòng dữ liệu nào để import.');
 
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(fieldName);
   var isNewSheet = !sheet;
+  var columns = isTestCsv ? TEST_COLUMNS : FIELD_COLUMNS;
 
   if (isNewSheet) {
     sheet = ss.insertSheet(fieldName);
-    sheet.appendRow(FIELD_COLUMNS);
-    sheet.getRange(1, 1, 1, FIELD_COLUMNS.length).setFontWeight('bold');
+    sheet.appendRow(columns);
+    sheet.getRange(1, 1, 1, columns.length).setFontWeight('bold');
     sheet.setFrozenRows(1);
   }
 
-  var numCols = FIELD_COLUMNS.length;
+  var numCols = columns.length;
   var normalizedRows = dataRows.map(function (row) {
     var r = row.slice(0, numCols);
     while (r.length < numCols) r.push('');
@@ -139,7 +154,7 @@ function importCsvToField(fieldName, csvText) {
   sheet.getRange(startRow, 1, normalizedRows.length, numCols).setValues(normalizedRows);
   sheet.autoResizeColumns(1, numCols);
 
-  return 'Đã import ' + normalizedRows.length + ' dòng vào lĩnh vực "' + fieldName + '"' + (isNewSheet ? ' (mới tạo)' : '') + '.';
+  return 'Đã import ' + normalizedRows.length + ' dòng vào lĩnh vực "' + fieldName + '"' + (isNewSheet ? ' (mới tạo, loại ' + (isTestCsv ? 'Test trắc nghiệm' : 'Từ vựng') + ')' : '') + '.';
 }
 
 function doGet(e) {
@@ -188,11 +203,24 @@ function getFields() {
     .filter(function (name) { return RESERVED_SHEETS.indexOf(name.trim()) === -1; });
 }
 
-// So luong tu theo tung linh vuc (chi doc so dong, khong doc noi dung) de man hinh thiet lap tai nhanh
+// Nhan dien loai sheet qua dong tieu de: co cot "question" -> Test trac nghiem, con lai -> Tu vung
+function getSheetType(sheet) {
+  if (sheet.getLastRow() === 0 || sheet.getLastColumn() === 0) return 'vocab';
+  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0]
+    .map(function (h) { return String(h).trim().toLowerCase(); });
+  return headers.indexOf('question') !== -1 ? 'test' : 'vocab';
+}
+
+// So luong tu/cau hoi theo tung linh vuc (chi doc dong tieu de + so dong, khong doc toan bo noi dung)
+// de man hinh thiet lap tai nhanh. Kem theo "type" de web loc dung che do (Tu vung / Test).
 function getFieldCounts() {
   return getFields().map(function (fieldName) {
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(fieldName);
-    return { field: fieldName, count: Math.max(sheet.getLastRow() - 1, 0) };
+    return {
+      field: fieldName,
+      count: Math.max(sheet.getLastRow() - 1, 0),
+      type: getSheetType(sheet)
+    };
   });
 }
 

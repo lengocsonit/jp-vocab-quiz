@@ -8,13 +8,19 @@ Mỗi **lĩnh vực** (BJT, IT Passport, SG, FE, ...) là **1 sheet (tab) riêng
 
 **Nếu 1 môn có nhiều bài** (vd BJT chia làm nhiều bài học), chỉ cần đặt tên tab có dấu `-` (vd: `BJT - Bài 1`, `BJT-P1 S3`). Web tự nhận diện phần trước dấu `-` đầu tiên là **môn**, phần sau là tên **bài**, rồi nhóm lại — trong "Chọn lĩnh vực" mỗi môn hiện 1 dòng gộp (kèm tổng số từ), bấm vào dòng đó (hoặc mũi tên ▸) mới xổ ra danh sách bài bên trong, đỡ bị dài khi có nhiều bài. Bảng xếp hạng cũng lọc theo Môn (gộp điểm mọi bài cùng môn) thay vì từng bài lẻ. Tab đặt tên không có dấu `-` (vd `SG`, `FE`) vẫn hoạt động bình thường, chỉ là tự nó là 1 môn có đúng 1 bài trùng tên.
 
+> Lưu ý: nếu muốn điểm bảng xếp hạng của lĩnh vực Test tách riêng, không gộp chung với lĩnh vực Từ vựng cùng tên môn, hãy đặt tiền tố khác nhau (vd môn từ vựng đặt `BJT - ...`, môn test đặt `Test BJT - ...`) — vì việc gộp Môn hiện chỉ dựa theo tên, không phân biệt loại lĩnh vực.
+
+Có **2 loại lĩnh vực**, tự nhận diện qua dòng tiêu đề (không cần đặt tên sheet theo quy ước riêng để phân biệt):
+
+- **Từ vựng** (chế độ "📚 Ôn từ vựng"): cột `id | word | reading | meaning | example | example_meaning`
+- **Test trắc nghiệm cố định** (chế độ "📝 Làm bài test", vd câu hỏi phân biệt từ gần nghĩa dạng BJT): cột `id | question | choice1 | choice2 | choice3 | choice4 | correct | explanation` — trong đó `question` dùng `___` làm chỗ trống, `choice1-4` là 4 đáp án cố định giữ nguyên thứ tự, `correct` là số 1-4, `explanation` là giải thích hiện ra sau khi chọn đáp án.
+
 1. Tạo 1 Google Sheet mới.
-2. Với mỗi lĩnh vực, tạo 1 tab mới, đặt tên tab đúng bằng tên lĩnh vực (ví dụ: `BJT`, `IT Passport`, `SG`, `FE`). Mỗi tab nhập các cột theo đúng thứ tự:
-   `id | word | reading | meaning | example | example_meaning`
-   (Có thể import file mẫu [`data/words-template.csv`](data/words-template.csv) vào từng tab qua File > Import > Insert new sheet(s)/Replace current sheet, rồi xoá dòng ví dụ và điền từ thật. Cột `id` chỉ cần đánh số thứ tự trong phạm vi tab đó, dùng để bạn tự quản lý/tra cứu từ, không bắt buộc phải duy nhất toàn bộ hệ thống.)
-3. Muốn mở rộng thêm lĩnh vực mới sau này: sau khi đã deploy Apps Script ở Bước 2, mở lại Google Sheet sẽ thấy menu **"Từ vựng" > "➕ Thêm lĩnh vực mới"** — chỉ cần gõ tên lĩnh vực (vd: `FE`), hệ thống tự tạo tab mới với đúng cột `id | word | reading | meaning | example | example_meaning` (không cần tạo tay hay sửa code). Trang web sẽ tự nhận lĩnh vực mới ngay lần tải sau.
-4. Nếu đã có sẵn danh sách từ dạng CSV (vd nhờ AI tạo ra), dùng menu **"Từ vựng" > "📥 Import CSV vào lĩnh vực"**: dán nội dung CSV vào ô textarea, chọn lĩnh vực (tạo mới hoặc gộp thêm vào lĩnh vực có sẵn), bấm Import — khỏi cần copy dán tay từng dòng hay dùng File > Import.
-4. Tạo thêm 1 tab tên `History` (không được trùng tên với bất kỳ lĩnh vực nào), dòng đầu tiên nhập tiêu đề cột (chỉ để dễ đọc, script tự bỏ qua dòng này):
+2. Với mỗi lĩnh vực, tạo 1 tab mới, đặt tên tab tuỳ ý (ví dụ: `BJT`, `IT Passport`, `SG`, `FE`, `Test - BJT Bài 15`). Mỗi tab nhập đúng cột theo loại tương ứng ở trên.
+   (Có thể import file mẫu [`data/words-template.csv`](data/words-template.csv) cho lĩnh vực từ vựng vào từng tab qua File > Import > Insert new sheet(s)/Replace current sheet, rồi xoá dòng ví dụ và điền từ thật. Cột `id` chỉ cần đánh số thứ tự trong phạm vi tab đó, dùng để bạn tự quản lý/tra cứu, không bắt buộc phải duy nhất toàn bộ hệ thống.)
+3. Muốn mở rộng thêm lĩnh vực mới sau này: sau khi đã deploy Apps Script ở Bước 2, mở lại Google Sheet sẽ thấy menu **"Từ vựng" > "➕ Thêm lĩnh vực mới"** — gõ tên lĩnh vực, chọn loại (Từ vựng hoặc Test trắc nghiệm), hệ thống tự tạo tab mới với đúng cột tương ứng (không cần tạo tay hay sửa code). Trang web sẽ tự nhận lĩnh vực mới ngay lần tải sau.
+4. Nếu đã có sẵn danh sách từ hoặc bộ câu hỏi test dạng CSV (vd nhờ AI tạo ra), dùng menu **"Từ vựng" > "📥 Import CSV vào lĩnh vực"**: dán nội dung CSV vào ô textarea, chọn lĩnh vực (tạo mới hoặc gộp thêm vào lĩnh vực có sẵn), bấm Import — loại lĩnh vực (từ vựng/test) khi tạo mới sẽ tự nhận diện qua dòng tiêu đề của CSV, khỏi cần chọn tay.
+5. Tạo thêm 1 tab tên `History` (không được trùng tên với bất kỳ lĩnh vực nào), dòng đầu tiên nhập tiêu đề cột (chỉ để dễ đọc, script tự bỏ qua dòng này):
    `timestamp | name | field | direction | total | correct | accuracy | duration_seconds`
 
 ## 2. Deploy Google Apps Script (backend đọc/ghi dữ liệu)
@@ -51,7 +57,9 @@ Repo này đã sẵn sàng cho GitHub Pages:
 
 ## 5. Cách dùng
 
-- Mỗi câu hỏi mặc định ẩn 4 đáp án — bấm "Hiện đáp án" mới hiện ra để chọn. Ngay sau khi chọn 1 đáp án, hệ thống báo đúng/sai và tự động hiện kèm câu ví dụ + nghĩa của ví dụ của từ đó để củng cố.
+- Trang chủ có 2 chế độ: **📚 Ôn từ vựng** (mặc định) và **📝 Làm bài test**. Chọn chế độ nào thì danh sách "Chọn lĩnh vực" chỉ hiện đúng loại lĩnh vực tương ứng.
+- **Chế độ Ôn từ vựng**: mỗi câu hỏi mặc định ẩn 4 đáp án — bấm "Hiện đáp án" mới hiện ra để chọn. Ngay sau khi chọn 1 đáp án, hệ thống báo đúng/sai và tự động hiện kèm câu ví dụ + nghĩa của ví dụ của từ đó để củng cố.
+- **Chế độ Làm bài test**: 4 đáp án hiện luôn cùng câu hỏi (không có bước "Hiện đáp án"), giữ nguyên thứ tự như trong Sheet (không xáo trộn vị trí). Chọn xong hiện luôn phần giải thích (`explanation`) đã soạn sẵn.
 - Mỗi lần sửa/thêm từ mới, hoặc thêm lĩnh vực mới: chỉ cần sửa trực tiếp trên Google Sheet (thêm tab mới cho lĩnh vực mới), không cần sửa code hay deploy lại.
 - Mỗi lượt chơi tự ghi vào tab `History` — nếu 1 lượt chơi gồm nhiều lĩnh vực (chọn nhiều lĩnh vực cùng lúc), mỗi lĩnh vực được ghi thành 1 dòng riêng để tính điểm theo từng lĩnh vực chính xác.
 - Bảng xếp hạng Top 10 (góc phải trang chủ) cộng dồn điểm theo tên qua tất cả các lượt chơi. Mặc định xem theo **Tổng** (cộng dồn mọi lĩnh vực), có thể đổi dropdown để xem xếp hạng riêng theo từng lĩnh vực.

@@ -3,6 +3,7 @@ const NAME_PATTERN = /^[A-Za-z0-9]+$/;
 const MAX_PRIORITY_SHARE = 0.3; // từ trong danh sách ưu tiên chiếm tối đa 30% số câu 1 lượt chơi, tránh độc chiếm cả bài
 
 const state = {
+  mode: 'vocab', // 'vocab' | 'test'
   filteredWords: [],
   quizQueue: [],
   currentIndex: 0,
@@ -24,7 +25,9 @@ const el = {
   nameSuggestions: document.getElementById('name-suggestions'),
   nameError: document.getElementById('name-error'),
   groupList: document.getElementById('group-list'),
+  countLabel: document.getElementById('count-label'),
   countSelect: document.getElementById('count-select'),
+  directionField: document.getElementById('direction-field'),
   setupError: document.getElementById('setup-error'),
   startBtn: document.getElementById('start-btn'),
 
@@ -52,6 +55,7 @@ const el = {
   resultAccuracy: document.getElementById('result-accuracy'),
   resultTime: document.getElementById('result-time'),
   wrongListWrap: document.getElementById('wrong-list-wrap'),
+  wrongListTitle: document.getElementById('wrong-list-title'),
   wrongList: document.getElementById('wrong-list'),
   replayBtn: document.getElementById('replay-btn'),
 
@@ -109,6 +113,9 @@ async function init() {
   el.historyModalClose.addEventListener('click', closeHistoryModal);
   el.historyModal.addEventListener('click', (e) => {
     if (e.target === el.historyModal) closeHistoryModal();
+  });
+  document.querySelectorAll('input[name="mode"]').forEach(radio => {
+    radio.addEventListener('change', onModeChange);
   });
 
   await loadFieldCounts();
@@ -203,6 +210,13 @@ async function loadFieldCounts() {
   }
 }
 
+function onModeChange() {
+  state.mode = document.querySelector('input[name="mode"]:checked').value;
+  el.directionField.classList.toggle('hidden', state.mode === 'test');
+  el.countLabel.textContent = state.mode === 'test' ? 'Số câu muốn làm' : 'Số từ muốn ôn';
+  renderFieldCheckboxes();
+}
+
 async function loadLeaderboard(fieldFilter) {
   try {
     const url = fieldFilter && fieldFilter !== 'all'
@@ -262,31 +276,34 @@ function updateLeaderboardVisibility() {
 }
 
 function renderFieldCheckboxes() {
-  // Bộ lọc xếp hạng liệt kê theo MÔN (gộp điểm mọi bài cùng môn)
+  // Bộ lọc xếp hạng liệt kê theo MÔN (gộp điểm mọi bài cùng môn), không phụ thuộc chế độ đang chọn
   const subjectsForLeaderboard = [...new Set(allFieldsWithCounts.map(f => parseFieldName(f.field).subject))];
   el.leaderboardFilter.innerHTML = '<option value="all">Tổng</option>' +
     subjectsForLeaderboard.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
 
-  if (allFieldsWithCounts.length === 0) {
-    el.groupList.innerHTML = '<p class="muted">Chưa có dữ liệu từ vựng.</p>';
+  const unit = state.mode === 'test' ? 'câu' : 'từ';
+  const relevantFields = allFieldsWithCounts.filter(f => f.type === state.mode);
+
+  if (relevantFields.length === 0) {
+    el.groupList.innerHTML = `<p class="muted">Chưa có dữ liệu ${state.mode === 'test' ? 'bộ test' : 'từ vựng'}.</p>`;
     return;
   }
 
   // Nhóm các lĩnh vực (sheet) theo Môn — mỗi môn hiện 1 dòng gộp, bấm vào mới xổ ra các bài bên trong
   const groups = new Map();
-  allFieldsWithCounts.forEach(f => {
+  relevantFields.forEach(f => {
     const { subject, lesson } = parseFieldName(f.field);
     if (!groups.has(subject)) groups.set(subject, []);
     groups.get(subject).push({ field: f.field, lesson, count: f.count });
   });
 
-  const totalCount = allFieldsWithCounts.reduce((sum, f) => sum + f.count, 0);
-  let html = `<label class="field-row field-all"><input type="checkbox" value="__all__" checked><span>Tất cả (${totalCount} từ)</span></label>`;
+  const totalCount = relevantFields.reduce((sum, f) => sum + f.count, 0);
+  let html = `<label class="field-row field-all"><input type="checkbox" value="__all__" checked><span>Tất cả (${totalCount} ${unit})</span></label>`;
 
   groups.forEach((lessons, subject) => {
     if (lessons.length === 1) {
       const l = lessons[0];
-      html += `<label class="field-row"><input type="checkbox" name="field" value="${escapeHtml(l.field)}"><span>${escapeHtml(subject)} (${l.count} từ)</span></label>`;
+      html += `<label class="field-row"><input type="checkbox" name="field" value="${escapeHtml(l.field)}"><span>${escapeHtml(subject)} (${l.count} ${unit})</span></label>`;
       return;
     }
 
@@ -295,11 +312,11 @@ function renderFieldCheckboxes() {
       <div class="subject-group">
         <div class="field-row subject-row" data-subject="${escapeHtml(subject)}">
           <input type="checkbox" class="subject-checkbox" data-subject="${escapeHtml(subject)}">
-          <span class="subject-label">${escapeHtml(subject)} (${subjectTotal} từ)</span>
+          <span class="subject-label">${escapeHtml(subject)} (${subjectTotal} ${unit})</span>
           <button type="button" class="expand-btn" data-subject="${escapeHtml(subject)}" tabindex="-1">▸</button>
         </div>
         <div class="lesson-list hidden" data-lessons-for="${escapeHtml(subject)}">
-          ${lessons.map(l => `<label class="field-row lesson-row"><input type="checkbox" name="field" value="${escapeHtml(l.field)}" class="lesson-checkbox" data-subject="${escapeHtml(subject)}"><span>${escapeHtml(l.lesson)} (${l.count} từ)</span></label>`).join('')}
+          ${lessons.map(l => `<label class="field-row lesson-row"><input type="checkbox" name="field" value="${escapeHtml(l.field)}" class="lesson-checkbox" data-subject="${escapeHtml(subject)}"><span>${escapeHtml(l.lesson)} (${l.count} ${unit})</span></label>`).join('')}
         </div>
       </div>`;
   });
@@ -376,7 +393,9 @@ async function startQuiz() {
       : CONFIG.APPS_SCRIPT_URL;
     const res = await fetch(url);
     const data = await res.json();
-    pool = data.filter(w => w.word && w.meaning);
+    pool = state.mode === 'test'
+      ? data.filter(w => w.question && w.choice1)
+      : data.filter(w => w.word && w.meaning);
   } catch (err) {
     el.startBtn.disabled = false;
     el.startBtn.textContent = 'Bắt đầu';
@@ -388,7 +407,9 @@ async function startQuiz() {
   el.startBtn.textContent = 'Bắt đầu';
 
   if (pool.length < 4) {
-    el.setupError.textContent = 'Cần ít nhất 4 từ trong lĩnh vực đã chọn để tạo câu hỏi trắc nghiệm.';
+    el.setupError.textContent = state.mode === 'test'
+      ? 'Cần ít nhất 4 câu hỏi trong lĩnh vực đã chọn.'
+      : 'Cần ít nhất 4 từ trong lĩnh vực đã chọn để tạo câu hỏi trắc nghiệm.';
     return;
   }
 
@@ -405,7 +426,9 @@ async function startQuiz() {
   const selected = buildQuizSelection(pool, count, word => state.markedWords.has(wordMarkKey(word)));
   state.quizQueue = selected.map(word => ({
     word,
-    direction: direction === 'mix' ? (Math.random() < 0.5 ? 'jp2meaning' : 'meaning2jp') : direction,
+    direction: state.mode === 'vocab'
+      ? (direction === 'mix' ? (Math.random() < 0.5 ? 'jp2meaning' : 'meaning2jp') : direction)
+      : null,
   }));
 
   state.currentIndex = 0;
@@ -449,15 +472,54 @@ function renderQuestion() {
   const item = state.quizQueue[state.currentIndex];
   el.quizProgressText.textContent = `Câu ${state.currentIndex + 1} / ${total} — Điểm: ${state.correctCount}`;
 
-  el.answers.classList.add('hidden');
   el.answers.innerHTML = '';
   el.feedback.classList.add('hidden');
-  el.revealBtn.classList.remove('hidden');
   el.nextBtn.textContent = 'Câu tiếp theo';
 
-  el.questionText.textContent = item.direction === 'jp2meaning' ? item.word.word : item.word.meaning;
-  updateReadingDisplay();
+  if (state.mode === 'test') {
+    el.revealBtn.classList.add('hidden');
+    el.toggleReadingBtn.classList.add('hidden');
+    el.questionReading.textContent = '';
+    el.questionText.textContent = item.word.question;
+    renderTestAnswers(item);
+    el.answers.classList.remove('hidden');
+  } else {
+    el.revealBtn.classList.remove('hidden');
+    el.toggleReadingBtn.classList.remove('hidden');
+    el.answers.classList.add('hidden');
+    el.questionText.textContent = item.direction === 'jp2meaning' ? item.word.word : item.word.meaning;
+    updateReadingDisplay();
+  }
+
   updateMarkButtonDisplay();
+}
+
+function renderTestAnswers(item) {
+  const data = item.word;
+  [data.choice1, data.choice2, data.choice3, data.choice4].forEach((choice, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.textContent = choice;
+    btn.addEventListener('click', () => selectTestAnswer(idx + 1, btn));
+    el.answers.appendChild(btn);
+  });
+}
+
+function selectTestAnswer(chosenIndex, btnEl) {
+  const item = state.quizQueue[state.currentIndex];
+  const data = item.word;
+  const correctIndex = Number(data.correct);
+  const isCorrect = chosenIndex === correctIndex;
+  const correctText = data['choice' + correctIndex] || '';
+
+  [...el.answers.children].forEach((btn, idx) => {
+    btn.disabled = true;
+    if (idx + 1 === correctIndex) btn.classList.add('correct');
+  });
+  if (!isCorrect) btnEl.classList.add('wrong');
+
+  const resultText = isCorrect ? '✅ Chính xác!' : `❌ Sai rồi. Đáp án đúng: ${correctText}`;
+  finalizeAnswer(data, isCorrect, resultText, data.explanation || '', '');
 }
 
 function wordMarkKey(word) {
@@ -574,9 +636,18 @@ function selectAnswer(choice, correctValue, btnEl) {
   });
   if (!isCorrect) btnEl.classList.add('wrong');
 
+  const resultText = isCorrect ? '✅ Chính xác!' : `❌ Sai rồi. Đáp án đúng: ${correctValue}`;
+  const exampleText = item.word.example ? `Ví dụ: ${item.word.example}` : '';
+  const exampleMeaningText = item.word.example_meaning ? `Nghĩa: ${item.word.example_meaning}` : '';
+  finalizeAnswer(item.word, isCorrect, resultText, exampleText, exampleMeaningText);
+}
+
+// Xu ly phan chung sau khi tra loi (dung cho ca 2 che do): cap nhat diem, danh sach sai,
+// hien khung feedback, ghi nhan uu tien, va tu dong chuyen cau neu bat.
+function finalizeAnswer(data, isCorrect, resultText, line1, line2) {
   state.answeredCount += 1;
 
-  const field = item.word.field || 'Khác';
+  const field = data.field || 'Khác';
   if (!state.fieldTally[field]) state.fieldTally[field] = { correct: 0, total: 0 };
   state.fieldTally[field].total += 1;
 
@@ -584,15 +655,15 @@ function selectAnswer(choice, correctValue, btnEl) {
     state.correctCount += 1;
     state.fieldTally[field].correct += 1;
   } else {
-    state.wrongList.push(item.word);
+    state.wrongList.push(data);
   }
 
-  el.feedbackResult.textContent = isCorrect ? '✅ Chính xác!' : `❌ Sai rồi. Đáp án đúng: ${correctValue}`;
-  el.feedbackExample.textContent = item.word.example ? `Ví dụ: ${item.word.example}` : '';
-  el.feedbackExampleMeaning.textContent = item.word.example_meaning ? `Nghĩa: ${item.word.example_meaning}` : '';
+  el.feedbackResult.textContent = resultText;
+  el.feedbackExample.textContent = line1 || '';
+  el.feedbackExampleMeaning.textContent = line2 || '';
   el.feedback.classList.remove('hidden');
 
-  recordAnswerForPriority(item.word, isCorrect);
+  recordAnswerForPriority(data, isCorrect);
 
   if (state.autoAdvance) startAutoAdvanceCountdown();
 }
@@ -637,7 +708,14 @@ async function finishQuiz() {
 
   if (state.wrongList.length > 0) {
     el.wrongListWrap.classList.remove('hidden');
-    el.wrongList.innerHTML = state.wrongList.map(w => `<li>${escapeHtml(w.word)} (${escapeHtml(w.reading || '')}) — ${escapeHtml(w.meaning)}</li>`).join('');
+    el.wrongListTitle.textContent = state.mode === 'test' ? 'Các câu trả lời sai' : 'Các từ trả lời sai';
+    el.wrongList.innerHTML = state.wrongList.map(w => {
+      if (state.mode === 'test') {
+        const correctText = w['choice' + w.correct] || '';
+        return `<li>${escapeHtml(w.question)} — Đáp án đúng: ${escapeHtml(correctText)}</li>`;
+      }
+      return `<li>${escapeHtml(w.word)} (${escapeHtml(w.reading || '')}) — ${escapeHtml(w.meaning)}</li>`;
+    }).join('');
   } else {
     el.wrongListWrap.classList.add('hidden');
   }
