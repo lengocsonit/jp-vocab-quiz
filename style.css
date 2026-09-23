@@ -146,8 +146,8 @@ input[type="text"], select {
   text-align: center;
   margin-bottom: 16px;
 }
-.question-text { font-size: 28px; font-weight: 700; }
-.question-reading { font-size: 15px; color: #6b6f76; margin-top: 6px; }
+.question-text { font-size: 28px; font-weight: 700; white-space: pre-line; }
+.question-reading { font-size: 15px; color: #6b6f76; margin-top: 6px; white-space: pre-line; }
 
 .answers { display: grid; gap: 10px; margin-bottom: 16px; }
 .answer-btn {
@@ -158,6 +158,7 @@ input[type="text"], select {
   font-size: 15px;
   text-align: left;
   cursor: pointer;
+  white-space: pre-line;
 }
 .answer-btn:hover { background: #f5f7fb; }
 .answer-btn.correct { border-color: #f2b705; border-width: 2px; padding: 11px; }
@@ -165,10 +166,11 @@ input[type="text"], select {
 .answer-btn[disabled] { cursor: default; }
 
 .feedback { border-top: 1px solid #eee; padding-top: 14px; }
-.feedback p { margin: 4px 0; font-size: 14px; }
+.feedback p { margin: 4px 0; font-size: 14px; white-space: pre-line; }
 #feedback-result { font-weight: 700; font-size: 16px; }
 
 #wrong-list-wrap ul { padding-left: 20px; font-size: 14px; }
+#wrong-list-wrap li { white-space: pre-line; }
 
 .leaderboard-widget {
   position: fixed;
