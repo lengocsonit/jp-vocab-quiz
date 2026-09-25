@@ -61,6 +61,7 @@ function addNewField() {
   sheet.getRange(1, 1, 1, columns.length).setFontWeight('bold');
   sheet.setFrozenRows(1);
   sheet.autoResizeColumns(1, columns.length);
+  invalidateFieldCountsCache();
 
   ui.alert('Đã tạo lĩnh vực "' + name + '" (' + (isTest ? 'Test trắc nghiệm' : 'Từ vựng') + '). Nhập dữ liệu vào sheet này — trang web sẽ tự nhận lĩnh vực mới, không cần sửa code hay deploy lại.');
 }
@@ -153,6 +154,7 @@ function importCsvToField(fieldName, csvText) {
   var startRow = sheet.getLastRow() + 1;
   sheet.getRange(startRow, 1, normalizedRows.length, numCols).setValues(normalizedRows);
   sheet.autoResizeColumns(1, numCols);
+  invalidateFieldCountsCache();
 
   return 'Đã import ' + normalizedRows.length + ' dòng vào lĩnh vực "' + fieldName + '"' + (isNewSheet ? ' (mới tạo, loại ' + (isTestCsv ? 'Test trắc nghiệm' : 'Từ vựng') + ')' : '') + '.';
 }
@@ -213,15 +215,31 @@ function getSheetType(sheet) {
 
 // So luong tu/cau hoi theo tung linh vuc (chi doc dong tieu de + so dong, khong doc toan bo noi dung)
 // de man hinh thiet lap tai nhanh. Kem theo "type" de web loc dung che do (Tu vung / Test).
+// Cache lai 10 phut vi day la phan cham nhat khi co nhieu sheet (moi sheet ton 1 luot goi API rieng
+// de doc dong tieu de) -> cang nhieu linh vuc thi lan dau cang lau, nhung tu lan 2 tro di gan nhu tuc thi.
 function getFieldCounts() {
-  return getFields().map(function (fieldName) {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(fieldName);
-    return {
-      field: fieldName,
-      count: Math.max(sheet.getLastRow() - 1, 0),
-      type: getSheetType(sheet)
-    };
-  });
+  var cache = CacheService.getScriptCache();
+  var cached = cache.get('fieldCounts');
+  if (cached) return JSON.parse(cached);
+
+  var sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets();
+  var result = sheets
+    .filter(function (s) { return RESERVED_SHEETS.indexOf(s.getName().trim()) === -1; })
+    .map(function (sheet) {
+      return {
+        field: sheet.getName(),
+        count: Math.max(sheet.getLastRow() - 1, 0),
+        type: getSheetType(sheet)
+      };
+    });
+
+  cache.put('fieldCounts', JSON.stringify(result), 600);
+  return result;
+}
+
+// Xoa cache fieldCounts moi khi co linh vuc moi/du lieu moi, de web thay ngay khong can doi cache het han
+function invalidateFieldCountsCache() {
+  CacheService.getScriptCache().remove('fieldCounts');
 }
 
 // Gộp từ vựng từ các sheet lĩnh vực được chọn (fieldFilter dạng "A,B"), hoặc tất cả nếu không truyền.

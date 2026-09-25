@@ -118,7 +118,8 @@ async function init() {
     radio.addEventListener('change', onModeChange);
   });
 
-  await loadFieldCounts();
+  // Tải song song, không chờ tuần tự — 3 lượt gọi này độc lập với nhau
+  loadFieldCounts();
   loadLeaderboard('all');
   loadNameSuggestions();
 }
