@@ -7,7 +7,9 @@
 
 var HISTORY_SHEET = 'History';
 var MARKED_SHEET = 'MarkedWords';
-var RESERVED_SHEETS = ['History', 'MarkedWords'];
+var STREAK_SHEET = 'Streaks';
+var RESERVED_SHEETS = ['History', 'MarkedWords', 'Streaks'];
+var STREAK_GRACE_DAYS = 2; // cach ngay hien tai <= so nay van tinh la con chuoi, qua so nay moi reset ve 1
 var FIELD_COLUMNS = ['id', 'word', 'reading', 'meaning', 'example', 'example_meaning'];
 var TEST_COLUMNS = ['id', 'question', 'choice1', 'choice2', 'choice3', 'choice4', 'correct', 'explanation'];
 var PRIORITY_GRADUATE_STREAK = 2; // dung lien tiep bao nhieu lan thi tu dong go khoi danh sach uu tien
@@ -188,6 +190,7 @@ function doPost(e) {
   entries.forEach(function (entry) {
     appendHistory(timestamp, data.name, data.direction, entry.field, entry.total, entry.correct, duration);
   });
+  if (entries.length > 0) recordStreak(data.name);
   return jsonResponse(getLeaderboard());
 }
 
@@ -336,12 +339,14 @@ function getLeaderboard(fieldFilter) {
     if (ts && ts > totals[name].lastActive) totals[name].lastActive = ts;
   });
 
+  var streaks = getStreakMap();
   var list = Object.keys(totals).map(function (name) {
     var t = totals[name];
     return {
       name: t.name,
       score: t.correct,
       lastActive: t.lastActive ? new Date(t.lastActive).toISOString() : null,
+      streak: streaks[name] || 0,
       accuracy: t.total > 0 ? Math.round((t.correct / t.total) * 1000) / 10 : 0
     };
   });
@@ -491,6 +496,79 @@ function getMarkedWordsForName(name) {
   return values
     .filter(function (row) { return row[0] === name; })
     .map(function (row) { return { field: row[1], wordId: String(row[2]) }; });
+}
+
+// Sheet luu "chuoi ngay lam bai lien tiep" (streak) theo tung ten, tu tao neu chua co.
+// Cot: name | streak | last_active_date (yyyy-MM-dd, theo timezone cua Script - tinh ngay tu 0:00).
+// Moi ngay chi tinh 1 lan du nop bai nhieu lan. Cach ngay hien tai <= STREAK_GRACE_DAYS ngay van
+// duoc coi la con chuoi (streak +1); qua so ngay do moi reset ve 1 (bat dau chuoi moi).
+function getStreakSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(STREAK_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(STREAK_SHEET);
+    sheet.appendRow(['name', 'streak', 'last_active_date']);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function todayDateString() {
+  return Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+}
+
+function toDateString(value) {
+  return value instanceof Date
+    ? Utilities.formatDate(value, Session.getScriptTimeZone(), 'yyyy-MM-dd')
+    : String(value);
+}
+
+// So ngay chenh lech giua 2 chuoi yyyy-MM-dd (b - a), chi tinh theo lich, khong phu thuoc gio phut
+function daysBetween(dateStrA, dateStrB) {
+  var a = new Date(dateStrA + 'T00:00:00');
+  var b = new Date(dateStrB + 'T00:00:00');
+  return Math.round((b - a) / 86400000);
+}
+
+// Goi moi khi 1 luot choi duoc nop (tu doPost). Cung 1 ngay chi tinh 1 lan.
+function recordStreak(name) {
+  if (!name) return;
+  var sheet = getStreakSheet();
+  var values = sheet.getDataRange().getValues();
+  var today = todayDateString();
+
+  for (var i = 1; i < values.length; i++) {
+    if (values[i][0] === name) {
+      var lastDate = toDateString(values[i][2]);
+      var gap = daysBetween(lastDate, today);
+      if (gap === 0) return; // hom nay da tinh roi
+      var newStreak = gap <= STREAK_GRACE_DAYS ? (Number(values[i][1]) || 0) + 1 : 1;
+      sheet.getRange(i + 1, 2, 1, 2).setValues([[newStreak, today]]);
+      return;
+    }
+  }
+
+  sheet.appendRow([name, 1, today]);
+}
+
+// Chuoi hien tai "thuc te" tai thoi diem xem: neu da qua STREAK_GRACE_DAYS ngay ke tu lan choi gan
+// nhat ma chua nop bai lai thi coi nhu da dut chuoi (tra ve 0), du gia tri luu trong Sheet co the
+// chua kip cap nhat (chi cap nhat khi co lan nop bai tiep theo, xem recordStreak).
+function getStreakMap() {
+  var sheet = getStreakSheet();
+  var values = sheet.getDataRange().getValues();
+  values.shift(); // bo header
+  var today = todayDateString();
+  var map = {};
+
+  values.forEach(function (row) {
+    var name = row[0];
+    if (!name) return;
+    var gap = daysBetween(toDateString(row[2]), today);
+    map[name] = gap > STREAK_GRACE_DAYS ? 0 : (Number(row[1]) || 0);
+  });
+
+  return map;
 }
 
 function jsonResponse(obj) {

@@ -257,8 +257,11 @@ input[type="text"], select {
   text-align: left;
 }
 .leaderboard-widget .lb-name:hover { text-decoration: underline; color: #2f6fed; }
+.lb-meta-line { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lb-lastactive { font-size: 10px; color: #a5a9b0; white-space: nowrap; }
 .lb-lastactive.online { color: #1a9c4a; font-weight: 600; }
+.lb-streak { font-size: 10px; color: #e8730f; font-weight: 600; white-space: nowrap; }
+.lb-meta-sep { font-size: 10px; color: #d7dae0; }
 
 .lb-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .lb-score { font-weight: 700; color: #d6a018; white-space: nowrap; }
@@ -344,6 +347,8 @@ input[type="text"], select {
   .leaderboard-widget li { border-color: #3a3c40; }
   .lb-rank, .lb-lastactive { color: #6b6f76; }
   .lb-lastactive.online { color: #3ddc73; }
+  .lb-streak { color: #ff9142; }
+  .lb-meta-sep { color: #3a3c40; }
   .leaderboard-widget li.rank-gold { background: linear-gradient(90deg, rgba(255, 200, 0, 0.12), transparent); }
   .leaderboard-widget li.rank-silver { background: linear-gradient(90deg, rgba(180, 180, 190, 0.14), transparent); }
   .leaderboard-widget li.rank-bronze { background: linear-gradient(90deg, rgba(205, 127, 50, 0.14), transparent); }

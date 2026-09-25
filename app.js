@@ -56,6 +56,7 @@ const el = {
   resultTime: document.getElementById('result-time'),
   resultCongrats: document.getElementById('result-congrats'),
   resultPointsEarned: document.getElementById('result-points-earned'),
+  resultStreakMessage: document.getElementById('result-streak-message'),
   resultRankMessage: document.getElementById('result-rank-message'),
   wrongListWrap: document.getElementById('wrong-list-wrap'),
   wrongListTitle: document.getElementById('wrong-list-title'),
@@ -274,6 +275,15 @@ function getScoreTier(score) {
   return SCORE_TIERS.find(t => score >= t.min) || SCORE_TIERS[SCORE_TIERS.length - 1];
 }
 
+// Icon chuoi ngay lam bai lien tiep "nong" dan len theo so ngay, kieu cac app hay dung (Duolingo/TikTok...)
+// de tao cam giac "dung de tat lua", khuyen khich quay lai lam bai moi ngay.
+function getStreakIcon(streak) {
+  if (streak >= 30) return '🔥💯';
+  if (streak >= 14) return '🔥🔥🔥';
+  if (streak >= 7) return '🔥🔥';
+  return '🔥';
+}
+
 let hasLeaderboardData = false;
 
 function renderLeaderboard(list) {
@@ -295,7 +305,7 @@ function renderLeaderboard(list) {
         ${rankMedals[i] ? `<span class="lb-medal">${rankMedals[i]}</span>` : `<span class="lb-rank">${i + 1}</span>`}
         <span class="lb-name-wrap">
           <button class="lb-name" data-name="${escapeHtml(item.name)}">${escapeHtml(item.name)}</button>
-          ${renderActivityStatus(item.lastActive)}
+          ${renderMetaLine(item)}
         </span>
       </span>
       <span class="lb-right">
@@ -344,6 +354,18 @@ function renderActivityStatus(isoString) {
   const cls = status.online ? 'lb-lastactive online' : 'lb-lastactive';
   const icon = status.online ? '🟢 ' : '';
   return `<span class="${cls}">${icon}${escapeHtml(status.text)}</span>`;
+}
+
+// Gop dong hoat dong (online/offline) va chuoi ngay lam bai lien tiep thanh 1 dong gon duoi ten.
+// Boc trong 1 the container duy nhat vi lb-name-wrap la flex-column - neu de nhieu the <span> roi
+// nam canh nhau o cung cap se bi tach thanh nhieu dong rieng thay vi nam chung 1 dong.
+function renderMetaLine(item) {
+  const parts = [];
+  const activity = renderActivityStatus(item.lastActive);
+  if (activity) parts.push(activity);
+  if (item.streak > 0) parts.push(`<span class="lb-streak">${getStreakIcon(item.streak)} ${item.streak} ngày</span>`);
+  if (parts.length === 0) return '';
+  return `<span class="lb-meta-line">${parts.join('<span class="lb-meta-sep"> · </span>')}</span>`;
 }
 
 function updateLeaderboardVisibility() {
@@ -835,8 +857,16 @@ async function submitResult(durationSeconds) {
     el.resultRankMessage.textContent = rankIndex === -1
       ? ''
       : `🏅 Bạn đang xếp hạng #${rankIndex + 1} toàn hệ thống — cố gắng lên nhé!`;
+
+    const streak = rankIndex === -1 ? 0 : (allBoard[rankIndex].streak || 0);
+    el.resultStreakMessage.textContent = streak > 1
+      ? `${getStreakIcon(streak)} Chuỗi ${streak} ngày liên tiếp — đừng để tắt lửa nhé!`
+      : streak === 1
+        ? '🔥 Bắt đầu chuỗi ngày học rồi đó, mai nhớ quay lại nhé!'
+        : '';
   } catch (err) {
     el.resultRankMessage.textContent = '';
+    el.resultStreakMessage.textContent = '';
   }
 }
 
