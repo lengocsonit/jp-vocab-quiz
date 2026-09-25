@@ -262,11 +262,11 @@ async function loadLeaderboard(fieldFilter) {
 // Cap bac theo tong diem tich luy, hien icon dep hon thay cho 1 icon cup phang duy nhat -
 // tao dong luc "len hang" khi choi nhieu hon, thay vi chi la 1 con so kho.
 const SCORE_TIERS = [
-  { min: 1000, icon: '💎', label: 'Huyền thoại' },
-  { min: 500, icon: '👑', label: 'Bậc thầy' },
-  { min: 300, icon: '🔥', label: 'Cao thủ' },
-  { min: 150, icon: '⚔️', label: 'Chiến binh' },
-  { min: 50, icon: '🥋', label: 'Học viên' },
+  { min: 20000, icon: '💎', label: 'Huyền thoại' },
+  { min: 10000, icon: '👑', label: 'Bậc thầy' },
+  { min: 6000, icon: '🔥', label: 'Cao thủ' },
+  { min: 3000, icon: '⚔️', label: 'Chiến binh' },
+  { min: 1000, icon: '🥋', label: 'Học viên' },
   { min: 0, icon: '🌱', label: 'Tân binh' },
 ];
 
