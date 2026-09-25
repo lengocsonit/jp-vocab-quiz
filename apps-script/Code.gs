@@ -215,8 +215,10 @@ function getSheetType(sheet) {
 
 // So luong tu/cau hoi theo tung linh vuc (chi doc dong tieu de + so dong, khong doc toan bo noi dung)
 // de man hinh thiet lap tai nhanh. Kem theo "type" de web loc dung che do (Tu vung / Test).
-// Cache lai 10 phut vi day la phan cham nhat khi co nhieu sheet (moi sheet ton 1 luot goi API rieng
-// de doc dong tieu de) -> cang nhieu linh vuc thi lan dau cang lau, nhung tu lan 2 tro di gan nhu tuc thi.
+// Cache lai 6 tieng (muc toi da CacheService cho phep) vi day la phan cham nhat khi co nhieu sheet
+// (moi sheet ton 1 luot goi API rieng de doc dong tieu de). Cache duoc xoa ngay khi co linh vuc moi
+// (xem invalidateFieldCountsCache), nen de thoi gian cache dai khong lo sai lech, chi thinh thoang
+// so luong tu/cau cua 1 linh vuc co san co the cham cap nhat toi da 6 tieng neu chi them dong moi vao sheet.
 function getFieldCounts() {
   var cache = CacheService.getScriptCache();
   var cached = cache.get('fieldCounts');
@@ -233,7 +235,7 @@ function getFieldCounts() {
       };
     });
 
-  cache.put('fieldCounts', JSON.stringify(result), 600);
+  cache.put('fieldCounts', JSON.stringify(result), 21600); // 6 tieng, muc toi da cua CacheService
   return result;
 }
 
