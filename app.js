@@ -25,7 +25,6 @@ const el = {
   nameSuggestions: document.getElementById('name-suggestions'),
   nameError: document.getElementById('name-error'),
   groupList: document.getElementById('group-list'),
-  refreshFieldsBtn: document.getElementById('refresh-fields-btn'),
   countLabel: document.getElementById('count-label'),
   countSelect: document.getElementById('count-select'),
   directionField: document.getElementById('direction-field'),
@@ -55,6 +54,9 @@ const el = {
   resultScore: document.getElementById('result-score'),
   resultAccuracy: document.getElementById('result-accuracy'),
   resultTime: document.getElementById('result-time'),
+  resultCongrats: document.getElementById('result-congrats'),
+  resultPointsEarned: document.getElementById('result-points-earned'),
+  resultRankMessage: document.getElementById('result-rank-message'),
   wrongListWrap: document.getElementById('wrong-list-wrap'),
   wrongListTitle: document.getElementById('wrong-list-title'),
   wrongList: document.getElementById('wrong-list'),
@@ -118,7 +120,6 @@ async function init() {
   document.querySelectorAll('input[name="mode"]').forEach(radio => {
     radio.addEventListener('change', onModeChange);
   });
-  el.refreshFieldsBtn.addEventListener('click', refreshFieldCounts);
 
   // Tải song song, không chờ tuần tự — 3 lượt gọi này độc lập với nhau
   loadFieldCounts();
@@ -203,29 +204,35 @@ function parseFieldName(field) {
   return { subject: field.slice(0, idx).trim(), lesson: field.slice(idx + 1).trim() };
 }
 
+const FIELD_CACHE_KEY = 'jpquiz_fieldCounts';
+const VERSION_CACHE_KEY = 'jpquiz_dataVersion';
+
+// So sanh "phien ban du lieu" (tang moi khi co linh vuc moi/import CSV/sua tay tren Sheet - xem
+// bumpVersion() ben Apps Script) voi ban da luu trong localStorage tu lan truoc. Khop nhau thi dung
+// luon ban da cache trong trinh duyet (khong can tai lai fieldCounts qua mang), khong khop moi tai lai.
+// Nho vay khong can cho cache het han hay bam nut tai lai thu cong nua.
 async function loadFieldCounts() {
   try {
+    const verRes = await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=version`);
+    const verData = await verRes.json();
+    const currentVersion = String(verData.version);
+    const cachedVersion = localStorage.getItem(VERSION_CACHE_KEY);
+    const cachedFields = localStorage.getItem(FIELD_CACHE_KEY);
+
+    if (cachedVersion === currentVersion && cachedFields) {
+      allFieldsWithCounts = JSON.parse(cachedFields);
+      renderFieldCheckboxes();
+      return;
+    }
+
     const res = await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=fieldCounts`);
     allFieldsWithCounts = await res.json();
+    localStorage.setItem(VERSION_CACHE_KEY, currentVersion);
+    localStorage.setItem(FIELD_CACHE_KEY, JSON.stringify(allFieldsWithCounts));
     renderFieldCheckboxes();
   } catch (err) {
     el.groupList.innerHTML = '<p class="error-text">Không tải được danh sách lĩnh vực. Kiểm tra lại APPS_SCRIPT_URL trong config.js.</p>';
   }
-}
-
-// Cho phep nguoi dung chu dong xoa cache fieldCounts phia server va tai lai ngay,
-// khong can doi cache tu het han (toi da 6 tieng) khi ho vua them tu vao 1 linh vuc co san.
-async function refreshFieldCounts() {
-  el.refreshFieldsBtn.disabled = true;
-  el.refreshFieldsBtn.textContent = '🔄 Đang tải lại...';
-  try {
-    await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=clearCache`);
-  } catch (err) {
-    // xoa cache that bai thi van cu thu tai lai binh thuong
-  }
-  await loadFieldCounts();
-  el.refreshFieldsBtn.disabled = false;
-  el.refreshFieldsBtn.textContent = '🔄 Tải lại';
 }
 
 function onModeChange() {
@@ -235,17 +242,36 @@ function onModeChange() {
   renderFieldCheckboxes();
 }
 
+async function fetchLeaderboardData(fieldFilter) {
+  const url = fieldFilter && fieldFilter !== 'all'
+    ? `${CONFIG.APPS_SCRIPT_URL}?action=leaderboard&field=${encodeURIComponent(fieldFilter)}`
+    : `${CONFIG.APPS_SCRIPT_URL}?action=leaderboard`;
+  const res = await fetch(url);
+  return res.json();
+}
+
 async function loadLeaderboard(fieldFilter) {
   try {
-    const url = fieldFilter && fieldFilter !== 'all'
-      ? `${CONFIG.APPS_SCRIPT_URL}?action=leaderboard&field=${encodeURIComponent(fieldFilter)}`
-      : `${CONFIG.APPS_SCRIPT_URL}?action=leaderboard`;
-    const res = await fetch(url);
-    const data = await res.json();
+    const data = await fetchLeaderboardData(fieldFilter);
     renderLeaderboard(data);
   } catch (err) {
     // im lặng bỏ qua nếu leaderboard chưa sẵn sàng
   }
+}
+
+// Cap bac theo tong diem tich luy, hien icon dep hon thay cho 1 icon cup phang duy nhat -
+// tao dong luc "len hang" khi choi nhieu hon, thay vi chi la 1 con so kho.
+const SCORE_TIERS = [
+  { min: 1000, icon: '💎', label: 'Huyền thoại' },
+  { min: 500, icon: '👑', label: 'Bậc thầy' },
+  { min: 300, icon: '🔥', label: 'Cao thủ' },
+  { min: 150, icon: '⚔️', label: 'Chiến binh' },
+  { min: 50, icon: '🥋', label: 'Học viên' },
+  { min: 0, icon: '🌱', label: 'Tân binh' },
+];
+
+function getScoreTier(score) {
+  return SCORE_TIERS.find(t => score >= t.min) || SCORE_TIERS[SCORE_TIERS.length - 1];
 }
 
 let hasLeaderboardData = false;
@@ -273,7 +299,7 @@ function renderLeaderboard(list) {
         </span>
       </span>
       <span class="lb-right">
-        <span class="lb-score">🏆 ${item.score}</span>
+        <span class="lb-score" title="${escapeHtml(getScoreTier(item.score).label)}">${getScoreTier(item.score).icon} ${item.score}</span>
         <span class="lb-acc">${item.accuracy}%</span>
       </span>
     </li>
@@ -289,7 +315,7 @@ function renderLeaderboard(list) {
   updateLeaderboardVisibility();
 }
 
-// Trạng thái hoạt động dựa trên lần nộp bài gần nhất: từ 15 phút trở xuống tính là "Đang online".
+// Trạng thái hoạt động dựa trên lần nộp bài gần nhất: từ 15 phút trở xuống tính là "Online".
 // Quá 15 phút mới bắt đầu tính offline, và tính TỪ MỐC 15 PHÚT (vd phút thứ 16 = offline 1 phút).
 // Không lấy phần lẻ (làm tròn xuống theo đơn vị đang hiển thị); offline quá 10 ngày chỉ hiện dấu "-".
 const ONLINE_THRESHOLD_MINUTES = 15;
@@ -300,7 +326,7 @@ function getActivityStatus(isoString) {
   if (isNaN(then)) return { text: '', online: false };
 
   const totalMinutes = Math.floor((Date.now() - then) / 60000);
-  if (totalMinutes <= ONLINE_THRESHOLD_MINUTES) return { text: 'Đang online', online: true };
+  if (totalMinutes <= ONLINE_THRESHOLD_MINUTES) return { text: 'Online', online: true };
 
   const offlineMinutes = totalMinutes - ONLINE_THRESHOLD_MINUTES;
   if (offlineMinutes < 60) return { text: `${offlineMinutes} phút trước`, online: false };
@@ -760,6 +786,10 @@ async function finishQuiz() {
   el.resultAccuracy.textContent = `Tỉ lệ chính xác lượt này: ${accuracy}%`;
   el.resultTime.textContent = `Thời gian làm bài: ${formatTime(elapsedMs)}`;
 
+  el.resultPointsEarned.textContent = `🎉 Bạn vừa ghi thêm ${state.correctCount} điểm rèn luyện!`;
+  el.resultRankMessage.textContent = 'Đang tính hạng...';
+  el.resultCongrats.classList.remove('hidden');
+
   if (state.wrongList.length > 0) {
     el.wrongListWrap.classList.remove('hidden');
     el.wrongListTitle.textContent = state.mode === 'test' ? 'Các câu trả lời sai' : 'Các từ trả lời sai';
@@ -798,8 +828,15 @@ async function submitResult(durationSeconds) {
     });
     loadLeaderboard(el.leaderboardFilter.value);
     loadNameSuggestions();
+
+    // Bao hang tong (khong phu thuoc bo loc dang chon o widget) de chuc mung + tao dong luc co gang tiep
+    const allBoard = await fetchLeaderboardData('all');
+    const rankIndex = allBoard.findIndex(item => item.name === state.playerName);
+    el.resultRankMessage.textContent = rankIndex === -1
+      ? ''
+      : `🏅 Bạn đang xếp hạng #${rankIndex + 1} toàn hệ thống — cố gắng lên nhé!`;
   } catch (err) {
-    // không chặn người dùng nếu ghi lịch sử thất bại
+    el.resultRankMessage.textContent = '';
   }
 }
 

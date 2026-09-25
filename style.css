@@ -138,10 +138,6 @@ input[type="text"], select {
 .link-btn:hover { text-decoration: underline; }
 .link-btn:disabled { opacity: 0.6; cursor: default; text-decoration: none; }
 
-.field-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
-.field-header label { margin-bottom: 0; }
-.field-header .small-link { font-size: 12px; padding: 0; }
-
 .mark-btn { display: block; margin-bottom: 12px; color: #8a8d93; }
 .mark-btn.marked { color: #d6a018; }
 
@@ -177,6 +173,17 @@ input[type="text"], select {
 
 #wrong-list-wrap ul { padding-left: 20px; font-size: 14px; }
 #wrong-list-wrap li { white-space: pre-line; }
+
+.result-congrats {
+  margin: 16px 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fff7e0, #ffe9b3);
+  border: 1px solid #f2c94c;
+  text-align: center;
+}
+.result-congrats p { margin: 4px 0; font-weight: 600; font-size: 14px; }
+#result-points-earned { font-size: 16px; }
 
 .leaderboard-widget {
   position: fixed;
@@ -347,4 +354,5 @@ input[type="text"], select {
   .history-table th { color: #9a9ca1; }
   .modal-close { color: #9a9ca1; }
   .modal-close:hover { color: #e6e6e6; }
+  .result-congrats { background: linear-gradient(135deg, #2e2a1a, #3a3116); border-color: #6b5c1e; }
 }

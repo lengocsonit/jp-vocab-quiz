@@ -11,6 +11,7 @@ var RESERVED_SHEETS = ['History', 'MarkedWords'];
 var FIELD_COLUMNS = ['id', 'word', 'reading', 'meaning', 'example', 'example_meaning'];
 var TEST_COLUMNS = ['id', 'question', 'choice1', 'choice2', 'choice3', 'choice4', 'correct', 'explanation'];
 var PRIORITY_GRADUATE_STREAK = 2; // dung lien tiep bao nhieu lan thi tu dong go khoi danh sach uu tien
+var DATA_VERSION_KEY = 'dataVersion'; // luu trong Script Properties, dung de frontend biet du lieu da doi chua
 
 // Thêm menu "Từ vựng" mỗi khi mở Google Sheet, để tạo lĩnh vực mới bằng 1 click
 // thay vì phải tự tạo tab và gõ tay đúng tên cột.
@@ -61,7 +62,7 @@ function addNewField() {
   sheet.getRange(1, 1, 1, columns.length).setFontWeight('bold');
   sheet.setFrozenRows(1);
   sheet.autoResizeColumns(1, columns.length);
-  invalidateFieldCountsCache();
+  bumpVersion();
 
   ui.alert('Đã tạo lĩnh vực "' + name + '" (' + (isTest ? 'Test trắc nghiệm' : 'Từ vựng') + '). Nhập dữ liệu vào sheet này — trang web sẽ tự nhận lĩnh vực mới, không cần sửa code hay deploy lại.');
 }
@@ -154,7 +155,7 @@ function importCsvToField(fieldName, csvText) {
   var startRow = sheet.getLastRow() + 1;
   sheet.getRange(startRow, 1, normalizedRows.length, numCols).setValues(normalizedRows);
   sheet.autoResizeColumns(1, numCols);
-  invalidateFieldCountsCache();
+  bumpVersion();
 
   return 'Đã import ' + normalizedRows.length + ' dòng vào lĩnh vực "' + fieldName + '"' + (isNewSheet ? ' (mới tạo, loại ' + (isTestCsv ? 'Test trắc nghiệm' : 'Từ vựng') + ')' : '') + '.';
 }
@@ -167,10 +168,7 @@ function doGet(e) {
   if (action === 'names') return jsonResponse(getAllNames());
   if (action === 'history') return jsonResponse(getHistoryForName(e.parameter.name));
   if (action === 'markedWords') return jsonResponse(getMarkedWordsForName(e.parameter.name));
-  if (action === 'clearCache') {
-    invalidateFieldCountsCache();
-    return jsonResponse({ cleared: true });
-  }
+  if (action === 'version') return jsonResponse({ version: getVersion() });
   return jsonResponse(getWords(e.parameter.field));
 }
 
@@ -219,10 +217,9 @@ function getSheetType(sheet) {
 
 // So luong tu/cau hoi theo tung linh vuc (chi doc dong tieu de + so dong, khong doc toan bo noi dung)
 // de man hinh thiet lap tai nhanh. Kem theo "type" de web loc dung che do (Tu vung / Test).
-// Cache lai 6 tieng (muc toi da CacheService cho phep) vi day la phan cham nhat khi co nhieu sheet
-// (moi sheet ton 1 luot goi API rieng de doc dong tieu de). Cache duoc xoa ngay khi co linh vuc moi
-// (xem invalidateFieldCountsCache), nen de thoi gian cache dai khong lo sai lech, chi thinh thoang
-// so luong tu/cau cua 1 linh vuc co san co the cham cap nhat toi da 6 tieng neu chi them dong moi vao sheet.
+// Cache lai phia server (an toan, khong lo qua han vi da co bumpVersion() xoa cache ngay khi du lieu doi -
+// xem onEdit/addNewField/importCsvToField). Frontend con tu cache theo "dataVersion" (xem getVersion/onEdit
+// ben duoi) de nhung lan vao sau, neu du lieu chua doi, khong can tai lai fieldCounts qua mang nua.
 function getFieldCounts() {
   var cache = CacheService.getScriptCache();
   var cached = cache.get('fieldCounts');
@@ -239,13 +236,37 @@ function getFieldCounts() {
       };
     });
 
-  cache.put('fieldCounts', JSON.stringify(result), 21600); // 6 tieng, muc toi da cua CacheService
+  cache.put('fieldCounts', JSON.stringify(result), 21600); // 6 tieng, muc toi da cua CacheService - chi la luoi an toan
   return result;
 }
 
-// Xoa cache fieldCounts moi khi co linh vuc moi/du lieu moi, de web thay ngay khong can doi cache het han
-function invalidateFieldCountsCache() {
+// So phien ban du lieu, tang moi khi co linh vuc moi/CSV import/sua tay truc tiep tren Sheet.
+// Frontend so sanh so nay voi ban da luu trong localStorage: khop thi dung lai cache trinh duyet
+// (khong can goi lai fieldCounts), khong khop thi moi tai lai - thay cho viec phai cho cache het han
+// hoac bam nut "Tai lai" thu cong.
+function bumpVersion() {
+  var props = PropertiesService.getScriptProperties();
+  var current = Number(props.getProperty(DATA_VERSION_KEY)) || 0;
+  props.setProperty(DATA_VERSION_KEY, String(current + 1));
   CacheService.getScriptCache().remove('fieldCounts');
+}
+
+function getVersion() {
+  var props = PropertiesService.getScriptProperties();
+  return Number(props.getProperty(DATA_VERSION_KEY)) || 0;
+}
+
+// Simple trigger: Google Apps Script tu goi ham nay moi khi co nguoi sua truc tiep 1 o tren Sheet
+// (ke ca sua tay, khong qua menu "Them linh vuc"/"Import CSV"). Nho vay truong hop them dong vao
+// 1 sheet co san cung duoc nhan dien ngay, khong con canh "cham cap nhat" nhu truoc.
+function onEdit(e) {
+  try {
+    if (!e || !e.range) return;
+    var sheetName = e.range.getSheet().getName().trim();
+    if (RESERVED_SHEETS.indexOf(sheetName) === -1) bumpVersion();
+  } catch (err) {
+    // Simple trigger khong duoc phep chan viec sua sheet cua nguoi dung, nuot loi neu co
+  }
 }
 
 // Gộp từ vựng từ các sheet lĩnh vực được chọn (fieldFilter dạng "A,B"), hoặc tất cả nếu không truyền.
