@@ -206,22 +206,35 @@ input[type="text"], select {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 6px 0;
+  padding: 7px 8px;
+  margin: 0 -8px;
+  border-radius: 8px;
   border-bottom: 1px solid #eee;
 }
 .leaderboard-widget li:last-child { border-bottom: none; }
 
-.lb-left { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.leaderboard-widget li.rank-gold { background: linear-gradient(90deg, rgba(255, 200, 0, 0.16), rgba(255, 200, 0, 0.02)); }
+.leaderboard-widget li.rank-silver { background: linear-gradient(90deg, rgba(180, 180, 190, 0.18), rgba(180, 180, 190, 0.02)); }
+.leaderboard-widget li.rank-bronze { background: linear-gradient(90deg, rgba(205, 127, 50, 0.16), rgba(205, 127, 50, 0.02)); }
+
+.lb-left { display: flex; align-items: center; gap: 7px; min-width: 0; }
 .lb-rank {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 14px;
+  width: 16px;
   font-size: 11px;
   font-weight: 700;
   color: #a5a9b0;
   flex-shrink: 0;
 }
+.lb-medal {
+  font-size: 17px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.2));
+}
+
+.lb-name-wrap { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
 .leaderboard-widget .lb-name {
   font-weight: 600;
   white-space: nowrap;
@@ -237,7 +250,8 @@ input[type="text"], select {
   text-align: left;
 }
 .leaderboard-widget .lb-name:hover { text-decoration: underline; color: #2f6fed; }
-.lb-crown { flex-shrink: 0; }
+.lb-lastactive { font-size: 10px; color: #a5a9b0; white-space: nowrap; }
+.lb-lastactive.online { color: #1a9c4a; font-weight: 600; }
 
 .lb-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .lb-score { font-weight: 700; color: #d6a018; white-space: nowrap; }
@@ -321,7 +335,11 @@ input[type="text"], select {
   .field-row, .subject-group { border-color: #34363b; }
   .subject-row:hover { background: #26282c; }
   .leaderboard-widget li { border-color: #3a3c40; }
-  .lb-rank { color: #6b6f76; }
+  .lb-rank, .lb-lastactive { color: #6b6f76; }
+  .lb-lastactive.online { color: #3ddc73; }
+  .leaderboard-widget li.rank-gold { background: linear-gradient(90deg, rgba(255, 200, 0, 0.12), transparent); }
+  .leaderboard-widget li.rank-silver { background: linear-gradient(90deg, rgba(180, 180, 190, 0.14), transparent); }
+  .leaderboard-widget li.rank-bronze { background: linear-gradient(90deg, rgba(205, 127, 50, 0.14), transparent); }
   .lb-toggle-btn { border-color: #3a3c40; }
   .lb-toggle-btn:hover { background: #26282c; }
   .modal-box { background: #1f2023; }

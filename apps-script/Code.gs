@@ -303,12 +303,16 @@ function getLeaderboard(fieldFilter) {
   values.forEach(function (row) {
     var name = row[1];
     var field = row[2];
+    var timestamp = row[0];
     if (!name) return;
     if (fieldFilter && getSubjectFromField(field) !== fieldFilter) return;
 
-    if (!totals[name]) totals[name] = { name: name, correct: 0, total: 0 };
+    if (!totals[name]) totals[name] = { name: name, correct: 0, total: 0, lastActive: 0 };
     totals[name].correct += Number(row[5]) || 0;
     totals[name].total += Number(row[4]) || 0;
+
+    var ts = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime();
+    if (ts && ts > totals[name].lastActive) totals[name].lastActive = ts;
   });
 
   var list = Object.keys(totals).map(function (name) {
@@ -316,6 +320,7 @@ function getLeaderboard(fieldFilter) {
     return {
       name: t.name,
       score: t.correct,
+      lastActive: t.lastActive ? new Date(t.lastActive).toISOString() : null,
       accuracy: t.total > 0 ? Math.round((t.correct / t.total) * 1000) / 10 : 0
     };
   });

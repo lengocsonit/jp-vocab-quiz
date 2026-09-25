@@ -259,14 +259,18 @@ function renderLeaderboard(list) {
     updateLeaderboardVisibility();
     return;
   }
-  const crownColors = ['#e63946', '#c0c0c0', '#cd7f32']; // đỏ, bạc, đồng cho hạng 1-2-3
+  const rankMedals = ['🥇', '🥈', '🥉'];
+  const rankClasses = ['rank-gold', 'rank-silver', 'rank-bronze'];
   const visibleList = leaderboardExpanded ? lastLeaderboardList : lastLeaderboardList.slice(0, LEADERBOARD_COLLAPSED_COUNT);
 
   el.leaderboardList.innerHTML = visibleList.map((item, i) => `
-    <li>
+    <li class="${rankClasses[i] || ''}">
       <span class="lb-left">
-        ${crownColors[i] ? crownIcon(crownColors[i]) : `<span class="lb-rank">${i + 1}</span>`}
-        <button class="lb-name" data-name="${escapeHtml(item.name)}">${escapeHtml(item.name)}</button>
+        ${rankMedals[i] ? `<span class="lb-medal">${rankMedals[i]}</span>` : `<span class="lb-rank">${i + 1}</span>`}
+        <span class="lb-name-wrap">
+          <button class="lb-name" data-name="${escapeHtml(item.name)}">${escapeHtml(item.name)}</button>
+          ${renderActivityStatus(item.lastActive)}
+        </span>
       </span>
       <span class="lb-right">
         <span class="lb-score">🏆 ${item.score}</span>
@@ -285,8 +289,35 @@ function renderLeaderboard(list) {
   updateLeaderboardVisibility();
 }
 
-function crownIcon(color) {
-  return `<svg class="lb-crown" width="14" height="14" viewBox="0 0 24 24" fill="${color}" xmlns="http://www.w3.org/2000/svg"><path d="M2 20h20l-2-9-5 4-3-7-3 7-5-4-2 9z"/></svg>`;
+// Trạng thái hoạt động dựa trên lần nộp bài gần nhất: từ 15 phút trở xuống tính là "Đang online".
+// Quá 15 phút mới bắt đầu tính offline, và tính TỪ MỐC 15 PHÚT (vd phút thứ 16 = offline 1 phút).
+// Không lấy phần lẻ (làm tròn xuống theo đơn vị đang hiển thị); offline quá 10 ngày chỉ hiện dấu "-".
+const ONLINE_THRESHOLD_MINUTES = 15;
+
+function getActivityStatus(isoString) {
+  if (!isoString) return { text: '', online: false };
+  const then = new Date(isoString).getTime();
+  if (isNaN(then)) return { text: '', online: false };
+
+  const totalMinutes = Math.floor((Date.now() - then) / 60000);
+  if (totalMinutes <= ONLINE_THRESHOLD_MINUTES) return { text: 'Đang online', online: true };
+
+  const offlineMinutes = totalMinutes - ONLINE_THRESHOLD_MINUTES;
+  if (offlineMinutes < 60) return { text: `${offlineMinutes} phút trước`, online: false };
+
+  const offlineHours = Math.floor(offlineMinutes / 60);
+  if (offlineHours < 24) return { text: `${offlineHours} giờ trước`, online: false };
+
+  const offlineDays = Math.floor(offlineHours / 24);
+  return { text: offlineDays > 10 ? '-' : `${offlineDays} ngày trước`, online: false };
+}
+
+function renderActivityStatus(isoString) {
+  const status = getActivityStatus(isoString);
+  if (!status.text) return '';
+  const cls = status.online ? 'lb-lastactive online' : 'lb-lastactive';
+  const icon = status.online ? '🟢 ' : '';
+  return `<span class="${cls}">${icon}${escapeHtml(status.text)}</span>`;
 }
 
 function updateLeaderboardVisibility() {
