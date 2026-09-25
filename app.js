@@ -297,6 +297,11 @@ function renderFieldCheckboxes() {
     groups.get(subject).push({ field: f.field, lesson, count: f.count });
   });
 
+  // Sắp xếp các bài trong từng môn theo thứ tự tự nhiên (P1, P2, P3... thay vì theo thứ tự tab trong Sheet)
+  groups.forEach(lessons => {
+    lessons.sort((a, b) => a.lesson.localeCompare(b.lesson, undefined, { numeric: true, sensitivity: 'base' }));
+  });
+
   const totalCount = relevantFields.reduce((sum, f) => sum + f.count, 0);
   let html = `<label class="field-row field-all"><input type="checkbox" value="__all__" checked><span>Tất cả (${totalCount} ${unit})</span></label>`;
 
