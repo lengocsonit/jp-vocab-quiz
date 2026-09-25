@@ -7,7 +7,8 @@
 
 var HISTORY_SHEET = 'History';
 var MARKED_SHEET = 'MarkedWords';
-var STREAK_SHEET = 'Streaks';
+// 'Streaks': tab con lai tu 1 phien ban cu (da bo, streak gio tinh thang tu History) - giu trong danh
+// sach nay de neu ai da lo tao tab do thi no van khong bi hien nham thanh 1 linh vuc tren web.
 var RESERVED_SHEETS = ['History', 'MarkedWords', 'Streaks'];
 var STREAK_GRACE_DAYS = 2; // cach ngay hien tai <= so nay van tinh la con chuoi, qua so nay moi reset ve 1
 var FIELD_COLUMNS = ['id', 'word', 'reading', 'meaning', 'example', 'example_meaning'];
@@ -190,7 +191,6 @@ function doPost(e) {
   entries.forEach(function (entry) {
     appendHistory(timestamp, data.name, data.direction, entry.field, entry.total, entry.correct, duration);
   });
-  if (entries.length > 0) recordStreak(data.name);
   return jsonResponse(getLeaderboard());
 }
 
@@ -324,11 +324,17 @@ function getLeaderboard(fieldFilter) {
   values.shift(); // bỏ header
 
   var totals = {};
+  var playDatesByName = {}; // name -> { 'yyyy-MM-dd': true }, gom TOAN BO lich su (khong phu thuoc fieldFilter) de tinh streak
+
   values.forEach(function (row) {
     var name = row[1];
     var field = row[2];
     var timestamp = row[0];
     if (!name) return;
+
+    if (!playDatesByName[name]) playDatesByName[name] = {};
+    playDatesByName[name][toDateString(timestamp)] = true;
+
     if (fieldFilter && getSubjectFromField(field) !== fieldFilter) return;
 
     if (!totals[name]) totals[name] = { name: name, correct: 0, total: 0, lastActive: 0 };
@@ -339,14 +345,13 @@ function getLeaderboard(fieldFilter) {
     if (ts && ts > totals[name].lastActive) totals[name].lastActive = ts;
   });
 
-  var streaks = getStreakMap();
   var list = Object.keys(totals).map(function (name) {
     var t = totals[name];
     return {
       name: t.name,
       score: t.correct,
       lastActive: t.lastActive ? new Date(t.lastActive).toISOString() : null,
-      streak: streaks[name] || 0,
+      streak: computeStreakFromDates(Object.keys(playDatesByName[name] || {})),
       accuracy: t.total > 0 ? Math.round((t.correct / t.total) * 1000) / 10 : 0
     };
   });
@@ -498,21 +503,9 @@ function getMarkedWordsForName(name) {
     .map(function (row) { return { field: row[1], wordId: String(row[2]) }; });
 }
 
-// Sheet luu "chuoi ngay lam bai lien tiep" (streak) theo tung ten, tu tao neu chua co.
-// Cot: name | streak | last_active_date (yyyy-MM-dd, theo timezone cua Script - tinh ngay tu 0:00).
-// Moi ngay chi tinh 1 lan du nop bai nhieu lan. Cach ngay hien tai <= STREAK_GRACE_DAYS ngay van
-// duoc coi la con chuoi (streak +1); qua so ngay do moi reset ve 1 (bat dau chuoi moi).
-function getStreakSheet() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName(STREAK_SHEET);
-  if (!sheet) {
-    sheet = ss.insertSheet(STREAK_SHEET);
-    sheet.appendRow(['name', 'streak', 'last_active_date']);
-    sheet.setFrozenRows(1);
-  }
-  return sheet;
-}
-
+// Chuoi ngay lam bai lien tiep duoc tinh THANG TU du lieu "History" co san (khong luu sheet rieng),
+// nen tu dong dung ca voi lich su cu, khong can migrate/backfill gi khi vua bat dau dung tinh nang nay.
+// STREAK_GRACE_DAYS: cach ngay hien tai <= so nay van tinh la con chuoi; qua so ngay do moi coi la dut.
 function todayDateString() {
   return Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
 }
@@ -520,7 +513,7 @@ function todayDateString() {
 function toDateString(value) {
   return value instanceof Date
     ? Utilities.formatDate(value, Session.getScriptTimeZone(), 'yyyy-MM-dd')
-    : String(value);
+    : Utilities.formatDate(new Date(value), Session.getScriptTimeZone(), 'yyyy-MM-dd');
 }
 
 // So ngay chenh lech giua 2 chuoi yyyy-MM-dd (b - a), chi tinh theo lich, khong phu thuoc gio phut
@@ -530,45 +523,26 @@ function daysBetween(dateStrA, dateStrB) {
   return Math.round((b - a) / 86400000);
 }
 
-// Goi moi khi 1 luot choi duoc nop (tu doPost). Cung 1 ngay chi tinh 1 lan.
-function recordStreak(name) {
-  if (!name) return;
-  var sheet = getStreakSheet();
-  var values = sheet.getDataRange().getValues();
+// dateStrings: danh sach cac ngay (yyyy-MM-dd, khong trung) ma 1 nguoi da nop it nhat 1 luot choi.
+// Duyet nguoc tu ngay gan nhat ve qua khu, dem lien tuc khi khoang cach voi ngay ke truoc <= STREAK_GRACE_DAYS,
+// dung lai khi gap lon hon. Neu ngay choi gan nhat da cach hien tai qua STREAK_GRACE_DAYS thi coi nhu dut (tra ve 0).
+function computeStreakFromDates(dateStrings) {
+  if (!dateStrings || dateStrings.length === 0) return 0;
+  var sorted = dateStrings.slice().sort();
   var today = todayDateString();
 
-  for (var i = 1; i < values.length; i++) {
-    if (values[i][0] === name) {
-      var lastDate = toDateString(values[i][2]);
-      var gap = daysBetween(lastDate, today);
-      if (gap === 0) return; // hom nay da tinh roi
-      var newStreak = gap <= STREAK_GRACE_DAYS ? (Number(values[i][1]) || 0) + 1 : 1;
-      sheet.getRange(i + 1, 2, 1, 2).setValues([[newStreak, today]]);
-      return;
+  if (daysBetween(sorted[sorted.length - 1], today) > STREAK_GRACE_DAYS) return 0;
+
+  var streak = 1;
+  for (var i = sorted.length - 1; i > 0; i--) {
+    var gap = daysBetween(sorted[i - 1], sorted[i]);
+    if (gap <= STREAK_GRACE_DAYS) {
+      streak += 1;
+    } else {
+      break;
     }
   }
-
-  sheet.appendRow([name, 1, today]);
-}
-
-// Chuoi hien tai "thuc te" tai thoi diem xem: neu da qua STREAK_GRACE_DAYS ngay ke tu lan choi gan
-// nhat ma chua nop bai lai thi coi nhu da dut chuoi (tra ve 0), du gia tri luu trong Sheet co the
-// chua kip cap nhat (chi cap nhat khi co lan nop bai tiep theo, xem recordStreak).
-function getStreakMap() {
-  var sheet = getStreakSheet();
-  var values = sheet.getDataRange().getValues();
-  values.shift(); // bo header
-  var today = todayDateString();
-  var map = {};
-
-  values.forEach(function (row) {
-    var name = row[0];
-    if (!name) return;
-    var gap = daysBetween(toDateString(row[2]), today);
-    map[name] = gap > STREAK_GRACE_DAYS ? 0 : (Number(row[1]) || 0);
-  });
-
-  return map;
+  return streak;
 }
 
 function jsonResponse(obj) {
