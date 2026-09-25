@@ -167,6 +167,10 @@ function doGet(e) {
   if (action === 'names') return jsonResponse(getAllNames());
   if (action === 'history') return jsonResponse(getHistoryForName(e.parameter.name));
   if (action === 'markedWords') return jsonResponse(getMarkedWordsForName(e.parameter.name));
+  if (action === 'clearCache') {
+    invalidateFieldCountsCache();
+    return jsonResponse({ cleared: true });
+  }
   return jsonResponse(getWords(e.parameter.field));
 }
 

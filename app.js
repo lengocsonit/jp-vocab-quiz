@@ -25,6 +25,7 @@ const el = {
   nameSuggestions: document.getElementById('name-suggestions'),
   nameError: document.getElementById('name-error'),
   groupList: document.getElementById('group-list'),
+  refreshFieldsBtn: document.getElementById('refresh-fields-btn'),
   countLabel: document.getElementById('count-label'),
   countSelect: document.getElementById('count-select'),
   directionField: document.getElementById('direction-field'),
@@ -117,6 +118,7 @@ async function init() {
   document.querySelectorAll('input[name="mode"]').forEach(radio => {
     radio.addEventListener('change', onModeChange);
   });
+  el.refreshFieldsBtn.addEventListener('click', refreshFieldCounts);
 
   // Tải song song, không chờ tuần tự — 3 lượt gọi này độc lập với nhau
   loadFieldCounts();
@@ -209,6 +211,21 @@ async function loadFieldCounts() {
   } catch (err) {
     el.groupList.innerHTML = '<p class="error-text">Không tải được danh sách lĩnh vực. Kiểm tra lại APPS_SCRIPT_URL trong config.js.</p>';
   }
+}
+
+// Cho phep nguoi dung chu dong xoa cache fieldCounts phia server va tai lai ngay,
+// khong can doi cache tu het han (toi da 6 tieng) khi ho vua them tu vao 1 linh vuc co san.
+async function refreshFieldCounts() {
+  el.refreshFieldsBtn.disabled = true;
+  el.refreshFieldsBtn.textContent = '🔄 Đang tải lại...';
+  try {
+    await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=clearCache`);
+  } catch (err) {
+    // xoa cache that bai thi van cu thu tai lai binh thuong
+  }
+  await loadFieldCounts();
+  el.refreshFieldsBtn.disabled = false;
+  el.refreshFieldsBtn.textContent = '🔄 Tải lại';
 }
 
 function onModeChange() {

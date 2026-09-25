@@ -136,6 +136,11 @@ input[type="text"], select {
   padding: 0 0 10px;
 }
 .link-btn:hover { text-decoration: underline; }
+.link-btn:disabled { opacity: 0.6; cursor: default; text-decoration: none; }
+
+.field-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.field-header label { margin-bottom: 0; }
+.field-header .small-link { font-size: 12px; padding: 0; }
 
 .mark-btn { display: block; margin-bottom: 12px; color: #8a8d93; }
 .mark-btn.marked { color: #d6a018; }

@@ -57,7 +57,7 @@ Repo này đã sẵn sàng cho GitHub Pages:
 
 ## 5. Cách dùng
 
-- Danh sách lĩnh vực (số lượng từ/câu, loại Từ vựng hay Test) được cache lại tối đa 6 tiếng phía Apps Script để trang chủ tải nhanh dù có nhiều sheet — cache tự xoá ngay khi bạn thêm lĩnh vực mới (qua menu hoặc Import CSV) nên lĩnh vực mới luôn hiện ngay, không cần chờ. Chỉ riêng trường hợp **thêm dòng vào 1 sheet đã có sẵn** (không tạo sheet mới), con số đếm hiển thị có thể chậm cập nhật tối đa 6 tiếng (không ảnh hưởng nội dung học, chỉ là con số đếm).
+- Danh sách lĩnh vực (số lượng từ/câu, loại Từ vựng hay Test) được cache lại tối đa 6 tiếng phía Apps Script để trang chủ tải nhanh dù có nhiều sheet — cache tự xoá ngay khi bạn thêm lĩnh vực mới (qua menu hoặc Import CSV) nên lĩnh vực mới luôn hiện ngay, không cần chờ. Riêng trường hợp **thêm dòng vào 1 sheet đã có sẵn** (không tạo sheet mới), con số đếm hiển thị có thể chậm cập nhật — bấm nút **"🔄 Tải lại"** cạnh "Chọn lĩnh vực" để buộc lấy lại dữ liệu mới ngay lập tức, không cần chờ cache tự hết hạn.
 - Trang chủ có 2 chế độ: **📚 Ôn từ vựng** (mặc định) và **📝 Làm bài test**. Chọn chế độ nào thì danh sách "Chọn lĩnh vực" chỉ hiện đúng loại lĩnh vực tương ứng.
 - **Chế độ Ôn từ vựng**: mỗi câu hỏi mặc định ẩn 4 đáp án — bấm "Hiện đáp án" mới hiện ra để chọn. Ngay sau khi chọn 1 đáp án, hệ thống báo đúng/sai và tự động hiện kèm câu ví dụ + nghĩa của ví dụ của từ đó để củng cố.
 - **Chế độ Làm bài test**: 4 đáp án hiện luôn cùng câu hỏi (không có bước "Hiện đáp án"), giữ nguyên thứ tự như trong Sheet (không xáo trộn vị trí). Chọn xong hiện luôn phần giải thích (`explanation`) đã soạn sẵn.
