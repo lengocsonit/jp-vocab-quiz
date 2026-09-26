@@ -90,17 +90,30 @@ const el = {
 // Chan moi thao tac (click xuyen qua overlay se khong toi duoc cac nut ben duoi) trong luc dang tai
 // du lieu quan trong (danh sach linh vuc luc vao trang, hoac cau hoi luc bam "Bat dau"), tranh viec
 // nguoi dung bam lung tung vao nut khac trong luc cho.
-// Vong tron % la tien trinh GIA LAP (fetch thuong khong biet truoc tong dung luong de tinh % that) -
-// chay dan cham lai khi gan toi 90%, khong bao gio tu vuot qua 90% cho den khi thuc su co ket qua,
-// luc do nhay thang len 100%. Muc dich la cho nguoi dung thay "van dang chay", do lo he thong bi treo.
+// Vong tron % la tien trinh GIA LAP (fetch khong bao gio biet truoc tong dung luong de tinh % that -
+// Apps Script Web App khong tra Content-Length). Chay dan cham lai khi gan toi LOADING_PROGRESS_CAP,
+// dung han o do (khong bao gio tu vuot qua) cho den khi thuc su co ket qua, luc do nhay thang len 100%.
+// Rieng % thoi khong du: neu mang qua cham, dung o gan cap qua lau van gay lo lang y het nhu dung o 90% -
+// nen kem theo doi chu trang thai theo moc thoi gian (LOADING_STALL_MESSAGES) de tran an nguoi dung.
 const LOADING_RING_CIRCUMFERENCE = 169.6; // 2 * PI * 27 (r cua vong tron trong SVG)
+const LOADING_PROGRESS_CAP = 96;
+const LOADING_STALL_MESSAGES = [
+  { afterMs: 6000, text: 'Đang tải hơi lâu, vui lòng đợi thêm chút...' },
+  { afterMs: 15000, text: 'Mạng có vẻ chậm, hệ thống vẫn đang thử tải, đừng tắt trang nhé...' },
+];
 let loadingProgressTimer = null;
 let loadingProgressValue = 0;
+let loadingStallTimers = [];
 
 function setLoadingProgress(percent) {
   loadingProgressValue = percent;
   el.loadingProgressText.textContent = `${Math.round(percent)}%`;
   el.loadingRingBar.style.strokeDashoffset = LOADING_RING_CIRCUMFERENCE * (1 - percent / 100);
+}
+
+function clearLoadingStallTimers() {
+  loadingStallTimers.forEach(t => clearTimeout(t));
+  loadingStallTimers = [];
 }
 
 function showLoadingOverlay(text) {
@@ -110,14 +123,21 @@ function showLoadingOverlay(text) {
   if (loadingProgressTimer) clearInterval(loadingProgressTimer);
   setLoadingProgress(0);
   loadingProgressTimer = setInterval(() => {
-    const remaining = 90 - loadingProgressValue;
-    setLoadingProgress(loadingProgressValue + Math.max(remaining * 0.08, 0.3));
-  }, 150);
+    const remaining = LOADING_PROGRESS_CAP - loadingProgressValue;
+    if (remaining <= 0.1) return; // da sat cap, dung hang o day cho den khi co ket qua that
+    setLoadingProgress(loadingProgressValue + Math.max(remaining * 0.06, 0.15));
+  }, 200);
+
+  clearLoadingStallTimers();
+  loadingStallTimers = LOADING_STALL_MESSAGES.map(m => setTimeout(() => {
+    el.loadingOverlayText.textContent = m.text;
+  }, m.afterMs));
 }
 
 function hideLoadingOverlay() {
   if (loadingProgressTimer) clearInterval(loadingProgressTimer);
   loadingProgressTimer = null;
+  clearLoadingStallTimers();
   setLoadingProgress(100);
   el.loadingOverlay.classList.add('hidden');
 }
