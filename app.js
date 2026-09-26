@@ -45,6 +45,7 @@ const el = {
   autoAdvanceCheckbox: document.getElementById('auto-advance-checkbox'),
   toggleReadingBtn: document.getElementById('toggle-reading-btn'),
   markWordBtn: document.getElementById('mark-word-btn'),
+  questionCard: document.getElementById('question-card'),
   questionText: document.getElementById('question-text'),
   questionReading: document.getElementById('question-reading'),
   revealBtn: document.getElementById('reveal-btn'),
@@ -708,6 +709,8 @@ function renderQuestion() {
   el.nextBtn.classList.remove('wrong-result');
   el.nextBtnResult.textContent = '';
   el.nextBtnLabel.textContent = 'Câu tiếp theo';
+
+  el.questionCard.classList.toggle('long-text', state.mode === 'test');
 
   if (state.mode === 'test') {
     el.revealBtn.classList.add('hidden');
