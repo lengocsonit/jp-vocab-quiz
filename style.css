@@ -124,6 +124,11 @@ input[type="text"], select {
 .secondary-btn { background: #eef1f6; color: #1c1e21; }
 .secondary-btn:hover { background: #dfe3ea; }
 
+#next-btn.wrong-result { background: #d33; }
+#next-btn.wrong-result:hover { background: #b52a2a; }
+.next-btn-result { display: block; font-size: 16px; }
+#next-btn-label { display: block; font-size: 12px; font-weight: 500; opacity: 0.85; margin-top: 2px; }
+
 .quiz-progress { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #8a8d93; margin-bottom: 8px; }
 
 .link-btn {
@@ -170,7 +175,6 @@ input[type="text"], select {
 
 .feedback { border-top: 1px solid #eee; padding-top: 14px; }
 .feedback p { margin: 4px 0; font-size: 14px; white-space: pre-line; }
-#feedback-result { font-weight: 700; font-size: 16px; }
 
 #wrong-list-wrap ul { padding-left: 20px; font-size: 14px; }
 #wrong-list-wrap li { white-space: pre-line; }

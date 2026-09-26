@@ -45,7 +45,8 @@ const el = {
   revealBtn: document.getElementById('reveal-btn'),
   answers: document.getElementById('answers'),
   feedback: document.getElementById('feedback'),
-  feedbackResult: document.getElementById('feedback-result'),
+  nextBtnResult: document.getElementById('next-btn-result'),
+  nextBtnLabel: document.getElementById('next-btn-label'),
   feedbackExample: document.getElementById('feedback-example'),
   feedbackExampleMeaning: document.getElementById('feedback-example-meaning'),
   nextBtn: document.getElementById('next-btn'),
@@ -105,7 +106,7 @@ async function init() {
     state.autoAdvance = el.autoAdvanceCheckbox.checked;
     if (!state.autoAdvance && state.autoAdvanceTimer) {
       clearAutoAdvanceTimer();
-      el.nextBtn.textContent = 'Câu tiếp theo';
+      el.nextBtnLabel.textContent = 'Câu tiếp theo';
     } else if (state.autoAdvance && !el.feedback.classList.contains('hidden') && !state.autoAdvanceTimer) {
       startAutoAdvanceCountdown();
     }
@@ -577,7 +578,9 @@ function renderQuestion() {
   el.answers.innerHTML = '';
   el.feedback.classList.add('hidden');
   el.nextBtn.classList.add('hidden');
-  el.nextBtn.textContent = 'Câu tiếp theo';
+  el.nextBtn.classList.remove('wrong-result');
+  el.nextBtnResult.textContent = '';
+  el.nextBtnLabel.textContent = 'Câu tiếp theo';
 
   if (state.mode === 'test') {
     el.revealBtn.classList.add('hidden');
@@ -761,11 +764,12 @@ function finalizeAnswer(data, isCorrect, resultText, line1, line2) {
     state.wrongList.push(data);
   }
 
-  el.feedbackResult.textContent = resultText;
+  el.nextBtnResult.textContent = resultText;
   el.feedbackExample.textContent = line1 || '';
   el.feedbackExampleMeaning.textContent = line2 || '';
   el.feedback.classList.remove('hidden');
   el.nextBtn.classList.remove('hidden');
+  el.nextBtn.classList.toggle('wrong-result', !isCorrect);
 
   recordAnswerForPriority(data, isCorrect);
 
@@ -774,14 +778,14 @@ function finalizeAnswer(data, isCorrect, resultText, line1, line2) {
 
 function startAutoAdvanceCountdown() {
   let remaining = 3;
-  el.nextBtn.textContent = `Câu tiếp theo (${remaining})`;
+  el.nextBtnLabel.textContent = `Câu tiếp theo (${remaining})`;
   state.autoAdvanceTimer = setInterval(() => {
     remaining -= 1;
     if (remaining <= 0) {
       clearAutoAdvanceTimer();
       nextQuestion();
     } else {
-      el.nextBtn.textContent = `Câu tiếp theo (${remaining})`;
+      el.nextBtnLabel.textContent = `Câu tiếp theo (${remaining})`;
     }
   }, 1000);
 }
