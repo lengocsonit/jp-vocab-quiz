@@ -3,7 +3,7 @@
 // Có 3 loại sheet, tự nhận diện qua dòng tiêu đề (không cần đặt tên theo quy ước riêng):
 //   - Sheet Từ vựng: cột word | reading | meaning | example | example_meaning
 //   - Sheet Test trắc nghiệm: cột question | choice1 | choice2 | choice3 | choice4 | correct | explanation
-//   - Sheet Ghép từ: cột left1-4 | right1-4 (rightN là đáp án đúng của leftN) | explanation
+//   - Sheet Ghép từ: cột left1-4 | left1_reading-left4_reading | right1-4 (rightN là đáp án đúng của leftN) | explanation
 // Ngoài ra cần 1 sheet tên "History" để lưu lịch sử làm bài (xem README).
 
 var HISTORY_SHEET = 'History';
@@ -14,7 +14,7 @@ var RESERVED_SHEETS = ['History', 'MarkedWords', 'Streaks'];
 var STREAK_GRACE_DAYS = 2; // cach ngay hien tai <= so nay van tinh la con chuoi, qua so nay moi reset ve 1
 var FIELD_COLUMNS = ['id', 'word', 'reading', 'meaning', 'example', 'example_meaning'];
 var TEST_COLUMNS = ['id', 'question', 'choice1', 'choice2', 'choice3', 'choice4', 'correct', 'explanation'];
-var MATCHING_COLUMNS = ['id', 'left1', 'left2', 'left3', 'left4', 'right1', 'right2', 'right3', 'right4', 'explanation'];
+var MATCHING_COLUMNS = ['id', 'left1', 'left1_reading', 'left2', 'left2_reading', 'left3', 'left3_reading', 'left4', 'left4_reading', 'right1', 'right2', 'right3', 'right4', 'explanation'];
 var PRIORITY_GRADUATE_STREAK = 2; // dung lien tiep bao nhieu lan thi tu dong go khoi danh sach uu tien
 var DATA_VERSION_KEY = 'dataVersion'; // luu trong Script Properties, dung de frontend biet du lieu da doi chua
 
@@ -97,7 +97,7 @@ function showImportCsvDialog() {
     optionsHtml +
     '</select>' +
     '<input type="text" id="newFieldName" placeholder="Tên lĩnh vực mới, vd: BJT - Bài 3">' +
-    '<label>Dán nội dung CSV — Từ vựng: id,word,reading,meaning,example,example_meaning — Test: id,question,choice1,choice2,choice3,choice4,correct,explanation — Ghép từ: id,left1,left2,left3,left4,right1,right2,right3,right4,explanation (tự nhận diện qua dòng tiêu đề)</label>' +
+    '<label>Dán nội dung CSV — Từ vựng: id,word,reading,meaning,example,example_meaning — Test: id,question,choice1,choice2,choice3,choice4,correct,explanation — Ghép từ: id,left1,left1_reading,left2,left2_reading,left3,left3_reading,left4,left4_reading,right1,right2,right3,right4,explanation (tự nhận diện qua dòng tiêu đề)</label>' +
     '<textarea id="csvContent" placeholder="id,word,reading,meaning,example,example_meaning"></textarea>' +
     '<button onclick="doImport()">Import</button>' +
     '<div id="msg"></div>' +

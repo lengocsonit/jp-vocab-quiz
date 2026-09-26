@@ -207,6 +207,8 @@ input[type="text"], select {
 .matching-btn.correct { border-color: #f2b705; border-width: 2px; padding: 11px 11px 11px 31px; }
 .matching-btn.wrong { border-color: #d33; border-width: 2px; padding: 11px 11px 11px 31px; }
 .matching-btn[disabled] { cursor: default; }
+.matching-left-text { display: block; }
+.matching-reading { display: block; font-size: 11px; color: #6b6f76; margin-top: 2px; }
 .matching-badge {
   position: absolute;
   left: 8px;
@@ -441,7 +443,7 @@ input[type="text"], select {
   .answer-btn:hover, .matching-btn:hover { background: #303236; }
   .matching-btn.selected { background: #1e2a44; border-color: #5b8dfd; }
   .matching-btn.paired { border-color: #6b6f76; }
-  .muted, .question-reading, .lb-acc, .loading-row { color: #9a9ca1; }
+  .muted, .question-reading, .matching-reading, .lb-acc, .loading-row { color: #9a9ca1; }
   .spinner { border-color: #3a3c40; border-top-color: #5b8dfd; }
   .feedback { border-color: #3a3c40; }
   .field-row, .subject-group { border-color: #34363b; }

@@ -718,7 +718,7 @@ function renderQuestion() {
     el.answers.classList.remove('hidden');
   } else if (state.mode === 'matching') {
     el.revealBtn.classList.add('hidden');
-    el.toggleReadingBtn.classList.add('hidden');
+    el.toggleReadingBtn.classList.remove('hidden');
     el.answers.classList.add('hidden');
     el.questionReading.textContent = '';
     el.questionText.textContent = 'Ghép mỗi từ bên trái với đáp án đúng bên phải:';
@@ -775,7 +775,10 @@ function renderMatchingPairs(item) {
   matchingState = { rightOrder, pairs: {}, selectedLeft: null, checked: false };
 
   el.matchingLeftCol.innerHTML = [0, 1, 2, 3].map(i => `
-    <button type="button" class="matching-btn matching-left-btn" data-index="${i}">${escapeHtml(data['left' + (i + 1)])}</button>
+    <button type="button" class="matching-btn matching-left-btn" data-index="${i}">
+      <span class="matching-left-text">${escapeHtml(data['left' + (i + 1)])}</span>
+      <span class="matching-reading${state.showReading ? '' : ' hidden'}">${escapeHtml(data['left' + (i + 1) + '_reading'] || '')}</span>
+    </button>
   `).join('');
 
   el.matchingRightCol.innerHTML = rightOrder.map(origIndex => `
@@ -952,7 +955,11 @@ async function recordAnswerForPriority(word, isCorrect) {
 function toggleReading() {
   state.showReading = !state.showReading;
   el.toggleReadingBtn.textContent = state.showReading ? '🙈 Ẩn cách đọc' : '👁 Hiện cách đọc';
-  updateReadingDisplay();
+  if (state.mode === 'matching') {
+    updateMatchingReadingDisplay();
+  } else {
+    updateReadingDisplay();
+  }
 }
 
 function updateReadingDisplay() {
@@ -960,6 +967,12 @@ function updateReadingDisplay() {
   if (!item) return;
   const isJp2Meaning = item.direction === 'jp2meaning';
   el.questionReading.textContent = isJp2Meaning && state.showReading ? (item.word.reading || '') : '';
+}
+
+function updateMatchingReadingDisplay() {
+  el.matchingLeftCol.querySelectorAll('.matching-reading').forEach(span => {
+    span.classList.toggle('hidden', !state.showReading);
+  });
 }
 
 function revealAnswers() {
