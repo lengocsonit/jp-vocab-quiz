@@ -576,6 +576,7 @@ function renderQuestion() {
 
   el.answers.innerHTML = '';
   el.feedback.classList.add('hidden');
+  el.nextBtn.classList.add('hidden');
   el.nextBtn.textContent = 'Câu tiếp theo';
 
   if (state.mode === 'test') {
@@ -764,6 +765,7 @@ function finalizeAnswer(data, isCorrect, resultText, line1, line2) {
   el.feedbackExample.textContent = line1 || '';
   el.feedbackExampleMeaning.textContent = line2 || '';
   el.feedback.classList.remove('hidden');
+  el.nextBtn.classList.remove('hidden');
 
   recordAnswerForPriority(data, isCorrect);
 

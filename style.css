@@ -117,10 +117,11 @@ input[type="text"], select {
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
+  margin-bottom: 14px;
 }
 .primary-btn { background: #2f6fed; color: #fff; }
 .primary-btn:hover { background: #2559c9; }
-.secondary-btn { background: #eef1f6; color: #1c1e21; margin-bottom: 14px; }
+.secondary-btn { background: #eef1f6; color: #1c1e21; }
 .secondary-btn:hover { background: #dfe3ea; }
 
 .quiz-progress { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #8a8d93; margin-bottom: 8px; }
