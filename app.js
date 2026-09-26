@@ -23,6 +23,8 @@ const state = {
 const el = {
   loadingOverlay: document.getElementById('loading-overlay'),
   loadingOverlayText: document.getElementById('loading-overlay-text'),
+  loadingRingBar: document.getElementById('loading-ring-bar'),
+  loadingProgressText: document.getElementById('loading-progress-text'),
   nameInput: document.getElementById('name-input'),
   nameSuggestions: document.getElementById('name-suggestions'),
   nameError: document.getElementById('name-error'),
@@ -88,12 +90,35 @@ const el = {
 // Chan moi thao tac (click xuyen qua overlay se khong toi duoc cac nut ben duoi) trong luc dang tai
 // du lieu quan trong (danh sach linh vuc luc vao trang, hoac cau hoi luc bam "Bat dau"), tranh viec
 // nguoi dung bam lung tung vao nut khac trong luc cho.
+// Vong tron % la tien trinh GIA LAP (fetch thuong khong biet truoc tong dung luong de tinh % that) -
+// chay dan cham lai khi gan toi 90%, khong bao gio tu vuot qua 90% cho den khi thuc su co ket qua,
+// luc do nhay thang len 100%. Muc dich la cho nguoi dung thay "van dang chay", do lo he thong bi treo.
+const LOADING_RING_CIRCUMFERENCE = 169.6; // 2 * PI * 27 (r cua vong tron trong SVG)
+let loadingProgressTimer = null;
+let loadingProgressValue = 0;
+
+function setLoadingProgress(percent) {
+  loadingProgressValue = percent;
+  el.loadingProgressText.textContent = `${Math.round(percent)}%`;
+  el.loadingRingBar.style.strokeDashoffset = LOADING_RING_CIRCUMFERENCE * (1 - percent / 100);
+}
+
 function showLoadingOverlay(text) {
   el.loadingOverlayText.textContent = text || 'Đang tải...';
   el.loadingOverlay.classList.remove('hidden');
+
+  if (loadingProgressTimer) clearInterval(loadingProgressTimer);
+  setLoadingProgress(0);
+  loadingProgressTimer = setInterval(() => {
+    const remaining = 90 - loadingProgressValue;
+    setLoadingProgress(loadingProgressValue + Math.max(remaining * 0.08, 0.3));
+  }, 150);
 }
 
 function hideLoadingOverlay() {
+  if (loadingProgressTimer) clearInterval(loadingProgressTimer);
+  loadingProgressTimer = null;
+  setLoadingProgress(100);
   el.loadingOverlay.classList.add('hidden');
 }
 
