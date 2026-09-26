@@ -207,7 +207,7 @@ input[type="text"], select {
 .matching-btn.correct { border-color: #f2b705; border-width: 2px; padding: 11px 11px 11px 31px; }
 .matching-btn.wrong { border-color: #d33; border-width: 2px; padding: 11px 11px 11px 31px; }
 .matching-btn[disabled] { cursor: default; }
-.matching-left-text { display: block; }
+.matching-left-text { display: block; font-size: 13px; }
 .matching-reading { display: block; font-size: 11px; color: #6b6f76; margin-top: 2px; }
 .matching-badge {
   position: absolute;
