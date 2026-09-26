@@ -35,6 +35,7 @@ const el = {
   quizScreen: document.getElementById('quiz-screen'),
   resultScreen: document.getElementById('result-screen'),
 
+  exitQuizBtn: document.getElementById('exit-quiz-btn'),
   quizProgressText: document.getElementById('quiz-progress-text'),
   quizTimer: document.getElementById('quiz-timer'),
   autoAdvanceCheckbox: document.getElementById('auto-advance-checkbox'),
@@ -111,6 +112,7 @@ async function init() {
     leaderboardExpanded = !leaderboardExpanded;
     renderLeaderboard(lastLeaderboardList);
   });
+  el.exitQuizBtn.addEventListener('click', exitQuiz);
   el.toggleReadingBtn.addEventListener('click', toggleReading);
   el.markWordBtn.addEventListener('click', toggleMarkCurrentWord);
   el.autoAdvanceCheckbox.addEventListener('change', () => {
@@ -814,6 +816,16 @@ function nextQuestion() {
   } else {
     renderQuestion();
   }
+}
+
+// Thoat giua chung ve trang chu (vd chon nham chu de) - bai dang lam do khong duoc ghi nhan,
+// khong goi submitResult nen khong tinh diem/lich su/streak cho luot nay.
+function exitQuiz() {
+  const confirmed = confirm('Thoát về trang chủ? Bài đang làm dở sẽ không được tính.');
+  if (!confirmed) return;
+  clearAutoAdvanceTimer();
+  stopTimer();
+  showScreen('setup');
 }
 
 async function finishQuiz() {

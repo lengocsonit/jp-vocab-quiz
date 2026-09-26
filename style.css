@@ -132,6 +132,19 @@ input[type="text"], select {
 #next-btn-label { display: block; font-size: 12px; font-weight: 500; opacity: 0.85; margin-top: 2px; }
 
 .quiz-progress { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #8a8d93; margin-bottom: 8px; }
+.quiz-progress-info { display: flex; align-items: center; gap: 12px; }
+.exit-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  color: #a5a9b0;
+  padding: 3px 7px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.exit-btn:hover { color: #d33; background: #fdeaea; }
 
 .link-btn {
   display: inline-block;
@@ -368,4 +381,5 @@ input[type="text"], select {
   .modal-close:hover { color: #e6e6e6; }
   .result-congrats { background: linear-gradient(135deg, #2e2a1a, #3a3116); border-color: #6b5c1e; }
   .app-version { color: #4a4c50; }
+  .exit-btn:hover { color: #ff6b6b; background: #3a2323; }
 }
