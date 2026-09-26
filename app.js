@@ -118,7 +118,7 @@ function clearLoadingStallTimers() {
 
 function showLoadingOverlay(text) {
   el.loadingOverlayText.textContent = text || 'Đang tải...';
-  el.loadingOverlay.classList.remove('hidden');
+  el.loadingOverlay.classList.remove('hidden', 'fade-out');
 
   if (loadingProgressTimer) clearInterval(loadingProgressTimer);
   setLoadingProgress(0);
@@ -134,25 +134,34 @@ function showLoadingOverlay(text) {
   }, m.afterMs));
 }
 
-// An overlay NGAY LAP TUC, dung khi that bai/loi - khong can cho hieu ung 100% vi khong co gi de "hoan thanh".
+// Mo dan (opacity) roi moi that su an (them class hidden) thay vi cat phut - cho ca 2 truong hop
+// deu tranh cam giac giat cuc luc bien mat.
+function fadeOutLoadingOverlay() {
+  el.loadingOverlay.classList.add('fade-out');
+  setTimeout(() => {
+    el.loadingOverlay.classList.add('hidden');
+    el.loadingOverlay.classList.remove('fade-out');
+  }, 200);
+}
+
+// An overlay NGAY (chi mo dan nhanh), dung khi that bai/loi - khong can cho hieu ung 100% vi khong co
+// gi de "hoan thanh".
 function hideLoadingOverlay() {
   if (loadingProgressTimer) clearInterval(loadingProgressTimer);
   loadingProgressTimer = null;
   clearLoadingStallTimers();
-  el.loadingOverlay.classList.add('hidden');
+  fadeOutLoadingOverlay();
 }
 
-// Dung khi THANH CONG: cho vong tron chay hien het len 100% de nguoi dung thay ro da xong, roi moi
-// an overlay. Neu an ngay lap tuc luc dang o giua chung tien trinh gia lap (vd moi 30%) se gay cam
-// giac giat cuc/nhu bi loi, dung du de trinh duyet ve xong 100% (transition CSS) truoc khi an.
+// Dung khi THANH CONG: cho vong tron chay hien het len 100% de nguoi dung thay ro da xong, dung lai
+// 1 chut o do, roi moi mo dan va an overlay - tranh cam giac giat cuc/nhu bi loi khi an dot ngot luc
+// con dang do (vd moi 30%) hoac cat phut ngay khi vua cham 100%.
 function finishLoadingOverlay() {
   if (loadingProgressTimer) clearInterval(loadingProgressTimer);
   loadingProgressTimer = null;
   clearLoadingStallTimers();
   setLoadingProgress(100);
-  setTimeout(() => {
-    el.loadingOverlay.classList.add('hidden');
-  }, 350);
+  setTimeout(fadeOutLoadingOverlay, 350);
 }
 
 function getAppVersion() {

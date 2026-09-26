@@ -356,7 +356,10 @@ input[type="text"], select {
   align-items: center;
   justify-content: center;
   z-index: 300;
+  opacity: 1;
+  transition: opacity 0.2s ease;
 }
+.loading-overlay.fade-out { opacity: 0; }
 .loading-overlay-box { text-align: center; }
 .loading-mascot { font-size: 46px; display: inline-block; animation: loading-mascot-bounce 0.9s ease-in-out infinite; }
 @keyframes loading-mascot-bounce {
