@@ -308,7 +308,15 @@ async function loadFieldCounts() {
     localStorage.setItem(FIELD_CACHE_KEY, JSON.stringify(allFieldsWithCounts));
     renderFieldCheckboxes();
   } catch (err) {
-    el.groupList.innerHTML = '<p class="error-text">Không tải được danh sách lĩnh vực. Kiểm tra lại APPS_SCRIPT_URL trong config.js.</p>';
+    el.groupList.innerHTML = `
+      <p class="error-text">Không tải được danh sách lĩnh vực, vui lòng thử lại.</p>
+      <button type="button" id="retry-fields-btn" class="secondary-btn">Thử lại</button>
+    `;
+    document.getElementById('retry-fields-btn').addEventListener('click', () => {
+      el.groupList.innerHTML = '<div class="loading-row"><span class="spinner"></span> Đang tải danh sách từ...</div>';
+      showLoadingOverlay('Đang tải danh sách lĩnh vực...');
+      loadFieldCounts().finally(hideLoadingOverlay);
+    });
   }
 }
 
