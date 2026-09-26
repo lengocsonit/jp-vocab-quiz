@@ -76,7 +76,17 @@ const el = {
   historyEmpty: document.getElementById('history-empty'),
   historyTable: document.getElementById('history-table'),
   historyTableBody: document.getElementById('history-table-body'),
+
+  appVersion: document.getElementById('app-version'),
 };
+
+// Lay so "?v=" ngay tren the <script src="app.js?v=..."> dang chay, de hien thi phien ban ma khong
+// can nho khai bao 1 hang so rieng - moi lan sua app.js von da phai tang so nay de pha cache roi.
+function getAppVersion() {
+  const script = document.querySelector('script[src*="app.js"]');
+  const match = script && script.src.match(/[?&]v=([\w.]+)/);
+  return match ? match[1] : '?';
+}
 
 const LEADERBOARD_COLLAPSED_COUNT = 5;
 let leaderboardExpanded = false;
@@ -87,6 +97,7 @@ init();
 async function init() {
   const savedName = localStorage.getItem(NAME_STORAGE_KEY);
   if (savedName) el.nameInput.value = savedName;
+  el.appVersion.textContent = `v${getAppVersion()}`;
 
   el.startBtn.addEventListener('click', startQuiz);
   el.revealBtn.addEventListener('click', revealAnswers);

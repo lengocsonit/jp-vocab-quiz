@@ -108,6 +108,8 @@ input[type="text"], select {
 
 .error-text { color: #d33; font-size: 13px; min-height: 18px; margin: 4px 0 0; }
 
+.app-version { text-align: center; color: #c2c5cb; font-size: 11px; margin: 10px 0 0; }
+
 .primary-btn, .secondary-btn {
   display: block;
   width: 100%;
@@ -365,4 +367,5 @@ input[type="text"], select {
   .modal-close { color: #9a9ca1; }
   .modal-close:hover { color: #e6e6e6; }
   .result-congrats { background: linear-gradient(135deg, #2e2a1a, #3a3116); border-color: #6b5c1e; }
+  .app-version { color: #4a4c50; }
 }
