@@ -139,12 +139,12 @@ input[type="text"], select {
   cursor: pointer;
   font-size: 15px;
   line-height: 1;
-  color: #a5a9b0;
+  color: #d33;
   padding: 3px 7px;
   border-radius: 6px;
   flex-shrink: 0;
 }
-.exit-btn:hover { color: #d33; background: #fdeaea; }
+.exit-btn:hover { color: #fff; background: #d33; }
 
 .link-btn {
   display: inline-block;
@@ -381,5 +381,6 @@ input[type="text"], select {
   .modal-close:hover { color: #e6e6e6; }
   .result-congrats { background: linear-gradient(135deg, #2e2a1a, #3a3116); border-color: #6b5c1e; }
   .app-version { color: #4a4c50; }
-  .exit-btn:hover { color: #ff6b6b; background: #3a2323; }
+  .exit-btn { color: #ff6b6b; }
+  .exit-btn:hover { color: #fff; background: #d33; }
 }
