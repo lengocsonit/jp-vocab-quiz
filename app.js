@@ -134,12 +134,25 @@ function showLoadingOverlay(text) {
   }, m.afterMs));
 }
 
+// An overlay NGAY LAP TUC, dung khi that bai/loi - khong can cho hieu ung 100% vi khong co gi de "hoan thanh".
 function hideLoadingOverlay() {
   if (loadingProgressTimer) clearInterval(loadingProgressTimer);
   loadingProgressTimer = null;
   clearLoadingStallTimers();
-  setLoadingProgress(100);
   el.loadingOverlay.classList.add('hidden');
+}
+
+// Dung khi THANH CONG: cho vong tron chay hien het len 100% de nguoi dung thay ro da xong, roi moi
+// an overlay. Neu an ngay lap tuc luc dang o giua chung tien trinh gia lap (vd moi 30%) se gay cam
+// giac giat cuc/nhu bi loi, dung du de trinh duyet ve xong 100% (transition CSS) truoc khi an.
+function finishLoadingOverlay() {
+  if (loadingProgressTimer) clearInterval(loadingProgressTimer);
+  loadingProgressTimer = null;
+  clearLoadingStallTimers();
+  setLoadingProgress(100);
+  setTimeout(() => {
+    el.loadingOverlay.classList.add('hidden');
+  }, 350);
 }
 
 function getAppVersion() {
@@ -199,7 +212,7 @@ async function init() {
   // Chan thao tac cho den khi fieldCounts xong (can de biet co gi de chon) - leaderboard/goi y ten
   // khong chan vi khong anh huong den viec bam "Bat dau".
   showLoadingOverlay('Đang tải danh sách lĩnh vực...');
-  loadFieldCounts().finally(hideLoadingOverlay);
+  loadFieldCounts().finally(finishLoadingOverlay);
   loadLeaderboard('all');
   loadNameSuggestions();
 }
@@ -315,7 +328,7 @@ async function loadFieldCounts() {
     document.getElementById('retry-fields-btn').addEventListener('click', () => {
       el.groupList.innerHTML = '<div class="loading-row"><span class="spinner"></span> Đang tải danh sách từ...</div>';
       showLoadingOverlay('Đang tải danh sách lĩnh vực...');
-      loadFieldCounts().finally(hideLoadingOverlay);
+      loadFieldCounts().finally(finishLoadingOverlay);
     });
   }
 }
@@ -628,9 +641,9 @@ async function startQuiz() {
   state.autoAdvance = el.autoAdvanceCheckbox.checked;
 
   startTimer();
-  hideLoadingOverlay();
   showScreen('quiz');
   renderQuestion();
+  finishLoadingOverlay();
 }
 
 function startTimer() {
