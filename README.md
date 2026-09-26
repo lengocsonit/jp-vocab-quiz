@@ -10,16 +10,17 @@ Mỗi **lĩnh vực** (BJT, IT Passport, SG, FE, ...) là **1 sheet (tab) riêng
 
 > Lưu ý: nếu muốn điểm bảng xếp hạng của lĩnh vực Test tách riêng, không gộp chung với lĩnh vực Từ vựng cùng tên môn, hãy đặt tiền tố khác nhau (vd môn từ vựng đặt `BJT - ...`, môn test đặt `Test BJT - ...`) — vì việc gộp Môn hiện chỉ dựa theo tên, không phân biệt loại lĩnh vực.
 
-Có **2 loại lĩnh vực**, tự nhận diện qua dòng tiêu đề (không cần đặt tên sheet theo quy ước riêng để phân biệt):
+Có **3 loại lĩnh vực**, tự nhận diện qua dòng tiêu đề (không cần đặt tên sheet theo quy ước riêng để phân biệt):
 
 - **Từ vựng** (chế độ "📚 Ôn từ vựng"): cột `id | word | reading | meaning | example | example_meaning`
 - **Test trắc nghiệm cố định** (chế độ "📝 Làm bài test", vd câu hỏi phân biệt từ gần nghĩa dạng BJT): cột `id | question | choice1 | choice2 | choice3 | choice4 | correct | explanation` — trong đó `question` dùng `___` làm chỗ trống, `choice1-4` là 4 đáp án cố định giữ nguyên thứ tự, `correct` là số 1-4, `explanation` là giải thích hiện ra sau khi chọn đáp án.
+- **Ghép từ** (chế độ "🧩 Ghép từ", vd 4 từ gần nghĩa cần ghép đúng với 4 mô tả/nghĩa tương ứng): cột `id | left1 | left2 | left3 | left4 | right1 | right2 | right3 | right4 | explanation` — mỗi dòng là 1 bộ 4 cặp, `rightN` là đáp án đúng khớp với `leftN` (thứ tự hiển thị bên phải sẽ tự xáo trộn, người chơi bấm 1 từ trái rồi bấm 1 đáp án phải để nối cặp). `explanation` tuỳ chọn, hiện sau khi kiểm tra — hợp để đặt câu ghi nhớ/cách đọc cho cả 4 từ.
 
 1. Tạo 1 Google Sheet mới.
 2. Với mỗi lĩnh vực, tạo 1 tab mới, đặt tên tab tuỳ ý (ví dụ: `BJT`, `IT Passport`, `SG`, `FE`, `Test - BJT Bài 15`). Mỗi tab nhập đúng cột theo loại tương ứng ở trên.
    (Có thể import file mẫu [`data/words-template.csv`](data/words-template.csv) cho lĩnh vực từ vựng vào từng tab qua File > Import > Insert new sheet(s)/Replace current sheet, rồi xoá dòng ví dụ và điền từ thật. Cột `id` chỉ cần đánh số thứ tự trong phạm vi tab đó, dùng để bạn tự quản lý/tra cứu, không bắt buộc phải duy nhất toàn bộ hệ thống.)
-3. Muốn mở rộng thêm lĩnh vực mới sau này: sau khi đã deploy Apps Script ở Bước 2, mở lại Google Sheet sẽ thấy menu **"Từ vựng" > "➕ Thêm lĩnh vực mới"** — gõ tên lĩnh vực, chọn loại (Từ vựng hoặc Test trắc nghiệm), hệ thống tự tạo tab mới với đúng cột tương ứng (không cần tạo tay hay sửa code). Trang web sẽ tự nhận lĩnh vực mới ngay lần tải sau.
-4. Nếu đã có sẵn danh sách từ hoặc bộ câu hỏi test dạng CSV (vd nhờ AI tạo ra), dùng menu **"Từ vựng" > "📥 Import CSV vào lĩnh vực"**: dán nội dung CSV vào ô textarea, chọn lĩnh vực (tạo mới hoặc gộp thêm vào lĩnh vực có sẵn), bấm Import — loại lĩnh vực (từ vựng/test) khi tạo mới sẽ tự nhận diện qua dòng tiêu đề của CSV, khỏi cần chọn tay.
+3. Muốn mở rộng thêm lĩnh vực mới sau này: sau khi đã deploy Apps Script ở Bước 2, mở lại Google Sheet sẽ thấy menu **"Từ vựng" > "➕ Thêm lĩnh vực mới"** — gõ tên lĩnh vực, chọn loại (Từ vựng, Test trắc nghiệm, hoặc Ghép từ), hệ thống tự tạo tab mới với đúng cột tương ứng (không cần tạo tay hay sửa code). Trang web sẽ tự nhận lĩnh vực mới ngay lần tải sau.
+4. Nếu đã có sẵn danh sách từ hoặc bộ câu hỏi dạng CSV (vd nhờ AI tạo ra), dùng menu **"Từ vựng" > "📥 Import CSV vào lĩnh vực"**: dán nội dung CSV vào ô textarea, chọn lĩnh vực (tạo mới hoặc gộp thêm vào lĩnh vực có sẵn), bấm Import — loại lĩnh vực khi tạo mới sẽ tự nhận diện qua dòng tiêu đề của CSV, khỏi cần chọn tay.
 5. Tạo thêm 1 tab tên `History` (không được trùng tên với bất kỳ lĩnh vực nào), dòng đầu tiên nhập tiêu đề cột (chỉ để dễ đọc, script tự bỏ qua dòng này):
    `timestamp | name | field | direction | total | correct | accuracy | duration_seconds`
 
@@ -58,10 +59,11 @@ Repo này đã sẵn sàng cho GitHub Pages:
 ## 5. Cách dùng
 
 - Danh sách lĩnh vực (số lượng từ/câu, loại Từ vựng hay Test) được cache theo **phiên bản dữ liệu**: mỗi khi có thay đổi thật sự (thêm lĩnh vực mới, Import CSV, hoặc **sửa tay trực tiếp trên Sheet** — kể cả chỉ thêm vài dòng vào 1 sheet có sẵn) thì phiên bản tự tăng lên 1. Trình duyệt lưu lại phiên bản đã tải; lần vào sau nếu phiên bản không đổi thì lấy thẳng dữ liệu đã lưu (gần như tức thì, không cần gọi lại server), còn nếu đổi thì mới tải lại — nên không cần bấm nút tải lại thủ công.
-- Trang chủ có 2 chế độ: **📚 Ôn từ vựng** (mặc định) và **📝 Làm bài test**. Chọn chế độ nào thì danh sách "Chọn lĩnh vực" chỉ hiện đúng loại lĩnh vực tương ứng.
+- Trang chủ có 3 chế độ: **📚 Ôn từ vựng** (mặc định), **📝 Làm bài test**, và **🧩 Ghép từ**. Chọn chế độ nào thì danh sách "Chọn lĩnh vực" chỉ hiện đúng loại lĩnh vực tương ứng.
 - **Chế độ Ôn từ vựng**: mỗi câu hỏi mặc định ẩn 4 đáp án — bấm "Hiện đáp án" mới hiện ra để chọn. Ngay sau khi chọn 1 đáp án, hệ thống báo đúng/sai và tự động hiện kèm câu ví dụ + nghĩa của ví dụ của từ đó để củng cố.
 - Trong lúc làm bài, có nút "✕" ở góc trái để thoát ngay về trang chủ (vd lỡ chọn nhầm lĩnh vực) — bài đang làm dở sẽ không được tính điểm/lịch sử/streak.
 - **Chế độ Làm bài test**: 4 đáp án hiện luôn cùng câu hỏi (không có bước "Hiện đáp án"), giữ nguyên thứ tự như trong Sheet (không xáo trộn vị trí). Chọn xong hiện luôn phần giải thích (`explanation`) đã soạn sẵn.
+- **Chế độ Ghép từ**: 4 từ bên trái, 4 đáp án bên phải (thứ tự đã xáo trộn) — bấm 1 từ trái rồi bấm 1 đáp án phải để nối cặp (số thứ tự hiện ở góc mỗi ô đã ghép); bấm lại 1 trong 2 ô đang ghép để tháo ra ghép lại. Ghép đủ 4/4 cặp mới bấm được "Kiểm tra đáp án". Mỗi cặp ghép đúng được 1 điểm (tối đa 4 điểm/câu); nếu chưa đúng hết cả 4 thì câu đó tính là sai (vào danh sách ưu tiên ôn lại, và hiện trong "Các bộ ghép chưa đúng hết" ở màn kết quả).
 - Mỗi lần sửa/thêm từ mới, hoặc thêm lĩnh vực mới: chỉ cần sửa trực tiếp trên Google Sheet (thêm tab mới cho lĩnh vực mới), không cần sửa code hay deploy lại.
 - Mỗi lượt chơi tự ghi vào tab `History` — nếu 1 lượt chơi gồm nhiều lĩnh vực (chọn nhiều lĩnh vực cùng lúc), mỗi lĩnh vực được ghi thành 1 dòng riêng để tính điểm theo từng lĩnh vực chính xác.
 - Bảng xếp hạng Top 10 (góc phải trang chủ) cộng dồn điểm theo tên qua tất cả các lượt chơi. Mặc định xem theo **Tổng** (cộng dồn mọi lĩnh vực), có thể đổi dropdown để xem xếp hạng riêng theo từng lĩnh vực. Top 1-2-3 có huy chương 🥇🥈🥉 và tô nền vàng/bạc/đồng nhẹ. Mỗi người kèm trạng thái hoạt động dựa trên lượt nộp bài gần nhất: nộp bài trong vòng 15 phút thì hiện "🟢 Online", quá 15 phút thì tính offline từ mốc đó (vd phút thứ 16 = "1 phút trước"), quá 10 ngày thì chỉ hiện dấu "-".

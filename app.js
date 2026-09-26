@@ -49,6 +49,10 @@ const el = {
   questionReading: document.getElementById('question-reading'),
   revealBtn: document.getElementById('reveal-btn'),
   answers: document.getElementById('answers'),
+  matchingContainer: document.getElementById('matching-container'),
+  matchingLeftCol: document.getElementById('matching-left-col'),
+  matchingRightCol: document.getElementById('matching-right-col'),
+  matchingCheckBtn: document.getElementById('matching-check-btn'),
   feedback: document.getElementById('feedback'),
   nextBtnResult: document.getElementById('next-btn-result'),
   nextBtnLabel: document.getElementById('next-btn-label'),
@@ -183,6 +187,7 @@ async function init() {
 
   el.startBtn.addEventListener('click', startQuiz);
   el.revealBtn.addEventListener('click', revealAnswers);
+  el.matchingCheckBtn.addEventListener('click', checkMatchingAnswers);
   el.nextBtn.addEventListener('click', nextQuestion);
   el.replayBtn.addEventListener('click', () => showScreen('setup'));
   el.leaderboardFilter.addEventListener('change', () => {
@@ -344,8 +349,10 @@ async function loadFieldCounts() {
 
 function onModeChange() {
   state.mode = document.querySelector('input[name="mode"]:checked').value;
-  el.directionField.classList.toggle('hidden', state.mode === 'test');
-  el.countLabel.textContent = state.mode === 'test' ? 'Số câu muốn làm' : 'Số từ muốn ôn';
+  el.directionField.classList.toggle('hidden', state.mode !== 'vocab');
+  el.countLabel.textContent = state.mode === 'test' ? 'Số câu muốn làm'
+    : state.mode === 'matching' ? 'Số bộ ghép muốn làm'
+    : 'Số từ muốn ôn';
   renderFieldCheckboxes();
 }
 
@@ -484,11 +491,12 @@ function renderFieldCheckboxes() {
   el.leaderboardFilter.innerHTML = '<option value="all">Tổng</option>' +
     subjectsForLeaderboard.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
 
-  const unit = state.mode === 'test' ? 'câu' : 'từ';
+  const unit = state.mode === 'test' ? 'câu' : state.mode === 'matching' ? 'bộ' : 'từ';
   const relevantFields = allFieldsWithCounts.filter(f => f.type === state.mode);
 
   if (relevantFields.length === 0) {
-    el.groupList.innerHTML = `<p class="muted">Chưa có dữ liệu ${state.mode === 'test' ? 'bộ test' : 'từ vựng'}.</p>`;
+    const modeLabel = state.mode === 'test' ? 'bộ test' : state.mode === 'matching' ? 'bộ ghép từ' : 'từ vựng';
+    el.groupList.innerHTML = `<p class="muted">Chưa có dữ liệu ${modeLabel}.</p>`;
     return;
   }
 
@@ -604,7 +612,9 @@ async function startQuiz() {
     const data = await res.json();
     pool = state.mode === 'test'
       ? data.filter(w => w.question && w.choice1)
-      : data.filter(w => w.word && w.meaning);
+      : state.mode === 'matching'
+        ? data.filter(w => w.left1 && w.right1)
+        : data.filter(w => w.word && w.meaning);
   } catch (err) {
     hideLoadingOverlay();
     el.startBtn.disabled = false;
@@ -616,11 +626,14 @@ async function startQuiz() {
   el.startBtn.disabled = false;
   el.startBtn.textContent = 'Bắt đầu';
 
-  if (pool.length < 4) {
+  const minRequired = state.mode === 'matching' ? 1 : 4;
+  if (pool.length < minRequired) {
     hideLoadingOverlay();
     el.setupError.textContent = state.mode === 'test'
       ? 'Cần ít nhất 4 câu hỏi trong lĩnh vực đã chọn.'
-      : 'Cần ít nhất 4 từ trong lĩnh vực đã chọn để tạo câu hỏi trắc nghiệm.';
+      : state.mode === 'matching'
+        ? 'Lĩnh vực đã chọn chưa có bộ ghép từ nào.'
+        : 'Cần ít nhất 4 từ trong lĩnh vực đã chọn để tạo câu hỏi trắc nghiệm.';
     return;
   }
 
@@ -685,6 +698,11 @@ function renderQuestion() {
   el.quizProgressText.textContent = `Câu ${state.currentIndex + 1} / ${total} — Điểm: ${state.correctCount}`;
 
   el.answers.innerHTML = '';
+  el.matchingContainer.classList.add('hidden');
+  el.matchingLeftCol.innerHTML = '';
+  el.matchingRightCol.innerHTML = '';
+  el.matchingCheckBtn.classList.add('hidden');
+  el.matchingCheckBtn.disabled = true;
   el.feedback.classList.add('hidden');
   el.nextBtn.classList.add('hidden');
   el.nextBtn.classList.remove('wrong-result');
@@ -698,6 +716,15 @@ function renderQuestion() {
     el.questionText.textContent = item.word.question;
     renderTestAnswers(item);
     el.answers.classList.remove('hidden');
+  } else if (state.mode === 'matching') {
+    el.revealBtn.classList.add('hidden');
+    el.toggleReadingBtn.classList.add('hidden');
+    el.answers.classList.add('hidden');
+    el.questionReading.textContent = '';
+    el.questionText.textContent = 'Ghép mỗi từ bên trái với đáp án đúng bên phải:';
+    renderMatchingPairs(item);
+    el.matchingContainer.classList.remove('hidden');
+    el.matchingCheckBtn.classList.remove('hidden');
   } else {
     el.revealBtn.classList.remove('hidden');
     el.toggleReadingBtn.classList.remove('hidden');
@@ -734,7 +761,127 @@ function selectTestAnswer(chosenIndex, btnEl) {
   if (!isCorrect) btnEl.classList.add('wrong');
 
   const resultText = isCorrect ? '✅ Chính xác!' : `❌ Sai rồi. Đáp án đúng: ${correctText}`;
-  finalizeAnswer(data, isCorrect, resultText, data.explanation || '', '');
+  finalizeAnswer(data, isCorrect ? 1 : 0, 1, resultText, data.explanation || '', '');
+}
+
+// Trang thai 1 cau ghep tu: rightOrder la thu tu hien thi (da xao tron) cua 4 dap an ben phai,
+// pairs la map { leftIndex: rightIndex_goc } cac cap da ghep, selectedLeft la o dang cho chon dap an,
+// checked = true sau khi da bam "Kiem tra dap an" (khoa lai, khong cho sua nua).
+let matchingState = { rightOrder: [], pairs: {}, selectedLeft: null, checked: false };
+
+function renderMatchingPairs(item) {
+  const data = item.word;
+  const rightOrder = shuffle([0, 1, 2, 3]);
+  matchingState = { rightOrder, pairs: {}, selectedLeft: null, checked: false };
+
+  el.matchingLeftCol.innerHTML = [0, 1, 2, 3].map(i => `
+    <button type="button" class="matching-btn matching-left-btn" data-index="${i}">${escapeHtml(data['left' + (i + 1)])}</button>
+  `).join('');
+
+  el.matchingRightCol.innerHTML = rightOrder.map(origIndex => `
+    <button type="button" class="matching-btn matching-right-btn" data-index="${origIndex}">${escapeHtml(data['right' + (origIndex + 1)])}</button>
+  `).join('');
+
+  el.matchingLeftCol.querySelectorAll('.matching-left-btn').forEach(btn => {
+    btn.addEventListener('click', () => handleMatchingLeftClick(Number(btn.dataset.index)));
+  });
+  el.matchingRightCol.querySelectorAll('.matching-right-btn').forEach(btn => {
+    btn.addEventListener('click', () => handleMatchingRightClick(Number(btn.dataset.index)));
+  });
+}
+
+// Bam 1 tu ben trai: neu da ghep roi thi go cap do ra va cho chon lai; bam lai chinh no dang
+// duoc chon thi bo chon; con lai thi chon no, cho bam tiep 1 dap an ben phai de ghep.
+function handleMatchingLeftClick(leftIndex) {
+  if (matchingState.checked) return;
+
+  if (matchingState.pairs[leftIndex] !== undefined) {
+    delete matchingState.pairs[leftIndex];
+    matchingState.selectedLeft = leftIndex;
+  } else if (matchingState.selectedLeft === leftIndex) {
+    matchingState.selectedLeft = null;
+  } else {
+    matchingState.selectedLeft = leftIndex;
+  }
+
+  syncMatchingUI();
+}
+
+// Bam 1 dap an ben phai: neu no dang ghep voi 1 tu khac thi go cap cu ra truoc (tranh 1 dap an
+// bi dung cho 2 tu); neu dang co 1 tu ben trai duoc chon thi ghep no voi dap an vua bam.
+function handleMatchingRightClick(rightIndex) {
+  if (matchingState.checked) return;
+
+  const existingLeft = Object.keys(matchingState.pairs).find(li => matchingState.pairs[li] === rightIndex);
+  if (existingLeft !== undefined) delete matchingState.pairs[Number(existingLeft)];
+
+  if (matchingState.selectedLeft !== null) {
+    matchingState.pairs[matchingState.selectedLeft] = rightIndex;
+    matchingState.selectedLeft = null;
+  }
+
+  syncMatchingUI();
+}
+
+// Ve lai class/badge so thu tu cho tat ca nut trai-phai dung theo matchingState hien tai,
+// va bat/tat nut "Kiem tra dap an" (chi bat khi da ghep du 4/4 cap).
+function syncMatchingUI() {
+  el.matchingLeftCol.querySelectorAll('.matching-left-btn').forEach(btn => {
+    const i = Number(btn.dataset.index);
+    const paired = matchingState.pairs[i] !== undefined;
+    btn.classList.toggle('paired', paired);
+    btn.classList.toggle('selected', matchingState.selectedLeft === i);
+    setMatchingBadge(btn, paired ? i + 1 : null);
+  });
+
+  el.matchingRightCol.querySelectorAll('.matching-right-btn').forEach(btn => {
+    const rightIndex = Number(btn.dataset.index);
+    const pairedLeft = Object.keys(matchingState.pairs).find(li => matchingState.pairs[li] === rightIndex);
+    btn.classList.toggle('paired', pairedLeft !== undefined);
+    setMatchingBadge(btn, pairedLeft !== undefined ? Number(pairedLeft) + 1 : null);
+  });
+
+  el.matchingCheckBtn.disabled = Object.keys(matchingState.pairs).length < 4;
+}
+
+function setMatchingBadge(btn, number) {
+  const oldBadge = btn.querySelector('.matching-badge');
+  if (oldBadge) oldBadge.remove();
+  if (number === null) return;
+  const badge = document.createElement('span');
+  badge.className = 'matching-badge';
+  badge.textContent = String(number);
+  btn.prepend(badge);
+}
+
+// Cham diem 1 cau ghep tu: rightN la dap an dung cho leftN (theo dung quy uoc cot trong Sheet),
+// nen 1 cap dung khi pairs[i] === i. Diem tinh tung phan (0-4), khac vocab/test la dung/sai tuyet doi.
+function checkMatchingAnswers() {
+  const item = state.quizQueue[state.currentIndex];
+  const data = item.word;
+  matchingState.checked = true;
+
+  let correctCount = 0;
+  el.matchingLeftCol.querySelectorAll('.matching-left-btn').forEach(btn => {
+    const i = Number(btn.dataset.index);
+    const isCorrect = matchingState.pairs[i] === i;
+    if (isCorrect) correctCount += 1;
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    btn.disabled = true;
+  });
+
+  el.matchingRightCol.querySelectorAll('.matching-right-btn').forEach(btn => {
+    const rightIndex = Number(btn.dataset.index);
+    const pairedLeft = Object.keys(matchingState.pairs).find(li => matchingState.pairs[li] === rightIndex);
+    const isCorrectPair = pairedLeft !== undefined && Number(pairedLeft) === rightIndex;
+    btn.classList.add(isCorrectPair ? 'correct' : 'wrong');
+    btn.disabled = true;
+  });
+
+  el.matchingCheckBtn.classList.add('hidden');
+
+  const resultText = correctCount === 4 ? '✅ Chính xác cả 4 cặp!' : `⚠️ Đúng ${correctCount}/4 cặp.`;
+  finalizeAnswer(data, correctCount, 4, resultText, data.explanation || '', '');
 }
 
 function wordMarkKey(word) {
@@ -854,24 +1001,25 @@ function selectAnswer(choice, correctValue, btnEl) {
   const resultText = isCorrect ? '✅ Chính xác!' : `❌ Sai rồi. Đáp án đúng: ${correctValue}`;
   const exampleText = item.word.example ? `Ví dụ: ${item.word.example}` : '';
   const exampleMeaningText = item.word.example_meaning ? `Nghĩa: ${item.word.example_meaning}` : '';
-  finalizeAnswer(item.word, isCorrect, resultText, exampleText, exampleMeaningText);
+  finalizeAnswer(item.word, isCorrect ? 1 : 0, 1, resultText, exampleText, exampleMeaningText);
 }
 
-// Xu ly phan chung sau khi tra loi (dung cho ca 2 che do): cap nhat diem, danh sach sai,
-// hien khung feedback, ghi nhan uu tien, va tu dong chuyen cau neu bat.
-function finalizeAnswer(data, isCorrect, resultText, line1, line2) {
-  state.answeredCount += 1;
+// Xu ly phan chung sau khi tra loi (dung cho ca 3 che do): cap nhat diem, danh sach sai, hien khung
+// feedback, ghi nhan uu tien, va tu dong chuyen cau neu bat.
+// correctPoints/totalPoints cho phep tinh diem tung phan (che do Ghep tu: dung 3/4 cap van duoc 3
+// diem) - vocab/test luon truyen (1,1) hoac (0,1). Rieng viec coi la "dung tuyet doi" (vao wrongList,
+// tinh vao danh sach uu tien) chi khi correctPoints === totalPoints (vd Ghep tu phai dung ca 4/4).
+function finalizeAnswer(data, correctPoints, totalPoints, resultText, line1, line2) {
+  state.answeredCount += totalPoints;
+  const isCorrect = correctPoints === totalPoints;
 
   const field = data.field || 'Khác';
   if (!state.fieldTally[field]) state.fieldTally[field] = { correct: 0, total: 0 };
-  state.fieldTally[field].total += 1;
+  state.fieldTally[field].total += totalPoints;
+  state.fieldTally[field].correct += correctPoints;
+  state.correctCount += correctPoints;
 
-  if (isCorrect) {
-    state.correctCount += 1;
-    state.fieldTally[field].correct += 1;
-  } else {
-    state.wrongList.push(data);
-  }
+  if (!isCorrect) state.wrongList.push(data);
 
   el.nextBtnResult.textContent = resultText;
   el.feedbackExample.textContent = line1 || '';
@@ -939,11 +1087,17 @@ async function finishQuiz() {
 
   if (state.wrongList.length > 0) {
     el.wrongListWrap.classList.remove('hidden');
-    el.wrongListTitle.textContent = state.mode === 'test' ? 'Các câu trả lời sai' : 'Các từ trả lời sai';
+    el.wrongListTitle.textContent = state.mode === 'test' ? 'Các câu trả lời sai'
+      : state.mode === 'matching' ? 'Các bộ ghép chưa đúng hết'
+      : 'Các từ trả lời sai';
     el.wrongList.innerHTML = state.wrongList.map(w => {
       if (state.mode === 'test') {
         const correctText = w['choice' + w.correct] || '';
         return `<li>${escapeHtml(w.question)} — Đáp án đúng: ${escapeHtml(correctText)}</li>`;
+      }
+      if (state.mode === 'matching') {
+        const pairs = [1, 2, 3, 4].map(n => `${w['left' + n]} → ${w['right' + n]}`).join('; ');
+        return `<li>${escapeHtml(pairs)}</li>`;
       }
       return `<li>${escapeHtml(w.word)} (${escapeHtml(w.reading || '')}) — ${escapeHtml(w.meaning)}</li>`;
     }).join('');

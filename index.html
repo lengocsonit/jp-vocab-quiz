@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ôn từ vựng tiếng Nhật</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
-<link rel="stylesheet" href="style.css?v=31">
+<link rel="stylesheet" href="style.css?v=32">
 </head>
 <body>
 
@@ -73,6 +73,7 @@
       <div class="radio-row mode-row">
         <label><input type="radio" name="mode" value="vocab" checked> 📚 Ôn từ vựng</label>
         <label><input type="radio" name="mode" value="test"> 📝 Làm bài test</label>
+        <label><input type="radio" name="mode" value="matching"> 🧩 Ghép từ</label>
       </div>
     </div>
 
@@ -131,12 +132,18 @@
     <button id="mark-word-btn" class="link-btn mark-btn">☆ Đánh dấu ôn lại</button>
 
     <button id="reveal-btn" class="secondary-btn">Hiện đáp án</button>
+    <button id="matching-check-btn" class="secondary-btn hidden" disabled>Kiểm tra đáp án</button>
     <button id="next-btn" class="primary-btn hidden">
       <span id="next-btn-result" class="next-btn-result"></span>
       <span id="next-btn-label">Câu tiếp theo</span>
     </button>
 
     <div id="answers" class="answers hidden"></div>
+
+    <div id="matching-container" class="matching-container hidden">
+      <div class="matching-col" id="matching-left-col"></div>
+      <div class="matching-col" id="matching-right-col"></div>
+    </div>
 
     <div id="feedback" class="feedback hidden">
       <p id="feedback-example"></p>
@@ -169,6 +176,6 @@
 </main>
 
 <script src="config.js?v=2"></script>
-<script src="app.js?v=37"></script>
+<script src="app.js?v=38"></script>
 </body>
 </html>
