@@ -774,12 +774,10 @@ function renderMatchingPairs(item) {
   const rightOrder = shuffle([0, 1, 2, 3]);
   matchingState = { rightOrder, pairs: {}, selectedLeft: null, checked: false };
 
-  el.matchingLeftCol.innerHTML = [0, 1, 2, 3].map(i => `
-    <button type="button" class="matching-btn matching-left-btn" data-index="${i}">
-      <span class="matching-left-text">${escapeHtml(data['left' + (i + 1)])}</span>
-      <span class="matching-reading${state.showReading ? '' : ' hidden'}">${escapeHtml(data['left' + (i + 1) + '_reading'] || '')}</span>
-    </button>
-  `).join('');
+  // Viet gon tren 1 dong (khong xuong dong/thut le trong template) vi nut nay dung white-space: pre-line
+  // ke thua tu .matching-btn - neu de xuong dong/thut le trong source, cac dau xuong dong do se bi hieu
+  // la line break that, lam khung nut phong to bat thuong so voi nut ben phai (chi co 1 dong text don).
+  el.matchingLeftCol.innerHTML = [0, 1, 2, 3].map(i => `<button type="button" class="matching-btn matching-left-btn" data-index="${i}"><span class="matching-left-text">${escapeHtml(data['left' + (i + 1)])}</span><span class="matching-reading${state.showReading ? '' : ' hidden'}">${escapeHtml(data['left' + (i + 1) + '_reading'] || '')}</span></button>`).join('');
 
   el.matchingRightCol.innerHTML = rightOrder.map(origIndex => `
     <button type="button" class="matching-btn matching-right-btn" data-index="${origIndex}">${escapeHtml(data['right' + (origIndex + 1)])}</button>
