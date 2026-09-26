@@ -21,6 +21,8 @@ const state = {
 };
 
 const el = {
+  loadingOverlay: document.getElementById('loading-overlay'),
+  loadingOverlayText: document.getElementById('loading-overlay-text'),
   nameInput: document.getElementById('name-input'),
   nameSuggestions: document.getElementById('name-suggestions'),
   nameError: document.getElementById('name-error'),
@@ -83,6 +85,18 @@ const el = {
 
 // Lay so "?v=" ngay tren the <script src="app.js?v=..."> dang chay, de hien thi phien ban ma khong
 // can nho khai bao 1 hang so rieng - moi lan sua app.js von da phai tang so nay de pha cache roi.
+// Chan moi thao tac (click xuyen qua overlay se khong toi duoc cac nut ben duoi) trong luc dang tai
+// du lieu quan trong (danh sach linh vuc luc vao trang, hoac cau hoi luc bam "Bat dau"), tranh viec
+// nguoi dung bam lung tung vao nut khac trong luc cho.
+function showLoadingOverlay(text) {
+  el.loadingOverlayText.textContent = text || 'Đang tải...';
+  el.loadingOverlay.classList.remove('hidden');
+}
+
+function hideLoadingOverlay() {
+  el.loadingOverlay.classList.add('hidden');
+}
+
 function getAppVersion() {
   const script = document.querySelector('script[src*="app.js"]');
   const match = script && script.src.match(/[?&]v=([\w.]+)/);
@@ -136,8 +150,11 @@ async function init() {
     radio.addEventListener('change', onModeChange);
   });
 
-  // Tải song song, không chờ tuần tự — 3 lượt gọi này độc lập với nhau
-  loadFieldCounts();
+  // Tải song song, không chờ tuần tự — 3 lượt gọi này độc lập với nhau.
+  // Chan thao tac cho den khi fieldCounts xong (can de biet co gi de chon) - leaderboard/goi y ten
+  // khong chan vi khong anh huong den viec bam "Bat dau".
+  showLoadingOverlay('Đang tải danh sách lĩnh vực...');
+  loadFieldCounts().finally(hideLoadingOverlay);
   loadLeaderboard('all');
   loadNameSuggestions();
 }
@@ -501,6 +518,7 @@ async function startQuiz() {
 
   el.startBtn.disabled = true;
   el.startBtn.textContent = 'Đang tải câu hỏi...';
+  showLoadingOverlay('Đang tải câu hỏi...');
 
   let pool;
   try {
@@ -513,6 +531,7 @@ async function startQuiz() {
       ? data.filter(w => w.question && w.choice1)
       : data.filter(w => w.word && w.meaning);
   } catch (err) {
+    hideLoadingOverlay();
     el.startBtn.disabled = false;
     el.startBtn.textContent = 'Bắt đầu';
     el.setupError.textContent = 'Không tải được câu hỏi, vui lòng thử lại.';
@@ -523,6 +542,7 @@ async function startQuiz() {
   el.startBtn.textContent = 'Bắt đầu';
 
   if (pool.length < 4) {
+    hideLoadingOverlay();
     el.setupError.textContent = state.mode === 'test'
       ? 'Cần ít nhất 4 câu hỏi trong lĩnh vực đã chọn.'
       : 'Cần ít nhất 4 từ trong lĩnh vực đã chọn để tạo câu hỏi trắc nghiệm.';
@@ -555,6 +575,7 @@ async function startQuiz() {
   state.autoAdvance = el.autoAdvanceCheckbox.checked;
 
   startTimer();
+  hideLoadingOverlay();
   showScreen('quiz');
   renderQuestion();
 }

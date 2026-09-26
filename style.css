@@ -347,6 +347,39 @@ input[type="text"], select {
 
 .hidden { display: none !important; }
 
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.8);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+}
+.loading-overlay-box { text-align: center; }
+.loading-mascot { font-size: 46px; display: inline-block; animation: loading-mascot-bounce 0.9s ease-in-out infinite; }
+@keyframes loading-mascot-bounce {
+  0%, 100% { transform: translateY(0) rotate(-8deg); }
+  50% { transform: translateY(-16px) rotate(8deg); }
+}
+.loading-overlay-box p { margin: 10px 0 8px; font-weight: 600; font-size: 14px; color: #1c1e21; }
+.loading-dots { display: flex; gap: 6px; justify-content: center; }
+.loading-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2f6fed;
+  display: inline-block;
+  animation: loading-dot-bounce 1.2s ease-in-out infinite;
+}
+.loading-dots span:nth-child(2) { animation-delay: 0.15s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes loading-dot-bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
 @media (max-width: 700px) {
   .leaderboard-widget { position: static; width: auto; margin-bottom: 16px; }
 }
@@ -383,4 +416,6 @@ input[type="text"], select {
   .app-version { color: #4a4c50; }
   .exit-btn { color: #ff6b6b; }
   .exit-btn:hover { color: #fff; background: #d33; }
+  .loading-overlay { background: rgba(20,21,23,0.82); }
+  .loading-overlay-box p { color: #e6e6e6; }
 }
