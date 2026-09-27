@@ -13,6 +13,7 @@ const state = {
   playerName: '',
   fieldTally: {}, // { fieldName: { correct, total } }
   showReading: false,
+  hideAnswer: false, // chi dung o che do Hoc bai: tick vao thi an nghia/vi du de tu on lai
   autoAdvance: true,
   quizStartTime: 0,
   timerInterval: null,
@@ -43,6 +44,8 @@ const el = {
   quizProgressText: document.getElementById('quiz-progress-text'),
   quizTimer: document.getElementById('quiz-timer'),
   autoAdvanceCheckbox: document.getElementById('auto-advance-checkbox'),
+  hideAnswerRow: document.getElementById('hide-answer-row'),
+  hideAnswerCheckbox: document.getElementById('hide-answer-checkbox'),
   toggleReadingBtn: document.getElementById('toggle-reading-btn'),
   markWordBtn: document.getElementById('mark-word-btn'),
   questionCard: document.getElementById('question-card'),
@@ -217,6 +220,10 @@ async function init() {
     } else if (state.autoAdvance && !el.feedback.classList.contains('hidden') && !state.autoAdvanceTimer) {
       startAutoAdvanceCountdown();
     }
+  });
+  el.hideAnswerCheckbox.addEventListener('change', () => {
+    state.hideAnswer = el.hideAnswerCheckbox.checked;
+    if (state.mode === 'study') el.feedback.classList.toggle('hidden', state.hideAnswer);
   });
   el.leaderboardList.addEventListener('click', (e) => {
     const nameBtn = e.target.closest('.lb-name');
@@ -757,6 +764,7 @@ function renderQuestion() {
   el.matchingCheckBtn.classList.add('hidden');
   el.matchingCheckBtn.disabled = true;
   el.feedback.classList.add('hidden');
+  el.hideAnswerRow.classList.add('hidden');
   el.prevBtn.classList.add('hidden');
   el.nextBtn.classList.add('hidden');
   el.nextBtn.classList.remove('wrong-result');
@@ -794,7 +802,8 @@ function renderQuestion() {
     el.feedbackMeaning.textContent = item.word.meaning || '';
     el.feedbackExample.textContent = item.word.example ? `Ví dụ: ${item.word.example}` : '';
     el.feedbackExampleMeaning.textContent = item.word.example_meaning ? `Nghĩa: ${item.word.example_meaning}` : '';
-    el.feedback.classList.remove('hidden');
+    el.feedback.classList.toggle('hidden', state.hideAnswer);
+    el.hideAnswerRow.classList.remove('hidden');
     el.prevBtn.classList.remove('hidden');
     el.prevBtn.disabled = state.currentIndex === 0;
     el.nextBtn.classList.remove('hidden');
