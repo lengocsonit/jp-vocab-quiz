@@ -365,7 +365,14 @@ function getLeaderboard(fieldFilter) {
     };
   });
 
-  list.sort(function (a, b) { return b.score - a.score; });
+  // Xep hang uu tien theo thoi gian hoat dong GAN NHAT (moi nhat len truoc), diem so chi dung de
+  // phan dinh khi trung thoi gian hoat dong - khong con la tieu chi chinh nhu truoc.
+  list.sort(function (a, b) {
+    var timeA = a.lastActive ? new Date(a.lastActive).getTime() : 0;
+    var timeB = b.lastActive ? new Date(b.lastActive).getTime() : 0;
+    if (timeB !== timeA) return timeB - timeA;
+    return b.score - a.score;
+  });
   return list; // tra ve toan bo, frontend tu gioi han hien Top 5 + nut "Xem them"
 }
 
