@@ -61,6 +61,7 @@ const el = {
   markWordBtn: document.getElementById('mark-word-btn'),
   questionCard: document.getElementById('question-card'),
   timerRing: document.getElementById('timer-ring'),
+  timerCountdown: document.getElementById('timer-countdown'),
   questionText: document.getElementById('question-text'),
   speakBtn: document.getElementById('speak-btn'),
   questionReading: document.getElementById('question-reading'),
@@ -1344,31 +1345,43 @@ function clearAutoAdvanceTimer() {
   state.autoAdvanceTimer = null;
 }
 
-// Dem nguoc 30s cho moi cau (chi Ôn từ vựng/Làm bài test). Vong tron quanh khung cau hoi chay tu
-// day (--timer-progress:1) ve het (--timer-progress:0) bang CSS transition (@property, xem style.css).
-// Het 30s ma chua tra loi thi tu dong xu ly nhu tra loi sai (xem handleAnswerTimeout).
+// Dem nguoc 30s cho moi cau (chi Ôn từ vựng/Làm bài test). Cap nhat vong tron + so dem MOI KHUNG
+// HINH dua tren thoi gian THUC TE da troi qua (Date.now()), khong dung CSS transition dat san 30s -
+// transition co the chay khong deu (nhanh/cham that thuong) neu trinh duyet ban ve lai (repaint
+// conic-gradient kha nang, co the bi delay khi co viec khac tren main thread). Tinh theo thoi gian
+// thuc luon tu dong bat kip dung toc do, khong bao gio bi lech du frame co bi drop.
+const ANSWER_TIME_LIMIT_MS = 30000;
 let answerTimeoutId = null;
+let answerTimerRAF = null;
+let answerTimerDeadline = 0;
 
 function startAnswerTimer() {
   clearAnswerTimer();
-  el.timerRing.style.transition = 'none';
-  el.timerRing.style.setProperty('--timer-progress', '1');
+  answerTimerDeadline = Date.now() + ANSWER_TIME_LIMIT_MS;
   el.timerRing.classList.add('active');
-  void el.timerRing.offsetWidth; // ep trinh duyet ve ngay gia tri day truoc khi bat lai transition
-  el.timerRing.style.transition = '';
-  el.timerRing.style.setProperty('--timer-progress', '0');
-  answerTimeoutId = setTimeout(handleAnswerTimeout, 30000);
+  el.timerCountdown.classList.remove('hidden');
+
+  const tick = () => {
+    const remainingMs = answerTimerDeadline - Date.now();
+    const progress = Math.max(remainingMs, 0) / ANSWER_TIME_LIMIT_MS;
+    el.timerRing.style.setProperty('--timer-progress', String(progress));
+    el.timerCountdown.textContent = String(Math.max(Math.ceil(remainingMs / 1000), 0));
+    if (remainingMs > 0) answerTimerRAF = requestAnimationFrame(tick);
+  };
+  tick();
+
+  answerTimeoutId = setTimeout(handleAnswerTimeout, ANSWER_TIME_LIMIT_MS);
 }
 
 // Goi khi da co cau tra loi (hoac het gio, hoac chuyen sang cau khac) - dung vong dem lai, an di.
 function clearAnswerTimer() {
   if (answerTimeoutId) clearTimeout(answerTimeoutId);
   answerTimeoutId = null;
+  if (answerTimerRAF) cancelAnimationFrame(answerTimerRAF);
+  answerTimerRAF = null;
   el.timerRing.classList.remove('active');
-  el.timerRing.style.transition = 'none';
   el.timerRing.style.setProperty('--timer-progress', '1');
-  void el.timerRing.offsetWidth;
-  el.timerRing.style.transition = '';
+  el.timerCountdown.classList.add('hidden');
 }
 
 // Het 30s ma chua chon dap an: tu dong hien dap an dung, tinh la sai (coi nhu khong chon), sau do

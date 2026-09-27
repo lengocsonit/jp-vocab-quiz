@@ -272,9 +272,10 @@ input[type="text"], select {
 .question-reading { font-size: 15px; color: #6b6f76; margin-top: 6px; white-space: pre-line; }
 
 /* Vong dem nguoc 30s chay quanh vien khung cau hoi (che do On tu vung/Test) - dung ky thuat
-   conic-gradient + mask de ve 1 vien "cung tron" theo % con lai, dang day (--timer-progress: 1)
-   luc moi hien cau hoi, roi vat ra het (--timer-progress: 0) sau 30s bang CSS transition (@property
-   cho phep transition truc tiep tren 1 bien so, khong can JS tick tung khung hinh). */
+   conic-gradient + mask de ve 1 vien "cung tron" theo % con lai. --timer-progress duoc JS cap nhat
+   TRUC TIEP moi khung hinh (requestAnimationFrame, dua tren thoi gian thuc te da troi qua) thay vi
+   dung CSS transition - transition co the chay khong deu neu trinh duyet ban ve lai thu khac (repaint
+   nang do conic-gradient gay ra), con tinh theo thoi gian thuc luon tu bat kip, khong bao gio lech. */
 @property --timer-progress {
   syntax: '<number>';
   inherits: false;
@@ -292,9 +293,26 @@ input[type="text"], select {
   mask-composite: exclude;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.2s ease, --timer-progress 30s linear;
+  transition: opacity 0.2s ease;
 }
 .timer-ring.active { opacity: 1; }
+
+.timer-countdown {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border-radius: 14px;
+  background: #4a6fa5;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 /* Vi tri co dinh o goc khung, khong phu thuoc do dai chu - tranh nhay vi tri giua cac cau hoi */
 .speak-btn {
@@ -316,7 +334,7 @@ input[type="text"], select {
 .speak-btn:active { transform: scale(0.94); }
 
 /* Cau hoi dai (che do Test) can gon nhe hon, khong dam/to/can giua nhu 1 tu ngan de de doc ca doan */
-.question-card.long-text { text-align: left; padding: 20px 46px 20px 18px; }
+.question-card.long-text { text-align: left; padding: 46px 46px 20px 18px; }
 .question-card.long-text .question-text { font-size: 19px; font-weight: 500; line-height: 1.7; }
 
 .answers { display: grid; gap: 10px; margin-bottom: 16px; }
@@ -627,6 +645,7 @@ input[type="text"], select {
   .mode-card.selected { border-color: #7c9ccf; background: #1e2a3d; }
   .mode-card input[type="radio"] { accent-color: #7c9ccf; }
   .timer-ring { background: conic-gradient(#7c9ccf calc(var(--timer-progress) * 360deg), transparent 0deg); }
+  .timer-countdown { background: #7c9ccf; }
   .quote-banner { background: linear-gradient(135deg, #1e2a3d, #26282c); border-color: #3a3c40; }
   .quote-jp { color: #9db8de; }
   .quote-vi { color: #9a9ca1; }
