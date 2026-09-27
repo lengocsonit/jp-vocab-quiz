@@ -271,6 +271,31 @@ input[type="text"], select {
 .question-text { font-size: 28px; font-weight: 700; white-space: pre-line; }
 .question-reading { font-size: 15px; color: #6b6f76; margin-top: 6px; white-space: pre-line; }
 
+/* Vong dem nguoc 30s chay quanh vien khung cau hoi (che do On tu vung/Test) - dung ky thuat
+   conic-gradient + mask de ve 1 vien "cung tron" theo % con lai, dang day (--timer-progress: 1)
+   luc moi hien cau hoi, roi vat ra het (--timer-progress: 0) sau 30s bang CSS transition (@property
+   cho phep transition truc tiep tren 1 bien so, khong can JS tick tung khung hinh). */
+@property --timer-progress {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 1;
+}
+.timer-ring {
+  --timer-progress: 1;
+  position: absolute;
+  inset: -3px;
+  border-radius: 19px;
+  padding: 3px;
+  background: conic-gradient(#4a6fa5 calc(var(--timer-progress) * 360deg), transparent 0deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease, --timer-progress 30s linear;
+}
+.timer-ring.active { opacity: 1; }
+
 /* Vi tri co dinh o goc khung, khong phu thuoc do dai chu - tranh nhay vi tri giua cac cau hoi */
 .speak-btn {
   position: absolute;
@@ -601,6 +626,7 @@ input[type="text"], select {
   .mode-card:hover { background: #26282c; }
   .mode-card.selected { border-color: #7c9ccf; background: #1e2a3d; }
   .mode-card input[type="radio"] { accent-color: #7c9ccf; }
+  .timer-ring { background: conic-gradient(#7c9ccf calc(var(--timer-progress) * 360deg), transparent 0deg); }
   .quote-banner { background: linear-gradient(135deg, #1e2a3d, #26282c); border-color: #3a3c40; }
   .quote-jp { color: #9db8de; }
   .quote-vi { color: #9a9ca1; }

@@ -60,6 +60,7 @@ const el = {
   wordListBody: document.getElementById('word-list-body'),
   markWordBtn: document.getElementById('mark-word-btn'),
   questionCard: document.getElementById('question-card'),
+  timerRing: document.getElementById('timer-ring'),
   questionText: document.getElementById('question-text'),
   speakBtn: document.getElementById('speak-btn'),
   questionReading: document.getElementById('question-reading'),
@@ -952,6 +953,14 @@ function renderQuestion() {
     updateReadingDisplay();
   }
 
+  // Dem nguoc 30s chi ap dung Ôn từ vựng va Làm bài test - Học bài khong co dap an nen khong ap dung,
+  // Ghép từ co co che cham diem khac (4 cap) nen cung khong ap dung.
+  if (state.mode === 'vocab' || state.mode === 'test') {
+    startAnswerTimer();
+  } else {
+    clearAnswerTimer();
+  }
+
   updateMarkButtonDisplay();
 }
 
@@ -1292,6 +1301,7 @@ function selectAnswer(choice, correctValue, btnEl) {
 // diem) - vocab/test luon truyen (1,1) hoac (0,1). Rieng viec coi la "dung tuyet doi" (vao wrongList,
 // tinh vao danh sach uu tien) chi khi correctPoints === totalPoints (vd Ghep tu phai dung ca 4/4).
 function finalizeAnswer(data, correctPoints, totalPoints, resultText, line1, line2) {
+  clearAnswerTimer();
   state.answeredCount += totalPoints;
   const isCorrect = correctPoints === totalPoints;
 
@@ -1334,6 +1344,66 @@ function clearAutoAdvanceTimer() {
   state.autoAdvanceTimer = null;
 }
 
+// Dem nguoc 30s cho moi cau (chi Ôn từ vựng/Làm bài test). Vong tron quanh khung cau hoi chay tu
+// day (--timer-progress:1) ve het (--timer-progress:0) bang CSS transition (@property, xem style.css).
+// Het 30s ma chua tra loi thi tu dong xu ly nhu tra loi sai (xem handleAnswerTimeout).
+let answerTimeoutId = null;
+
+function startAnswerTimer() {
+  clearAnswerTimer();
+  el.timerRing.style.transition = 'none';
+  el.timerRing.style.setProperty('--timer-progress', '1');
+  el.timerRing.classList.add('active');
+  void el.timerRing.offsetWidth; // ep trinh duyet ve ngay gia tri day truoc khi bat lai transition
+  el.timerRing.style.transition = '';
+  el.timerRing.style.setProperty('--timer-progress', '0');
+  answerTimeoutId = setTimeout(handleAnswerTimeout, 30000);
+}
+
+// Goi khi da co cau tra loi (hoac het gio, hoac chuyen sang cau khac) - dung vong dem lai, an di.
+function clearAnswerTimer() {
+  if (answerTimeoutId) clearTimeout(answerTimeoutId);
+  answerTimeoutId = null;
+  el.timerRing.classList.remove('active');
+  el.timerRing.style.transition = 'none';
+  el.timerRing.style.setProperty('--timer-progress', '1');
+  void el.timerRing.offsetWidth;
+  el.timerRing.style.transition = '';
+}
+
+// Het 30s ma chua chon dap an: tu dong hien dap an dung, tinh la sai (coi nhu khong chon), sau do
+// di theo dung luong finalizeAnswer nhu tra loi binh thuong - tu chuyen cau neu dang bat, khong thi
+// dung yen cho bam "Cau tiep theo" thu cong.
+function handleAnswerTimeout() {
+  answerTimeoutId = null;
+  const item = state.quizQueue[state.currentIndex];
+  if (!item) return;
+
+  if (state.mode === 'vocab') {
+    if (el.answers.classList.contains('hidden')) revealAnswers();
+    const isJp2Meaning = item.direction === 'jp2meaning';
+    const correctValue = isJp2Meaning ? item.word.meaning : item.word.word;
+    [...el.answers.children].forEach(btn => {
+      btn.disabled = true;
+      if (btn.textContent === correctValue) btn.classList.add('correct');
+    });
+    const resultText = `⌛ Hết giờ! Đáp án đúng: ${correctValue}`;
+    const exampleText = item.word.example ? `Ví dụ: ${item.word.example}` : '';
+    const exampleMeaningText = item.word.example_meaning ? `Nghĩa: ${item.word.example_meaning}` : '';
+    finalizeAnswer(item.word, 0, 1, resultText, exampleText, exampleMeaningText);
+  } else if (state.mode === 'test') {
+    const data = item.word;
+    const correctIndex = Number(data.correct);
+    const correctText = data['choice' + correctIndex] || '';
+    [...el.answers.children].forEach(btn => {
+      btn.disabled = true;
+      if (Number(btn.dataset.choiceIndex) === correctIndex) btn.classList.add('correct');
+    });
+    const resultText = `⌛ Hết giờ! Đáp án đúng: ${correctText}`;
+    finalizeAnswer(data, 0, 1, resultText, data.explanation || '', '');
+  }
+}
+
 function nextQuestion() {
   clearAutoAdvanceTimer();
   state.currentIndex += 1;
@@ -1358,11 +1428,13 @@ function exitQuiz() {
   const confirmed = confirm('Thoát về trang chủ? Bài đang làm dở sẽ không được tính.');
   if (!confirmed) return;
   clearAutoAdvanceTimer();
+  clearAnswerTimer();
   stopTimer();
   showScreen('setup');
 }
 
 async function finishQuiz() {
+  clearAnswerTimer();
   const elapsedMs = stopTimer();
 
   el.resultName.textContent = state.playerName;
