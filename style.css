@@ -272,6 +272,8 @@ input[type="text"], select {
 
 .feedback { border-top: 1px solid #f1ede4; padding-top: 14px; }
 .feedback p { margin: 4px 0; font-size: 14px; white-space: pre-line; }
+.feedback p:empty { display: none; }
+#feedback-meaning { font-weight: 700; font-size: 16px; }
 
 #wrong-list-wrap ul { padding-left: 20px; font-size: 14px; }
 #wrong-list-wrap li { white-space: pre-line; }

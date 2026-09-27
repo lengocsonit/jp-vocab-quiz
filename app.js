@@ -57,12 +57,14 @@ const el = {
   feedback: document.getElementById('feedback'),
   nextBtnResult: document.getElementById('next-btn-result'),
   nextBtnLabel: document.getElementById('next-btn-label'),
+  feedbackMeaning: document.getElementById('feedback-meaning'),
   feedbackExample: document.getElementById('feedback-example'),
   feedbackExampleMeaning: document.getElementById('feedback-example-meaning'),
   nextBtn: document.getElementById('next-btn'),
 
   resultName: document.getElementById('result-name'),
   resultAccuracy: document.getElementById('result-accuracy'),
+  resultAccuracyLabel: document.getElementById('result-accuracy-label'),
   resultTime: document.getElementById('result-time'),
   resultCongrats: document.getElementById('result-congrats'),
   resultPointsEarned: document.getElementById('result-points-earned'),
@@ -363,11 +365,18 @@ async function loadFieldCounts() {
   }
 }
 
+// Che do "Hoc bai" dung chung du lieu/schema voi "On tu vung" (loai sheet 'vocab'), chi khac cach
+// hien thi va khong xao tron - nen khi loc theo loai sheet phai quy ve 'vocab'.
+function modeToSheetType(mode) {
+  return mode === 'study' ? 'vocab' : mode;
+}
+
 function onModeChange() {
   state.mode = document.querySelector('input[name="mode"]:checked').value;
   el.directionField.classList.toggle('hidden', state.mode !== 'vocab');
   el.countLabel.textContent = state.mode === 'test' ? 'Số câu muốn làm'
     : state.mode === 'matching' ? 'Số bộ ghép muốn làm'
+    : state.mode === 'study' ? 'Số từ muốn học'
     : 'Số từ muốn ôn';
   syncModeCardSelection();
   renderFieldCheckboxes();
@@ -514,7 +523,7 @@ function renderFieldCheckboxes() {
     subjectsForLeaderboard.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
 
   const unit = state.mode === 'test' ? 'câu' : state.mode === 'matching' ? 'bộ' : 'từ';
-  const relevantFields = allFieldsWithCounts.filter(f => f.type === state.mode);
+  const relevantFields = allFieldsWithCounts.filter(f => f.type === modeToSheetType(state.mode));
 
   if (relevantFields.length === 0) {
     const modeLabel = state.mode === 'test' ? 'bộ test' : state.mode === 'matching' ? 'bộ ghép từ' : 'từ vựng';
@@ -648,14 +657,16 @@ async function startQuiz() {
   el.startBtn.disabled = false;
   el.startBtn.textContent = 'Bắt đầu';
 
-  const minRequired = state.mode === 'matching' ? 1 : 4;
+  const minRequired = (state.mode === 'matching' || state.mode === 'study') ? 1 : 4;
   if (pool.length < minRequired) {
     hideLoadingOverlay();
     el.setupError.textContent = state.mode === 'test'
       ? 'Cần ít nhất 4 câu hỏi trong lĩnh vực đã chọn.'
       : state.mode === 'matching'
         ? 'Lĩnh vực đã chọn chưa có bộ ghép từ nào.'
-        : 'Cần ít nhất 4 từ trong lĩnh vực đã chọn để tạo câu hỏi trắc nghiệm.';
+        : state.mode === 'study'
+          ? 'Lĩnh vực đã chọn chưa có từ nào.'
+          : 'Cần ít nhất 4 từ trong lĩnh vực đã chọn để tạo câu hỏi trắc nghiệm.';
     return;
   }
 
@@ -669,7 +680,12 @@ async function startQuiz() {
   const count = countValue === 'all' ? pool.length : Math.min(Number(countValue), pool.length);
 
   const direction = document.querySelector('input[name="direction"]:checked').value;
-  const selected = buildQuizSelection(pool, count, word => state.markedWords.has(wordMarkKey(word)));
+  // Che do Hoc bai: KHONG xao tron, giu dung thu tu tra ve tu Sheet (dung id, cac tu lien quan
+  // nam canh nhau nhu nguoi dung sap xep) - chi lay N tu dau tien, khac vocab/test/matching la luon
+  // ngau nhien/uu tien.
+  const selected = state.mode === 'study'
+    ? pool.slice(0, count)
+    : buildQuizSelection(pool, count, word => state.markedWords.has(wordMarkKey(word)));
   state.quizQueue = selected.map(word => ({
     word,
     direction: state.mode === 'vocab'
@@ -717,9 +733,12 @@ function formatTime(ms) {
 function renderQuestion() {
   const total = state.quizQueue.length;
   const item = state.quizQueue[state.currentIndex];
-  el.quizProgressText.textContent = `Câu ${state.currentIndex + 1} / ${total} — Điểm: ${state.correctCount}`;
+  el.quizProgressText.textContent = state.mode === 'study'
+    ? `Từ ${state.currentIndex + 1} / ${total}`
+    : `Câu ${state.currentIndex + 1} / ${total} — Điểm: ${state.correctCount}`;
 
   el.answers.innerHTML = '';
+  el.feedbackMeaning.textContent = '';
   el.matchingContainer.classList.add('hidden');
   el.matchingLeftCol.innerHTML = '';
   el.matchingRightCol.innerHTML = '';
@@ -749,6 +768,19 @@ function renderQuestion() {
     renderMatchingPairs(item);
     el.matchingContainer.classList.remove('hidden');
     el.matchingCheckBtn.classList.remove('hidden');
+  } else if (state.mode === 'study') {
+    // Khong co dap an de tra loi - hien tu + nghia + vi du luon cung luc, chi de "doc qua" thoi.
+    el.revealBtn.classList.add('hidden');
+    el.toggleReadingBtn.classList.remove('hidden');
+    el.answers.classList.add('hidden');
+    el.questionText.textContent = item.word.word;
+    updateReadingDisplay();
+    el.feedbackMeaning.textContent = item.word.meaning || '';
+    el.feedbackExample.textContent = item.word.example ? `Ví dụ: ${item.word.example}` : '';
+    el.feedbackExampleMeaning.textContent = item.word.example_meaning ? `Nghĩa: ${item.word.example_meaning}` : '';
+    el.feedback.classList.remove('hidden');
+    el.nextBtn.classList.remove('hidden');
+    if (state.autoAdvance) startAutoAdvanceCountdown();
   } else {
     el.revealBtn.classList.remove('hidden');
     el.toggleReadingBtn.classList.remove('hidden');
@@ -987,7 +1019,8 @@ function toggleReading() {
 function updateReadingDisplay() {
   const item = state.quizQueue[state.currentIndex];
   if (!item) return;
-  const isJp2Meaning = item.direction === 'jp2meaning';
+  // Che do Hoc bai luon hien tu goc (khong co huong jp2meaning/meaning2jp) nen coi nhu jp2meaning
+  const isJp2Meaning = state.mode === 'study' || item.direction === 'jp2meaning';
   el.questionReading.textContent = isJp2Meaning && state.showReading ? (item.word.reading || '') : '';
 }
 
@@ -1109,11 +1142,24 @@ function exitQuiz() {
 
 async function finishQuiz() {
   const elapsedMs = stopTimer();
-  const accuracy = state.answeredCount > 0 ? Math.round((state.correctCount / state.answeredCount) * 1000) / 10 : 0;
 
   el.resultName.textContent = state.playerName;
-  el.resultAccuracy.textContent = `${formatPercent(accuracy)}%`;
   el.resultTime.textContent = formatTime(elapsedMs);
+
+  // Hoc bai la doc/on thu dong, khong co dung/sai nen khong tinh diem/lich su/streak/hang -
+  // chi bao lai da doc xong bao nhieu tu, khong goi submitResult.
+  if (state.mode === 'study') {
+    el.resultAccuracyLabel.textContent = 'Số từ đã học';
+    el.resultAccuracy.textContent = String(state.quizQueue.length);
+    el.resultCongrats.classList.add('hidden');
+    el.wrongListWrap.classList.add('hidden');
+    showScreen('result');
+    return;
+  }
+
+  el.resultAccuracyLabel.textContent = 'Chính xác';
+  const accuracy = state.answeredCount > 0 ? Math.round((state.correctCount / state.answeredCount) * 1000) / 10 : 0;
+  el.resultAccuracy.textContent = `${formatPercent(accuracy)}%`;
 
   el.resultPointsEarned.textContent = `🎉 Bạn vừa ghi thêm ${state.correctCount} điểm rèn luyện!`;
   el.resultRankMessage.textContent = 'Đang tính hạng...';
