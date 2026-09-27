@@ -140,6 +140,7 @@ input[type="text"], select {
 .field-hint { color: #8a8d93; font-size: 12px; margin: 5px 0 0; }
 
 .app-version { text-align: center; color: #c2c5cb; font-size: 11px; margin: 10px 0 0; }
+.visit-counter { text-align: center; color: #a5a9b0; font-size: 11px; margin: 14px 0 0; }
 
 .primary-btn, .secondary-btn {
   display: block;
@@ -528,6 +529,7 @@ input[type="text"], select {
   .result-stat-value { color: #e6e6e6; }
   .result-congrats { background: linear-gradient(135deg, #2e2a1a, #3a3116); border-color: #6b5c1e; }
   .app-version { color: #4a4c50; }
+  .visit-counter { color: #6b6f76; }
   .exit-btn { background: #26282c; border-color: #4a2626; color: #ff6b6b; }
   .exit-btn:hover { background: #d33; color: #fff; }
   .loading-overlay { background: rgba(20,21,23,0.82); }

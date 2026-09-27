@@ -8,9 +8,10 @@
 
 var HISTORY_SHEET = 'History';
 var MARKED_SHEET = 'MarkedWords';
+var VISITS_SHEET = 'Visits';
 // 'Streaks': tab con lai tu 1 phien ban cu (da bo, streak gio tinh thang tu History) - giu trong danh
 // sach nay de neu ai da lo tao tab do thi no van khong bi hien nham thanh 1 linh vuc tren web.
-var RESERVED_SHEETS = ['History', 'MarkedWords', 'Streaks'];
+var RESERVED_SHEETS = ['History', 'MarkedWords', 'Streaks', 'Visits'];
 var STREAK_GRACE_DAYS = 2; // cach ngay hien tai <= so nay van tinh la con chuoi, qua so nay moi reset ve 1
 var FIELD_COLUMNS = ['id', 'word', 'reading', 'meaning', 'example', 'example_meaning'];
 var TEST_COLUMNS = ['id', 'question', 'choice1', 'choice2', 'choice3', 'choice4', 'correct', 'explanation'];
@@ -177,6 +178,7 @@ function doGet(e) {
   if (action === 'history') return jsonResponse(getHistoryForName(e.parameter.name));
   if (action === 'markedWords') return jsonResponse(getMarkedWordsForName(e.parameter.name));
   if (action === 'version') return jsonResponse({ version: getVersion() });
+  if (action === 'visit') return jsonResponse(recordVisit());
   return jsonResponse(getWords(e.parameter.field));
 }
 
@@ -550,6 +552,51 @@ function computeStreakFromDates(dateStrings) {
     }
   }
   return streak;
+}
+
+// Dem luot truy cap: sheet Visits tu tao neu chua co, cot date (yyyy-MM-dd) | count.
+// Moi lan trang chu goi action=visit se cong 1 vao dong cua ngay hom nay (tao dong moi neu chua co),
+// tra ve luon tong tat ca cac ngay (total) va so lieu hom nay (today) de web hien thi ngay, khong can
+// goi endpoint rieng.
+function getVisitsSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(VISITS_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(VISITS_SHEET);
+    sheet.appendRow(['date', 'count']);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function recordVisit() {
+  var sheet = getVisitsSheet();
+  var values = sheet.getDataRange().getValues();
+  var today = todayDateString();
+
+  var total = 0;
+  var todayRowIndex = -1;
+  var todayCount = 0;
+  for (var i = 1; i < values.length; i++) {
+    var rowDate = toDateString(values[i][0]);
+    var rowCount = Number(values[i][1]) || 0;
+    total += rowCount;
+    if (rowDate === today) {
+      todayRowIndex = i;
+      todayCount = rowCount;
+    }
+  }
+
+  todayCount += 1;
+  total += 1;
+
+  if (todayRowIndex === -1) {
+    sheet.appendRow([today, 1]);
+  } else {
+    sheet.getRange(todayRowIndex + 1, 2).setValue(todayCount);
+  }
+
+  return { total: total, today: todayCount };
 }
 
 function jsonResponse(obj) {

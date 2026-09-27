@@ -87,6 +87,7 @@ const el = {
   historyTableBody: document.getElementById('history-table-body'),
 
   appVersion: document.getElementById('app-version'),
+  visitCounter: document.getElementById('visit-counter'),
 };
 
 // Lay so "?v=" ngay tren the <script src="app.js?v=..."> dang chay, de hien thi phien ban ma khong
@@ -230,6 +231,20 @@ async function init() {
   loadFieldCounts().finally(finishLoadingOverlay);
   loadLeaderboard('all');
   loadNameSuggestions();
+  loadVisitStats();
+}
+
+// Ghi nhan 1 luot truy cap (moi lan tai trang chu goi 1 lan) va hien tong so + so luot hom nay.
+// Khong chan overlay vi khong anh huong den viec bam "Bat dau".
+async function loadVisitStats() {
+  try {
+    const res = await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=visit`);
+    const stats = await res.json();
+    el.visitCounter.textContent = `👀 Hôm nay: ${stats.today} · Tổng: ${stats.total}`;
+    el.visitCounter.classList.remove('hidden');
+  } catch (err) {
+    // im lặng bỏ qua nếu chưa lấy được số liệu truy cập
+  }
 }
 
 async function openHistoryModal(name) {
@@ -425,16 +440,16 @@ function renderLeaderboard(list) {
   el.leaderboardList.innerHTML = visibleList.map((item, i) => `
     <li class="${rankClasses[i] || ''}">
       <span class="lb-left">
-        ${rankMedals[i] ? `<span class="lb-medal">${rankMedals[i]}</span>` : `<span class="lb-rank">${i + 1}</span>`}
+        ${rankMedals[i] ? `<span class="lb-medal" title="Hạng ${i + 1}">${rankMedals[i]}</span>` : `<span class="lb-rank" title="Hạng ${i + 1}">${i + 1}</span>`}
         <span class="lb-name-wrap">
-          <button class="lb-name" data-name="${escapeHtml(item.name)}">${escapeHtml(item.name)}</button>
+          <button class="lb-name" data-name="${escapeHtml(item.name)}" title="Bấm để xem lịch sử làm bài">${escapeHtml(item.name)}</button>
           ${renderActivityStatus(item.lastActive)}
           ${renderStreakBadge(item.streak)}
         </span>
       </span>
       <span class="lb-right">
-        <span class="lb-score" title="${escapeHtml(getScoreTier(item.score).label)}">${getScoreTier(item.score).icon} ${item.score}</span>
-        <span class="lb-acc">${formatPercent(item.accuracy)}%</span>
+        <span class="lb-score" title="Cấp bậc: ${escapeHtml(getScoreTier(item.score).label)} — tổng điểm rèn luyện tích luỹ">${getScoreTier(item.score).icon} ${item.score}</span>
+        <span class="lb-acc" title="Tỉ lệ trả lời đúng (tính trên tất cả lượt chơi)">${formatPercent(item.accuracy)}%</span>
       </span>
     </li>
   `).join('');
@@ -477,7 +492,7 @@ function renderActivityStatus(isoString) {
   if (!status.text) return '';
   const cls = status.online ? 'lb-lastactive online' : 'lb-lastactive';
   const icon = status.online ? '🟢 ' : '';
-  return `<span class="${cls}">${icon}${escapeHtml(status.text)}</span>`;
+  return `<span class="${cls}" title="Hoạt động dựa trên lượt nộp bài gần nhất">${icon}${escapeHtml(status.text)}</span>`;
 }
 
 // Trang thai hoat dong va streak co tinh RIENG TUNG DONG (khong noi chung 1 dong bang dau "·") vi
@@ -485,7 +500,7 @@ function renderActivityStatus(isoString) {
 // du chu truoc do (vd "54 phut truoc" vs "6 gio truoc") dai ngan khac nhau - tranh bi lech cot giua cac dong.
 function renderStreakBadge(streak) {
   if (!streak || streak <= 0) return '';
-  return `<span class="lb-streak">${getStreakIcon(streak)} ${streak}</span>`;
+  return `<span class="lb-streak" title="Chuỗi ngày làm bài liên tiếp">${getStreakIcon(streak)} ${streak}</span>`;
 }
 
 function updateLeaderboardVisibility() {
