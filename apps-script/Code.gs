@@ -334,6 +334,7 @@ function getLeaderboard(fieldFilter) {
 
   var totals = {};
   var playDatesByName = {}; // name -> { 'yyyy-MM-dd': true }, gom TOAN BO lich su (khong phu thuoc fieldFilter) de tinh streak
+  var today = todayDateString();
 
   values.forEach(function (row) {
     var name = row[1];
@@ -346,9 +347,11 @@ function getLeaderboard(fieldFilter) {
 
     if (fieldFilter && getSubjectFromField(field) !== fieldFilter) return;
 
-    if (!totals[name]) totals[name] = { name: name, correct: 0, total: 0, lastActive: 0 };
-    totals[name].correct += Number(row[5]) || 0;
+    if (!totals[name]) totals[name] = { name: name, correct: 0, total: 0, lastActive: 0, todayGain: 0 };
+    var rowCorrect = Number(row[5]) || 0;
+    totals[name].correct += rowCorrect;
     totals[name].total += Number(row[4]) || 0;
+    if (toDateString(timestamp) === today) totals[name].todayGain += rowCorrect;
 
     var ts = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime();
     if (ts && ts > totals[name].lastActive) totals[name].lastActive = ts;
@@ -359,6 +362,7 @@ function getLeaderboard(fieldFilter) {
     return {
       name: t.name,
       score: t.correct,
+      todayGain: t.todayGain,
       lastActive: t.lastActive ? new Date(t.lastActive).toISOString() : null,
       streak: computeStreakFromDates(Object.keys(playDatesByName[name] || {})),
       accuracy: t.total > 0 ? Math.round((t.correct / t.total) * 1000) / 10 : 0

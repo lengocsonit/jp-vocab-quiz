@@ -467,7 +467,7 @@ function renderLeaderboard(list) {
         </span>
       </span>
       <span class="lb-right">
-        <span class="lb-score" title="Cấp bậc: ${escapeHtml(getScoreTier(item.score).label)} — tổng điểm rèn luyện tích luỹ">${getScoreTier(item.score).icon} ${item.score}</span>
+        <span class="lb-score" title="Cấp bậc: ${escapeHtml(getScoreTier(item.score).label)} — tổng điểm rèn luyện tích luỹ">${getScoreTier(item.score).icon} ${item.score}${item.todayGain > 0 ? ` <span class="lb-gain" title="Điểm kiếm được hôm nay">(+${item.todayGain})</span>` : ''}</span>
         <span class="lb-acc" title="Tỉ lệ trả lời đúng (tính trên tất cả lượt chơi)">${formatPercent(item.accuracy)}%</span>
       </span>
     </li>`;

@@ -414,6 +414,7 @@ input[type="text"], select {
 
 .lb-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .lb-score { font-weight: 700; color: #d6a018; white-space: nowrap; }
+.lb-gain { color: #1a9c4a; font-weight: 700; font-size: 11px; }
 .leaderboard-widget .lb-acc { color: #8a8d93; font-size: 11px; }
 
 .lb-toggle-btn {
@@ -551,6 +552,7 @@ input[type="text"], select {
   .leaderboard-widget li { border-color: #3a3c40; }
   .lb-rank, .lb-lastactive { color: #6b6f76; }
   .lb-lastactive.online { color: #3ddc73; }
+  .lb-gain { color: #3ddc73; }
   .lb-streak { color: #ff9142; }
   .leaderboard-widget li.rank-gold { background: linear-gradient(90deg, rgba(255, 200, 0, 0.12), transparent); }
   .leaderboard-widget li.rank-silver { background: linear-gradient(90deg, rgba(180, 180, 190, 0.14), transparent); }
