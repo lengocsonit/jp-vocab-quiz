@@ -807,13 +807,17 @@ function renderQuestion() {
   updateMarkButtonDisplay();
 }
 
+// Vi tri hien thi 4 dap an duoc xao tron moi lan render (khong con giu nguyen thu tu trong Sheet
+// nhu truoc), nhung van cham diem dung theo chi so goc (data-choice-index) khop voi cot "correct".
 function renderTestAnswers(item) {
   const data = item.word;
-  [data.choice1, data.choice2, data.choice3, data.choice4].forEach((choice, idx) => {
+  const choices = shuffle([1, 2, 3, 4].map(n => ({ index: n, text: data['choice' + n] })));
+  choices.forEach(choice => {
     const btn = document.createElement('button');
     btn.className = 'answer-btn';
-    btn.textContent = choice;
-    btn.addEventListener('click', () => selectTestAnswer(idx + 1, btn));
+    btn.textContent = choice.text;
+    btn.dataset.choiceIndex = choice.index;
+    btn.addEventListener('click', () => selectTestAnswer(choice.index, btn));
     el.answers.appendChild(btn);
   });
 }
@@ -825,9 +829,9 @@ function selectTestAnswer(chosenIndex, btnEl) {
   const isCorrect = chosenIndex === correctIndex;
   const correctText = data['choice' + correctIndex] || '';
 
-  [...el.answers.children].forEach((btn, idx) => {
+  [...el.answers.children].forEach((btn) => {
     btn.disabled = true;
-    if (idx + 1 === correctIndex) btn.classList.add('correct');
+    if (Number(btn.dataset.choiceIndex) === correctIndex) btn.classList.add('correct');
   });
   if (!isCorrect) btnEl.classList.add('wrong');
 
