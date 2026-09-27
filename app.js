@@ -3,6 +3,7 @@ const NAME_PATTERN = /^[A-Za-z0-9]+$/;
 const MAX_PRIORITY_SHARE = 0.3; // từ trong danh sách ưu tiên chiếm tối đa 30% số câu 1 lượt chơi, tránh độc chiếm cả bài
 
 const state = {
+  category: null, // 'bjt' | 'itp' | 'n5' | 'other' | null (null = con dang o man hinh chon linh vuc lon)
   mode: 'vocab', // 'vocab' | 'test'
   filteredWords: [],
   quizQueue: [],
@@ -29,6 +30,13 @@ const el = {
   nameInput: document.getElementById('name-input'),
   nameSuggestions: document.getElementById('name-suggestions'),
   nameError: document.getElementById('name-error'),
+  categoryScreen: document.getElementById('category-screen'),
+  categoryList: document.getElementById('category-list'),
+  greetingBanner: document.getElementById('greeting-banner'),
+  quoteJp: document.getElementById('quote-jp'),
+  quoteVi: document.getElementById('quote-vi'),
+  backToCategoryBtn: document.getElementById('back-to-category-btn'),
+  setupCategoryTitle: document.getElementById('setup-category-title'),
   groupList: document.getElementById('group-list'),
   countLabel: document.getElementById('count-label'),
   countSelect: document.getElementById('count-select'),
@@ -185,6 +193,100 @@ function getAppVersion() {
   return match ? match[1] : '?';
 }
 
+// Phan loai linh vuc lon dua theo TIEN TO ten sheet (khong can doi ten sheet nao, chi doc du lieu
+// da co san tu fieldCounts). Thu tu kiem tra: BJT -> IT Passport -> N5 -> con lai la Other.
+// LUU Y: neu doi quy tac nay, phai doi ca ham getCategoryFromField() tuong ung trong Code.gs
+// (dung de loc bang xep hang theo category o backend) cho khop.
+const CATEGORY_DEFS = [
+  { id: 'bjt', label: 'BJT', icon: '💼', tagline: 'Kỳ thi năng lực kinh doanh tiếng Nhật', match: f => f.trim().toLowerCase().startsWith('bjt') },
+  { id: 'itp', label: 'IT Passport', icon: '💻', tagline: 'Chứng chỉ CNTT cơ bản', match: f => f.trim().toLowerCase().startsWith('it passport') },
+  { id: 'n5', label: 'N5', icon: '🌱', tagline: 'Nền tảng JLPT mới bắt đầu', match: f => f.trim().toLowerCase().startsWith('n5') },
+  { id: 'other', label: 'Khác', icon: '🗂️', tagline: 'Các chủ đề còn lại', match: () => true },
+];
+
+function getCategoryId(fieldName) {
+  const found = CATEGORY_DEFS.find(c => c.id !== 'other' && c.match(fieldName));
+  return found ? found.id : 'other';
+}
+
+const MOTIVATIONAL_QUOTES = [
+  { jp: '「継続は力なり」', vi: 'Kiên trì chính là sức mạnh.' },
+  { jp: '「千里の道も一歩から」', vi: 'Con đường ngàn dặm bắt đầu từ một bước chân.' },
+  { jp: '「七転び八起き」', vi: 'Vấp ngã bảy lần, đứng dậy tám lần.' },
+  { jp: '「学問に王道なし」', vi: 'Học tập không có con đường tắt.' },
+  { jp: '「塵も積もれば山となる」', vi: 'Bụi nhỏ góp lại thành núi — mỗi từ học hôm nay đều có giá trị!' },
+];
+let quoteIndex = 0;
+
+function showQuote(index) {
+  el.quoteJp.textContent = MOTIVATIONAL_QUOTES[index].jp;
+  el.quoteVi.textContent = MOTIVATIONAL_QUOTES[index].vi;
+}
+
+function startQuoteRotation() {
+  showQuote(0);
+  setInterval(() => {
+    quoteIndex = (quoteIndex + 1) % MOTIVATIONAL_QUOTES.length;
+    showQuote(quoteIndex);
+  }, 6000);
+}
+
+// Chao ngay khi quay lai (dua vao ten da luu) kem streak hien tai, lay tu bang xep hang TONG toan he
+// thong (khong phu thuoc category) de dung ngay khi con o man hinh chon linh vuc lon.
+function renderGreetingBanner() {
+  const savedName = localStorage.getItem(NAME_STORAGE_KEY);
+  if (!savedName) return;
+  const entry = lastLeaderboardList.find(item => item.name === savedName);
+  if (!entry) return;
+  const streakText = entry.streak > 0
+    ? ` 🔥 Chuỗi ${entry.streak} ngày — đừng bỏ lỡ hôm nay nhé!`
+    : ' Hôm nay học gì nào?';
+  el.greetingBanner.textContent = `👋 Chào ${savedName}!${streakText}`;
+  el.greetingBanner.classList.remove('hidden');
+}
+
+// Hien 4 the linh vuc lon kem tong so muc (goi qua tat ca loai: tu vung/test/ghep tu) de nguoi dung
+// hinh dung truoc do co bao nhieu de hoc, chua can chon che do.
+function renderCategoryScreen() {
+  const counts = {};
+  CATEGORY_DEFS.forEach(c => { counts[c.id] = 0; });
+  allFieldsWithCounts.forEach(f => {
+    counts[getCategoryId(f.field)] += f.count;
+  });
+
+  el.categoryList.innerHTML = CATEGORY_DEFS.map(c => `
+    <button type="button" class="category-card" data-category="${c.id}">
+      <span class="category-card-icon">${c.icon}</span>
+      <span class="category-card-label">${escapeHtml(c.label)}</span>
+      <span class="category-card-tagline">${escapeHtml(c.tagline)}</span>
+      <span class="category-card-count">${counts[c.id]} mục</span>
+    </button>
+  `).join('');
+
+  el.categoryList.querySelectorAll('.category-card').forEach(btn => {
+    btn.addEventListener('click', () => selectCategory(btn.dataset.category));
+  });
+}
+
+function selectCategory(categoryId) {
+  state.category = categoryId;
+  const def = CATEGORY_DEFS.find(c => c.id === categoryId);
+  el.setupCategoryTitle.textContent = `${def.icon} ${def.label}`;
+  renderFieldCheckboxes();
+  leaderboardExpanded = false;
+  el.leaderboardFilter.value = 'all';
+  loadLeaderboard('all');
+  showScreen('setup');
+}
+
+function goToCategoryScreen() {
+  state.category = null;
+  leaderboardExpanded = false;
+  el.leaderboardFilter.value = 'all';
+  loadLeaderboard('all');
+  showScreen('category');
+}
+
 const LEADERBOARD_COLLAPSED_COUNT = 3;
 const LEADERBOARD_MAX_COUNT = 10; // tren so nay khong hien nua, ke ca khi bam "Xem them"
 let leaderboardExpanded = false;
@@ -212,6 +314,7 @@ async function init() {
     renderLeaderboard(lastLeaderboardList);
   });
   el.exitQuizBtn.addEventListener('click', exitQuiz);
+  el.backToCategoryBtn.addEventListener('click', goToCategoryScreen);
   el.toggleReadingBtn.addEventListener('click', toggleReading);
   el.wordListBtn.addEventListener('click', toggleWordList);
   el.speakBtn.addEventListener('click', () => speakJapanese(el.speakBtn.dataset.text || ''));
@@ -247,9 +350,10 @@ async function init() {
   // khong chan vi khong anh huong den viec bam "Bat dau".
   showLoadingOverlay('Đang tải danh sách lĩnh vực...');
   loadFieldCounts().finally(finishLoadingOverlay);
-  loadLeaderboard('all');
+  loadLeaderboard('all').then(renderGreetingBanner);
   loadNameSuggestions();
   loadVisitStats();
+  startQuoteRotation();
 }
 
 // Ghi nhan 1 luot truy cap (moi lan tai trang chu goi 1 lan) va hien tong so + so luot hom nay.
@@ -359,6 +463,7 @@ async function loadFieldCounts() {
 
     if (cachedVersion === currentVersion && cachedFields) {
       allFieldsWithCounts = JSON.parse(cachedFields);
+      renderCategoryScreen();
       renderFieldCheckboxes();
       return;
     }
@@ -367,16 +472,25 @@ async function loadFieldCounts() {
     allFieldsWithCounts = await res.json();
     localStorage.setItem(VERSION_CACHE_KEY, currentVersion);
     localStorage.setItem(FIELD_CACHE_KEY, JSON.stringify(allFieldsWithCounts));
+    renderCategoryScreen();
     renderFieldCheckboxes();
   } catch (err) {
-    el.groupList.innerHTML = `
+    // Loi co the xay ra khi con dang o man hinh category (dau tien) hoac setup - hien thong bao +
+    // nut thu lai o CA HAI noi vi khong biet truoc dang o man nao.
+    const errorHtml = `
       <p class="error-text">Không tải được danh sách lĩnh vực, vui lòng thử lại.</p>
-      <button type="button" id="retry-fields-btn" class="secondary-btn">Thử lại</button>
+      <button type="button" class="retry-fields-btn secondary-btn">Thử lại</button>
     `;
-    document.getElementById('retry-fields-btn').addEventListener('click', () => {
-      el.groupList.innerHTML = '<div class="loading-row"><span class="spinner"></span> Đang tải danh sách từ...</div>';
-      showLoadingOverlay('Đang tải danh sách lĩnh vực...');
-      loadFieldCounts().finally(finishLoadingOverlay);
+    el.categoryList.innerHTML = errorHtml;
+    el.groupList.innerHTML = errorHtml;
+    document.querySelectorAll('.retry-fields-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const loadingHtml = '<div class="loading-row"><span class="spinner"></span> Đang tải danh sách lĩnh vực...</div>';
+        el.categoryList.innerHTML = loadingHtml;
+        el.groupList.innerHTML = loadingHtml;
+        showLoadingOverlay('Đang tải danh sách lĩnh vực...');
+        loadFieldCounts().finally(finishLoadingOverlay);
+      });
     });
   }
 }
@@ -406,11 +520,13 @@ function syncModeCardSelection() {
   });
 }
 
+// Khi da chon 1 category, bang xep hang tu dong loc theo category do (kem field/Mon con neu co
+// chon them) - "Tổng" luc nay nghia la tong trong category, khong phai tong toan he thong nua.
 async function fetchLeaderboardData(fieldFilter) {
-  const url = fieldFilter && fieldFilter !== 'all'
-    ? `${CONFIG.APPS_SCRIPT_URL}?action=leaderboard&field=${encodeURIComponent(fieldFilter)}`
-    : `${CONFIG.APPS_SCRIPT_URL}?action=leaderboard`;
-  const res = await fetch(url);
+  const params = new URLSearchParams({ action: 'leaderboard' });
+  if (fieldFilter && fieldFilter !== 'all') params.set('field', fieldFilter);
+  if (state.category) params.set('category', state.category);
+  const res = await fetch(`${CONFIG.APPS_SCRIPT_URL}?${params.toString()}`);
   return res.json();
 }
 
@@ -540,13 +656,20 @@ function updateLeaderboardVisibility() {
 }
 
 function renderFieldCheckboxes() {
+  // Khi da chon 1 category (BJT/IT Passport/N5/Other) thi CHI lam viec voi linh vuc thuoc category
+  // do - ca danh sach checkbox lan bo loc Mon cua bang xep hang deu thu hep lai, tranh chon nham
+  // sang linh vuc cua category khac.
+  const fieldsInCategory = state.category
+    ? allFieldsWithCounts.filter(f => getCategoryId(f.field) === state.category)
+    : allFieldsWithCounts;
+
   // Bộ lọc xếp hạng liệt kê theo MÔN (gộp điểm mọi bài cùng môn), không phụ thuộc chế độ đang chọn
-  const subjectsForLeaderboard = [...new Set(allFieldsWithCounts.map(f => parseFieldName(f.field).subject))];
+  const subjectsForLeaderboard = [...new Set(fieldsInCategory.map(f => parseFieldName(f.field).subject))];
   el.leaderboardFilter.innerHTML = '<option value="all">Tổng</option>' +
     subjectsForLeaderboard.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
 
   const unit = state.mode === 'test' ? 'câu' : state.mode === 'matching' ? 'bộ' : 'từ';
-  const relevantFields = allFieldsWithCounts.filter(f => f.type === modeToSheetType(state.mode));
+  const relevantFields = fieldsInCategory.filter(f => f.type === modeToSheetType(state.mode));
 
   if (relevantFields.length === 0) {
     const modeLabel = state.mode === 'test' ? 'bộ test' : state.mode === 'matching' ? 'bộ ghép từ' : 'từ vựng';
@@ -1329,6 +1452,7 @@ async function submitResult(durationSeconds) {
 }
 
 function showScreen(name) {
+  el.categoryScreen.classList.toggle('hidden', name !== 'category');
   el.setupScreen.classList.toggle('hidden', name !== 'setup');
   el.quizScreen.classList.toggle('hidden', name !== 'quiz');
   el.resultScreen.classList.toggle('hidden', name !== 'result');

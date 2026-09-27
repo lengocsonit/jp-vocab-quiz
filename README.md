@@ -10,6 +10,14 @@ Mỗi **lĩnh vực** (BJT, IT Passport, SG, FE, ...) là **1 sheet (tab) riêng
 
 > Lưu ý: nếu muốn điểm bảng xếp hạng của lĩnh vực Test tách riêng, không gộp chung với lĩnh vực Từ vựng cùng tên môn, hãy đặt tiền tố khác nhau (vd môn từ vựng đặt `BJT - ...`, môn test đặt `Test BJT - ...`) — vì việc gộp Môn hiện chỉ dựa theo tên, không phân biệt loại lĩnh vực.
 
+**Ngoài ra còn có 1 cấp gộp lớn hơn Môn, gọi là "lĩnh vực lớn"** (BJT / IT Passport / N5 / Khác) — đây là màn hình đầu tiên khi vào trang web, người dùng chọn 1 trong 4 nhóm này trước, rồi mới thấy danh sách Môn/Bài bên trong nhóm đó, tránh lẫn lộn khi có nhiều chủ đề khác nhau. Nhóm được xác định tự động theo **tiền tố tên sheet** (không cần đặt tên theo quy ước gì thêm ngoài việc bắt đầu đúng tiền tố):
+- Tên sheet bắt đầu bằng `BJT` (không phân biệt hoa/thường) → nhóm **BJT**
+- Tên sheet bắt đầu bằng `IT Passport` → nhóm **IT Passport**
+- Tên sheet bắt đầu bằng `N5` → nhóm **N5**
+- Còn lại → nhóm **Khác**
+
+Quy tắc này nằm trong code (`app.js` hàm `getCategoryId`, và `Code.gs` hàm `getCategoryFromField` — 2 chỗ phải khớp nhau), muốn đổi tiền tố hoặc thêm nhóm mới thì cần sửa code, không sửa được qua Sheet.
+
 Có **3 loại lĩnh vực**, tự nhận diện qua dòng tiêu đề (không cần đặt tên sheet theo quy ước riêng để phân biệt):
 
 - **Từ vựng** (chế độ "📚 Ôn từ vựng"): cột `id | word | reading | meaning | example | example_meaning`
@@ -58,6 +66,8 @@ Repo này đã sẵn sàng cho GitHub Pages:
 
 ## 5. Cách dùng
 
+- **Vào trang, việc đầu tiên là chọn 1 trong 4 "lĩnh vực lớn"**: 🎌 màn hình chọn hiện 4 thẻ **BJT / IT Passport / N5 / Khác** (kèm tổng số mục mỗi nhóm, banner câu châm ngôn tiếng Nhật xoay vòng để tạo động lực, và nếu trình duyệt nhớ tên bạn từng chơi thì hiện thêm dòng chào + chuỗi streak hiện tại). Bấm 1 thẻ mới vào màn hình chọn chế độ + lĩnh vực quen thuộc — nhưng danh sách lúc này chỉ còn của nhóm đã chọn, không lẫn giữa các nhóm nữa. Có nút "← Đổi lĩnh vực" để quay lại chọn nhóm khác bất kỳ lúc nào.
+- **Bảng xếp hạng cũng theo ngữ cảnh**: ở màn hình chọn nhóm thì bảng xếp hạng hiện **Tổng toàn hệ thống** (mọi nhóm gộp lại); sau khi vào 1 nhóm thì bảng xếp hạng tự lọc theo đúng nhóm đó — "Tổng" lúc này nghĩa là tổng trong nhóm, vẫn chọn được từng Môn con như trước.
 - Danh sách lĩnh vực (số lượng từ/câu, loại Từ vựng hay Test) được cache theo **phiên bản dữ liệu**: mỗi khi có thay đổi thật sự (thêm lĩnh vực mới, Import CSV, hoặc **sửa tay trực tiếp trên Sheet** — kể cả chỉ thêm vài dòng vào 1 sheet có sẵn) thì phiên bản tự tăng lên 1. Trình duyệt lưu lại phiên bản đã tải; lần vào sau nếu phiên bản không đổi thì lấy thẳng dữ liệu đã lưu (gần như tức thì, không cần gọi lại server), còn nếu đổi thì mới tải lại — nên không cần bấm nút tải lại thủ công.
 - Trang chủ có 4 chế độ: **🎓 Học bài**, **📚 Ôn từ vựng** (mặc định), **📝 Làm bài test**, và **🎴 Ghép từ**. Chọn chế độ nào thì danh sách "Chọn lĩnh vực" chỉ hiện đúng loại lĩnh vực tương ứng.
 - **Chế độ Học bài**: dùng chung dữ liệu với Ôn từ vựng (không cần tạo sheet riêng), nhưng **không xáo trộn** — giữ đúng thứ tự các dòng trong Sheet (theo `id`), để các từ liên quan/theo chủ đề bạn sắp xếp cạnh nhau vẫn học liền mạch. Không có câu hỏi/đáp án — mỗi từ hiện luôn cả nghĩa và ví dụ cùng lúc, chỉ để đọc lướt qua, bấm "Câu tiếp theo" (hoặc để tự động chuyển) để xem từ kế tiếp, và có thêm nút "← Từ trước" để quay lại xem từ đã học trước đó (tắt ở từ đầu tiên). Có thêm checkbox **"Ẩn nghĩa (tự ôn)"** — tick vào để ẩn nghĩa/ví dụ đi (chỉ hiện từ, tự nhớ lại nghĩa trước khi bỏ tick để kiểm tra), bỏ tick để hiện lại như bình thường; áp dụng ngay cho cả từ đang xem. Không tính điểm/lịch sử/streak vì không có khái niệm đúng/sai — màn kết thúc chỉ báo số từ đã học.

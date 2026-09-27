@@ -173,7 +173,7 @@ function doGet(e) {
   var action = e.parameter.action;
   if (action === 'fields') return jsonResponse(getFields());
   if (action === 'fieldCounts') return jsonResponse(getFieldCounts());
-  if (action === 'leaderboard') return jsonResponse(getLeaderboard(e.parameter.field));
+  if (action === 'leaderboard') return jsonResponse(getLeaderboard(e.parameter.field, e.parameter.category));
   if (action === 'names') return jsonResponse(getAllNames());
   if (action === 'history') return jsonResponse(getHistoryForName(e.parameter.name));
   if (action === 'markedWords') return jsonResponse(getMarkedWordsForName(e.parameter.name));
@@ -326,8 +326,20 @@ function getSubjectFromField(field) {
   return field.slice(0, idx).trim();
 }
 
-// fieldFilter rỗng/undefined => tính tổng tất cả lĩnh vực. Có giá trị => tính theo MÔN (gộp mọi bài cùng môn).
-function getLeaderboard(fieldFilter) {
+// Phan loai linh vuc lon theo TIEN TO ten sheet - PHAI khop voi CATEGORY_DEFS/getCategoryId() ben
+// app.js (doi 1 cho thi doi ca 2 cho). Dung de loc bang xep hang theo category (?category=...).
+function getCategoryFromField(field) {
+  var f = String(field).trim().toLowerCase();
+  if (f.indexOf('bjt') === 0) return 'bjt';
+  if (f.indexOf('it passport') === 0) return 'itp';
+  if (f.indexOf('n5') === 0) return 'n5';
+  return 'other';
+}
+
+// fieldFilter rỗng/undefined => tính tổng tất cả lĩnh vực (hoặc tất cả trong categoryFilter, nếu có).
+// Có giá trị => tính theo MÔN (gộp mọi bài cùng môn). categoryFilter co gia tri => chi tinh cac linh
+// vuc thuoc category do (BJT/IT Passport/N5/Other).
+function getLeaderboard(fieldFilter, categoryFilter) {
   var sheet = getHistorySheet();
   var values = sheet.getDataRange().getValues();
   values.shift(); // bỏ header
@@ -345,6 +357,7 @@ function getLeaderboard(fieldFilter) {
     if (!playDatesByName[name]) playDatesByName[name] = {};
     playDatesByName[name][toDateString(timestamp)] = true;
 
+    if (categoryFilter && getCategoryFromField(field) !== categoryFilter) return;
     if (fieldFilter && getSubjectFromField(field) !== fieldFilter) return;
 
     if (!totals[name]) totals[name] = { name: name, correct: 0, total: 0, lastActive: 0, todayGain: 0 };

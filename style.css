@@ -108,6 +108,60 @@ input[type="text"], select {
 .mode-card-label { flex: 1; }
 .mode-card input[type="radio"] { accent-color: #4a6fa5; margin: 0; flex-shrink: 0; }
 
+/* Man hinh chon linh vuc lon (category) - hien dau tien khi vao trang */
+.back-link { padding-bottom: 6px; }
+
+.greeting-banner {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fff7e0, #ffe9b3);
+  border: 1px solid #f2c94c;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.quote-banner {
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #eef2f8, #f6f1ea);
+  border: 1px solid #dde3ee;
+  text-align: center;
+  margin-bottom: 16px;
+  min-height: 62px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  transition: opacity 0.3s ease;
+}
+.quote-jp { margin: 0; font-size: 15px; font-weight: 700; color: #3c5c88; }
+.quote-vi { margin: 0; font-size: 12px; color: #6b7280; font-style: italic; }
+
+.category-intro { text-align: center; font-weight: 600; margin: 0 0 14px; }
+
+.category-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+.category-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 20px 10px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(160deg, #fff, #f6f1ea);
+  border: 1.5px solid #e6e1d6;
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.category-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(60,45,20,0.12); border-color: #4a6fa5; }
+.category-card:active { transform: translateY(-1px); }
+.category-card-icon { font-size: 34px; }
+.category-card-label { font-weight: 700; font-size: 15px; margin-top: 2px; }
+.category-card-tagline { font-size: 11px; color: #8a8d93; }
+.category-card-count { font-size: 11px; font-weight: 700; color: #4a6fa5; background: #eef2f8; padding: 2px 8px; border-radius: 20px; margin-top: 4px; }
+
 .checkbox-row { display: flex; align-items: center; gap: 8px; font-weight: 400; font-size: 14px; }
 .checkbox-row.small { font-size: 13px; gap: 6px; }
 
@@ -547,6 +601,14 @@ input[type="text"], select {
   .mode-card:hover { background: #26282c; }
   .mode-card.selected { border-color: #7c9ccf; background: #1e2a3d; }
   .mode-card input[type="radio"] { accent-color: #7c9ccf; }
+  .quote-banner { background: linear-gradient(135deg, #1e2a3d, #26282c); border-color: #3a3c40; }
+  .quote-jp { color: #9db8de; }
+  .quote-vi { color: #9a9ca1; }
+  .greeting-banner { background: linear-gradient(135deg, #2e2a1a, #3a3116); border-color: #6b5c1e; }
+  .category-card { background: linear-gradient(160deg, #26282c, #1f2023); border-color: #3a3c40; }
+  .category-card:hover { border-color: #7c9ccf; }
+  .category-card-count { color: #7c9ccf; background: #1e2a3d; }
+  .category-card-tagline { color: #9a9ca1; }
   .primary-btn { background: #5b7fb5; }
   .primary-btn:hover { background: #4a6a99; }
   .secondary-btn { background: #2a2c30; color: #e6e6e6; }

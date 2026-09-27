@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="Ôn từ vựng">
 <title>🎌 Ôn từ vựng tiếng Nhật</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
-<link rel="stylesheet" href="style.css?v=46">
+<link rel="stylesheet" href="style.css?v=47">
 </head>
 <body>
 
@@ -62,9 +62,31 @@
 
 <main class="container">
 
-  <!-- SETUP SCREEN -->
-  <section id="setup-screen">
+  <!-- CATEGORY SCREEN -->
+  <section id="category-screen">
     <h1>🎌 Ôn từ vựng tiếng Nhật</h1>
+
+    <div class="greeting-banner hidden" id="greeting-banner"></div>
+
+    <div class="quote-banner" id="quote-banner">
+      <p id="quote-jp" class="quote-jp"></p>
+      <p id="quote-vi" class="quote-vi"></p>
+    </div>
+
+    <p class="category-intro">Chọn lĩnh vực bạn muốn chinh phục hôm nay 💪</p>
+
+    <div id="category-list" class="category-list">
+      <div class="loading-row"><span class="spinner"></span> Đang tải danh sách lĩnh vực...</div>
+    </div>
+
+    <p class="visit-counter hidden" id="visit-counter"></p>
+    <p class="app-version">Phiên bản <span id="app-version"></span></p>
+  </section>
+
+  <!-- SETUP SCREEN -->
+  <section id="setup-screen" class="hidden">
+    <button type="button" id="back-to-category-btn" class="link-btn back-link">← Đổi lĩnh vực</button>
+    <h1 id="setup-category-title">🎌 Ôn từ vựng tiếng Nhật</h1>
 
     <div class="field">
       <label for="name-input">Tên của bạn</label>
@@ -129,8 +151,6 @@
 
     <p class="error-text" id="setup-error"></p>
     <button id="start-btn" class="primary-btn">Bắt đầu</button>
-    <p class="visit-counter hidden" id="visit-counter"></p>
-    <p class="app-version">Phiên bản <span id="app-version"></span></p>
   </section>
 
   <!-- QUIZ SCREEN -->
@@ -224,6 +244,6 @@
 </main>
 
 <script src="config.js?v=2"></script>
-<script src="app.js?v=53"></script>
+<script src="app.js?v=54"></script>
 </body>
 </html>
