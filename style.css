@@ -203,35 +203,37 @@ input[type="text"], select {
 .mark-btn.marked { color: #d6a018; }
 
 .question-card {
+  position: relative;
   background: #f6f1ea;
   border-radius: 16px;
   padding: 28px 16px;
   text-align: center;
   margin-bottom: 16px;
 }
-.question-text-row { display: flex; align-items: center; justify-content: center; gap: 10px; }
 .question-text { font-size: 28px; font-weight: 700; white-space: pre-line; }
 .question-reading { font-size: 15px; color: #6b6f76; margin-top: 6px; white-space: pre-line; }
 
+/* Vi tri co dinh o goc khung, khong phu thuoc do dai chu - tranh nhay vi tri giua cac cau hoi */
 .speak-btn {
-  flex-shrink: 0;
-  width: 34px;
-  height: 34px;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: 1px solid #e2ded4;
   background: #fff;
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.speak-btn:hover { background: #f6f1ea; }
+.speak-btn:hover { background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
 .speak-btn:active { transform: scale(0.94); }
 
 /* Cau hoi dai (che do Test) can gon nhe hon, khong dam/to/can giua nhu 1 tu ngan de de doc ca doan */
-.question-card.long-text { text-align: left; padding: 20px 18px; }
-.question-card.long-text .question-text-row { justify-content: flex-start; align-items: flex-start; }
+.question-card.long-text { text-align: left; padding: 20px 46px 20px 18px; }
 .question-card.long-text .question-text { font-size: 19px; font-weight: 500; line-height: 1.7; }
 
 .answers { display: grid; gap: 10px; margin-bottom: 16px; }
