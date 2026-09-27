@@ -132,19 +132,28 @@ input[type="text"], select {
 #next-btn-label { display: block; font-size: 12px; font-weight: 500; opacity: 0.85; margin-top: 2px; }
 
 .quiz-progress { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #8a8d93; margin-bottom: 8px; }
-.quiz-progress-info { display: flex; align-items: center; gap: 12px; }
-.exit-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 15px;
-  line-height: 1;
+
+.exit-float-btn {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #f3c2c2;
   color: #d33;
-  padding: 3px 7px;
-  border-radius: 6px;
-  flex-shrink: 0;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+  z-index: 250;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.exit-btn:hover { color: #fff; background: #d33; }
+.exit-float-btn:hover { background: #d33; color: #fff; }
 
 .link-btn {
   display: inline-block;
@@ -469,8 +478,8 @@ input[type="text"], select {
   .modal-close:hover { color: #e6e6e6; }
   .result-congrats { background: linear-gradient(135deg, #2e2a1a, #3a3116); border-color: #6b5c1e; }
   .app-version { color: #4a4c50; }
-  .exit-btn { color: #ff6b6b; }
-  .exit-btn:hover { color: #fff; background: #d33; }
+  .exit-float-btn { background: #26282c; border-color: #4a2626; color: #ff6b6b; }
+  .exit-float-btn:hover { background: #d33; color: #fff; }
   .loading-overlay { background: rgba(20,21,23,0.82); }
   .loading-overlay-box p { color: #e6e6e6; }
   .loading-ring-track { stroke: #3a3c40; }

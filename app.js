@@ -39,7 +39,7 @@ const el = {
   quizScreen: document.getElementById('quiz-screen'),
   resultScreen: document.getElementById('result-screen'),
 
-  exitQuizBtn: document.getElementById('exit-quiz-btn'),
+  exitQuizFloatBtn: document.getElementById('exit-quiz-float'),
   quizProgressText: document.getElementById('quiz-progress-text'),
   quizTimer: document.getElementById('quiz-timer'),
   autoAdvanceCheckbox: document.getElementById('auto-advance-checkbox'),
@@ -199,7 +199,7 @@ async function init() {
     leaderboardExpanded = !leaderboardExpanded;
     renderLeaderboard(lastLeaderboardList);
   });
-  el.exitQuizBtn.addEventListener('click', exitQuiz);
+  el.exitQuizFloatBtn.addEventListener('click', exitQuiz);
   el.toggleReadingBtn.addEventListener('click', toggleReading);
   el.markWordBtn.addEventListener('click', toggleMarkCurrentWord);
   el.autoAdvanceCheckbox.addEventListener('change', () => {
@@ -379,9 +379,9 @@ async function loadLeaderboard(fieldFilter) {
 const SCORE_TIERS = [
   { min: 20000, icon: '💎', label: 'Huyền thoại' },
   { min: 10000, icon: '👑', label: 'Bậc thầy' },
-  { min: 6000, icon: '🔥', label: 'Cao thủ' },
+  { min: 6000, icon: '🌟', label: 'Cao thủ' },
   { min: 3000, icon: '⚔️', label: 'Chiến binh' },
-  { min: 1000, icon: '🥋', label: 'Học viên' },
+  { min: 1000, icon: '📖', label: 'Học viên' },
   { min: 0, icon: '🌱', label: 'Tân binh' },
 ];
 
@@ -477,7 +477,7 @@ function renderMetaLine(item) {
   const parts = [];
   const activity = renderActivityStatus(item.lastActive);
   if (activity) parts.push(activity);
-  if (item.streak > 0) parts.push(`<span class="lb-streak">${getStreakIcon(item.streak)} ${item.streak} ngày</span>`);
+  if (item.streak > 0) parts.push(`<span class="lb-streak">${getStreakIcon(item.streak)} ${item.streak}</span>`);
   if (parts.length === 0) return '';
   return `<span class="lb-meta-line">${parts.join('<span class="lb-meta-sep"> · </span>')}</span>`;
 }
@@ -1167,6 +1167,7 @@ function showScreen(name) {
   el.setupScreen.classList.toggle('hidden', name !== 'setup');
   el.quizScreen.classList.toggle('hidden', name !== 'quiz');
   el.resultScreen.classList.toggle('hidden', name !== 'result');
+  el.exitQuizFloatBtn.classList.toggle('hidden', name !== 'quiz');
   updateLeaderboardVisibility();
 }
 

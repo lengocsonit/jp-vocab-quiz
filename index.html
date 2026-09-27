@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ôn từ vựng tiếng Nhật</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
-<link rel="stylesheet" href="style.css?v=35">
+<link rel="stylesheet" href="style.css?v=36">
 </head>
 <body>
 
@@ -22,6 +22,8 @@
     <p id="loading-overlay-text">Đang tải...</p>
   </div>
 </div>
+
+<button id="exit-quiz-float" class="exit-float-btn hidden" title="Thoát về trang chủ, không tính bài đang làm">✕</button>
 
 <div id="leaderboard-widget" class="leaderboard-widget hidden">
   <div class="lb-header">
@@ -112,11 +114,8 @@
   <!-- QUIZ SCREEN -->
   <section id="quiz-screen" class="hidden">
     <div class="quiz-progress">
-      <button id="exit-quiz-btn" class="exit-btn" title="Thoát về trang chủ, không tính bài đang làm">✕</button>
-      <div class="quiz-progress-info">
-        <span id="quiz-progress-text"></span>
-        <span id="quiz-timer">⏱ 00:00</span>
-      </div>
+      <span id="quiz-progress-text"></span>
+      <span id="quiz-timer">⏱ 00:00</span>
     </div>
 
     <div class="quiz-settings-row">
@@ -176,6 +175,6 @@
 </main>
 
 <script src="config.js?v=2"></script>
-<script src="app.js?v=41"></script>
+<script src="app.js?v=42"></script>
 </body>
 </html>
