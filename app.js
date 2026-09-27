@@ -62,7 +62,6 @@ const el = {
   nextBtn: document.getElementById('next-btn'),
 
   resultName: document.getElementById('result-name'),
-  resultScore: document.getElementById('result-score'),
   resultAccuracy: document.getElementById('result-accuracy'),
   resultTime: document.getElementById('result-time'),
   resultCongrats: document.getElementById('result-congrats'),
@@ -233,7 +232,7 @@ async function init() {
 }
 
 async function openHistoryModal(name) {
-  el.historyModalTitle.textContent = `Lịch sử làm bài — ${name}`;
+  el.historyModalTitle.textContent = `Lịch sử làm bài (5 gần nhất) — ${name}`;
   el.historyModal.classList.remove('hidden');
   el.historyEmpty.classList.add('hidden');
   el.historyTable.classList.add('hidden');
@@ -255,7 +254,7 @@ async function openHistoryModal(name) {
         <td>${formatDateTime(s.timestamp)}</td>
         <td>${escapeHtml(s.field || '')}</td>
         <td>${s.correct}/${s.total}</td>
-        <td>${s.accuracy}%</td>
+        <td>${formatPercent(s.accuracy)}%</td>
         <td>${formatTime((s.durationSeconds || 0) * 1000)}</td>
       </tr>
     `).join('');
@@ -419,12 +418,13 @@ function renderLeaderboard(list) {
         ${rankMedals[i] ? `<span class="lb-medal">${rankMedals[i]}</span>` : `<span class="lb-rank">${i + 1}</span>`}
         <span class="lb-name-wrap">
           <button class="lb-name" data-name="${escapeHtml(item.name)}">${escapeHtml(item.name)}</button>
-          ${renderMetaLine(item)}
+          ${renderActivityStatus(item.lastActive)}
+          ${renderStreakBadge(item.streak)}
         </span>
       </span>
       <span class="lb-right">
         <span class="lb-score" title="${escapeHtml(getScoreTier(item.score).label)}">${getScoreTier(item.score).icon} ${item.score}</span>
-        <span class="lb-acc">${item.accuracy}%</span>
+        <span class="lb-acc">${formatPercent(item.accuracy)}%</span>
       </span>
     </li>
   `).join('');
@@ -470,16 +470,12 @@ function renderActivityStatus(isoString) {
   return `<span class="${cls}">${icon}${escapeHtml(status.text)}</span>`;
 }
 
-// Gop dong hoat dong (online/offline) va chuoi ngay lam bai lien tiep thanh 1 dong gon duoi ten.
-// Boc trong 1 the container duy nhat vi lb-name-wrap la flex-column - neu de nhieu the <span> roi
-// nam canh nhau o cung cap se bi tach thanh nhieu dong rieng thay vi nam chung 1 dong.
-function renderMetaLine(item) {
-  const parts = [];
-  const activity = renderActivityStatus(item.lastActive);
-  if (activity) parts.push(activity);
-  if (item.streak > 0) parts.push(`<span class="lb-streak">${getStreakIcon(item.streak)} ${item.streak}</span>`);
-  if (parts.length === 0) return '';
-  return `<span class="lb-meta-line">${parts.join('<span class="lb-meta-sep"> · </span>')}</span>`;
+// Trang thai hoat dong va streak co tinh RIENG TUNG DONG (khong noi chung 1 dong bang dau "·") vi
+// lb-name-wrap la flex-column: moi the <span> con la 1 dong rieng, luon bat dau cung 1 vi tri can trai
+// du chu truoc do (vd "54 phut truoc" vs "6 gio truoc") dai ngan khac nhau - tranh bi lech cot giua cac dong.
+function renderStreakBadge(streak) {
+  if (!streak || streak <= 0) return '';
+  return `<span class="lb-streak">${getStreakIcon(streak)} ${streak}</span>`;
 }
 
 function updateLeaderboardVisibility() {
@@ -1090,10 +1086,9 @@ async function finishQuiz() {
   const elapsedMs = stopTimer();
   const accuracy = state.answeredCount > 0 ? Math.round((state.correctCount / state.answeredCount) * 1000) / 10 : 0;
 
-  el.resultName.textContent = `Người chơi: ${state.playerName}`;
-  el.resultScore.textContent = `Điểm lượt này: ${state.correctCount}`;
-  el.resultAccuracy.textContent = `Tỉ lệ chính xác lượt này: ${accuracy}%`;
-  el.resultTime.textContent = `Thời gian làm bài: ${formatTime(elapsedMs)}`;
+  el.resultName.textContent = state.playerName;
+  el.resultAccuracy.textContent = `${formatPercent(accuracy)}%`;
+  el.resultTime.textContent = formatTime(elapsedMs);
 
   el.resultPointsEarned.textContent = `🎉 Bạn vừa ghi thêm ${state.correctCount} điểm rèn luyện!`;
   el.resultRankMessage.textContent = 'Đang tính hạng...';
@@ -1194,6 +1189,11 @@ function buildQuizSelection(items, count, isPriorityFn) {
   const chosenNormal = shuffle(normalItems.slice()).slice(0, remaining);
 
   return shuffle([...chosenPriority, ...chosenNormal]);
+}
+
+// Chuan hoa hien thi % luon co 1 chu so thap phan (vd "96.0%" thay vi luc "96%" luc "92.7%" lung tung)
+function formatPercent(n) {
+  return Number(n).toFixed(1);
 }
 
 function escapeHtml(str) {

@@ -14,7 +14,7 @@ Có **3 loại lĩnh vực**, tự nhận diện qua dòng tiêu đề (không c
 
 - **Từ vựng** (chế độ "📚 Ôn từ vựng"): cột `id | word | reading | meaning | example | example_meaning`
 - **Test trắc nghiệm cố định** (chế độ "📝 Làm bài test", vd câu hỏi phân biệt từ gần nghĩa dạng BJT): cột `id | question | choice1 | choice2 | choice3 | choice4 | correct | explanation` — trong đó `question` dùng `___` làm chỗ trống, `choice1-4` là 4 đáp án cố định giữ nguyên thứ tự, `correct` là số 1-4, `explanation` là giải thích hiện ra sau khi chọn đáp án.
-- **Ghép từ** (chế độ "🧩 Ghép từ", vd 4 từ gần nghĩa cần ghép đúng với 4 mô tả/nghĩa tương ứng): cột `id | left1 | left1_reading | left2 | left2_reading | left3 | left3_reading | left4 | left4_reading | right1 | right2 | right3 | right4 | explanation` — mỗi dòng là 1 bộ 4 cặp, `rightN` là đáp án đúng khớp với `leftN` (thứ tự hiển thị bên phải sẽ tự xáo trộn, người chơi bấm 1 từ trái rồi bấm 1 đáp án phải để nối cặp). `leftN_reading` là cách đọc (hiragana) của `leftN`, dùng cho nút bật/tắt cách đọc — để trống nếu không cần. `explanation` tuỳ chọn, hiện sau khi kiểm tra — hợp để đặt câu ghi nhớ cho cả 4 từ.
+- **Ghép từ** (chế độ "🎴 Ghép từ", vd 4 từ gần nghĩa cần ghép đúng với 4 mô tả/nghĩa tương ứng): cột `id | left1 | left1_reading | left2 | left2_reading | left3 | left3_reading | left4 | left4_reading | right1 | right2 | right3 | right4 | explanation` — mỗi dòng là 1 bộ 4 cặp, `rightN` là đáp án đúng khớp với `leftN` (thứ tự hiển thị bên phải sẽ tự xáo trộn, người chơi bấm 1 từ trái rồi bấm 1 đáp án phải để nối cặp). `leftN_reading` là cách đọc (hiragana) của `leftN`, dùng cho nút bật/tắt cách đọc — để trống nếu không cần. `explanation` tuỳ chọn, hiện sau khi kiểm tra — hợp để đặt câu ghi nhớ cho cả 4 từ.
 
 1. Tạo 1 Google Sheet mới.
 2. Với mỗi lĩnh vực, tạo 1 tab mới, đặt tên tab tuỳ ý (ví dụ: `BJT`, `IT Passport`, `SG`, `FE`, `Test - BJT Bài 15`). Mỗi tab nhập đúng cột theo loại tương ứng ở trên.
@@ -59,7 +59,7 @@ Repo này đã sẵn sàng cho GitHub Pages:
 ## 5. Cách dùng
 
 - Danh sách lĩnh vực (số lượng từ/câu, loại Từ vựng hay Test) được cache theo **phiên bản dữ liệu**: mỗi khi có thay đổi thật sự (thêm lĩnh vực mới, Import CSV, hoặc **sửa tay trực tiếp trên Sheet** — kể cả chỉ thêm vài dòng vào 1 sheet có sẵn) thì phiên bản tự tăng lên 1. Trình duyệt lưu lại phiên bản đã tải; lần vào sau nếu phiên bản không đổi thì lấy thẳng dữ liệu đã lưu (gần như tức thì, không cần gọi lại server), còn nếu đổi thì mới tải lại — nên không cần bấm nút tải lại thủ công.
-- Trang chủ có 3 chế độ: **📚 Ôn từ vựng** (mặc định), **📝 Làm bài test**, và **🧩 Ghép từ**. Chọn chế độ nào thì danh sách "Chọn lĩnh vực" chỉ hiện đúng loại lĩnh vực tương ứng.
+- Trang chủ có 3 chế độ: **📚 Ôn từ vựng** (mặc định), **📝 Làm bài test**, và **🎴 Ghép từ**. Chọn chế độ nào thì danh sách "Chọn lĩnh vực" chỉ hiện đúng loại lĩnh vực tương ứng.
 - **Chế độ Ôn từ vựng**: mỗi câu hỏi mặc định ẩn 4 đáp án — bấm "Hiện đáp án" mới hiện ra để chọn. Ngay sau khi chọn 1 đáp án, hệ thống báo đúng/sai và tự động hiện kèm câu ví dụ + nghĩa của ví dụ của từ đó để củng cố.
 - Trong lúc làm bài, có nút tròn "✕" nổi cố định ở góc trên-trái màn hình (luôn thấy được, không bị cuộn trang che mất) để thoát ngay về trang chủ (vd lỡ chọn nhầm lĩnh vực) — bài đang làm dở sẽ không được tính điểm/lịch sử/streak.
 - **Chế độ Làm bài test**: 4 đáp án hiện luôn cùng câu hỏi (không có bước "Hiện đáp án"), giữ nguyên thứ tự như trong Sheet (không xáo trộn vị trí). Chọn xong hiện luôn phần giải thích (`explanation`) đã soạn sẵn.

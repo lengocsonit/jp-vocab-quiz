@@ -410,7 +410,7 @@ function getHistoryForName(name) {
   });
 
   list.sort(function (a, b) { return new Date(b.timestamp) - new Date(a.timestamp); });
-  return list;
+  return list.slice(0, 5); // chi tra ve 5 luot gan nhat, khong can xem toan bo lich su
 }
 
 // Danh sách tên duy nhất đã từng chơi (dùng để gợi ý trong ô nhập tên)
