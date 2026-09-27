@@ -471,6 +471,14 @@ input[type="text"], select {
 
 .table-scroll { overflow-x: auto; }
 .history-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+
+.word-list-wrap {
+  margin-bottom: 16px;
+  padding: 10px;
+  border: 1px solid #e2ded4;
+  border-radius: 12px;
+}
+.word-list-scroll { max-height: 240px; overflow-y: auto; }
 .history-table th, .history-table td {
   text-align: left;
   padding: 6px 8px;
@@ -565,6 +573,7 @@ input[type="text"], select {
   .lb-toggle-btn:hover { background: #26282c; }
   .modal-box { background: #1f2023; }
   .history-table th, .history-table td { border-color: #3a3c40; }
+  .word-list-wrap { border-color: #3a3c40; }
   .history-table th { color: #9a9ca1; }
   .modal-close { color: #9a9ca1; }
   .modal-close:hover { color: #e6e6e6; }

@@ -47,6 +47,9 @@ const el = {
   hideAnswerRow: document.getElementById('hide-answer-row'),
   hideAnswerCheckbox: document.getElementById('hide-answer-checkbox'),
   toggleReadingBtn: document.getElementById('toggle-reading-btn'),
+  wordListBtn: document.getElementById('word-list-btn'),
+  wordListWrap: document.getElementById('word-list-wrap'),
+  wordListBody: document.getElementById('word-list-body'),
   markWordBtn: document.getElementById('mark-word-btn'),
   questionCard: document.getElementById('question-card'),
   questionText: document.getElementById('question-text'),
@@ -210,6 +213,7 @@ async function init() {
   });
   el.exitQuizBtn.addEventListener('click', exitQuiz);
   el.toggleReadingBtn.addEventListener('click', toggleReading);
+  el.wordListBtn.addEventListener('click', toggleWordList);
   el.speakBtn.addEventListener('click', () => speakJapanese(el.speakBtn.dataset.text || ''));
   el.markWordBtn.addEventListener('click', toggleMarkCurrentWord);
   el.autoAdvanceCheckbox.addEventListener('change', () => {
@@ -719,6 +723,13 @@ async function startQuiz() {
   state.fieldTally = {};
   state.autoAdvance = el.autoAdvanceCheckbox.checked;
 
+  // Nut xem toan bo danh sach tu chi hop voi che do co dung cot word/meaning (Hoc bai, On tu vung)
+  const canShowWordList = state.mode === 'vocab' || state.mode === 'study';
+  el.wordListBtn.classList.toggle('hidden', !canShowWordList);
+  el.wordListWrap.classList.add('hidden');
+  el.wordListBtn.textContent = '📋 Xem danh sách từ';
+  if (canShowWordList) renderWordListTable();
+
   startTimer();
   showScreen('quiz');
   renderQuestion();
@@ -1071,6 +1082,19 @@ function speakJapanese(text) {
   utterance.lang = 'ja-JP';
   utterance.rate = 0.9;
   window.speechSynthesis.speak(utterance);
+}
+
+// Bang xem truoc toan bo tu cua luot choi nay (id/tu/nghia), co scroll rieng khi danh sach dai.
+function renderWordListTable() {
+  el.wordListBody.innerHTML = state.quizQueue.map(item => `
+    <tr><td>${escapeHtml(String(item.word.id))}</td><td>${escapeHtml(item.word.word)}</td><td>${escapeHtml(item.word.meaning)}</td></tr>
+  `).join('');
+}
+
+function toggleWordList() {
+  const willShow = el.wordListWrap.classList.contains('hidden');
+  el.wordListWrap.classList.toggle('hidden');
+  el.wordListBtn.textContent = willShow ? '🙈 Ẩn danh sách từ' : '📋 Xem danh sách từ';
 }
 
 function toggleReading() {
