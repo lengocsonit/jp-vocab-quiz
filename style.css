@@ -155,8 +155,12 @@ input[type="text"], select {
 }
 .primary-btn { background: #4a6fa5; color: #fff; }
 .primary-btn:hover { background: #3c5c88; }
+.primary-btn[disabled], .secondary-btn[disabled] { opacity: 0.5; cursor: default; }
 .secondary-btn { background: #f2ede3; color: #1c1e21; }
 .secondary-btn:hover { background: #e6dfd0; }
+
+.nav-btn-row { display: flex; gap: 10px; }
+.nav-btn-row .primary-btn, .nav-btn-row .secondary-btn { width: auto; flex: 1; margin-bottom: 14px; }
 
 #next-btn.wrong-result { background: #d33; }
 #next-btn.wrong-result:hover { background: #b52a2a; }

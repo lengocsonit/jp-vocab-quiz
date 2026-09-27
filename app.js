@@ -61,6 +61,7 @@ const el = {
   feedbackMeaning: document.getElementById('feedback-meaning'),
   feedbackExample: document.getElementById('feedback-example'),
   feedbackExampleMeaning: document.getElementById('feedback-example-meaning'),
+  prevBtn: document.getElementById('prev-btn'),
   nextBtn: document.getElementById('next-btn'),
 
   resultName: document.getElementById('result-name'),
@@ -194,6 +195,7 @@ async function init() {
   el.revealBtn.addEventListener('click', revealAnswers);
   el.matchingCheckBtn.addEventListener('click', checkMatchingAnswers);
   el.nextBtn.addEventListener('click', nextQuestion);
+  el.prevBtn.addEventListener('click', previousQuestion);
   el.replayBtn.addEventListener('click', () => showScreen('setup'));
   el.leaderboardFilter.addEventListener('change', () => {
     leaderboardExpanded = false;
@@ -755,6 +757,7 @@ function renderQuestion() {
   el.matchingCheckBtn.classList.add('hidden');
   el.matchingCheckBtn.disabled = true;
   el.feedback.classList.add('hidden');
+  el.prevBtn.classList.add('hidden');
   el.nextBtn.classList.add('hidden');
   el.nextBtn.classList.remove('wrong-result');
   el.nextBtnResult.textContent = '';
@@ -792,6 +795,8 @@ function renderQuestion() {
     el.feedbackExample.textContent = item.word.example ? `Ví dụ: ${item.word.example}` : '';
     el.feedbackExampleMeaning.textContent = item.word.example_meaning ? `Nghĩa: ${item.word.example_meaning}` : '';
     el.feedback.classList.remove('hidden');
+    el.prevBtn.classList.remove('hidden');
+    el.prevBtn.disabled = state.currentIndex === 0;
     el.nextBtn.classList.remove('hidden');
     if (state.autoAdvance) startAutoAdvanceCountdown();
   } else {
@@ -1181,6 +1186,14 @@ function nextQuestion() {
   } else {
     renderQuestion();
   }
+}
+
+// Chi dung cho che do Hoc bai - xem lai tu truoc do, khong lam gi neu dang o tu dau tien.
+function previousQuestion() {
+  if (state.currentIndex <= 0) return;
+  clearAutoAdvanceTimer();
+  state.currentIndex -= 1;
+  renderQuestion();
 }
 
 // Thoat giua chung ve trang chu (vd chon nham chu de) - bai dang lam do khong duoc ghi nhan,
