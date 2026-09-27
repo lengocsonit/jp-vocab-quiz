@@ -2,19 +2,29 @@
 
 body {
   font-family: -apple-system, "Segoe UI", "Meiryo UI", Meiryo, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Roboto, Arial, sans-serif;
-  background: #f5f6fa;
+  background: #faf7f2;
   color: #1c1e21;
   margin: 0;
   padding: 24px 16px 80px;
 }
 
 .container {
+  position: relative;
   max-width: 560px;
   margin: 0 auto;
   background: #fff;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  border-radius: 20px;
+  padding: 26px 24px 24px;
+  box-shadow: 0 10px 32px rgba(60,45,20,0.08);
+  overflow: hidden;
+}
+/* Vach mau mong tren dinh khung, lay cam hung tu sac do-cham (Nhat Ban) - chi tiet nho, khong lam qua */
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #c86458, #4a6fa5);
 }
 
 h1 { font-size: 22px; margin-top: 0; }
@@ -26,8 +36,8 @@ label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; }
 input[type="text"], select {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #d7dae0;
-  border-radius: 8px;
+  border: 1px solid #e2ded4;
+  border-radius: 12px;
   font-size: 15px;
 }
 
@@ -35,8 +45,8 @@ input[type="text"], select {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border: 1px solid #e6e1d6;
+  border-radius: 12px;
   padding: 6px 12px;
   max-height: 280px;
   overflow-y: auto;
@@ -49,18 +59,18 @@ input[type="text"], select {
   font-size: 14px;
   margin: 0;
   padding: 6px 0;
-  border-bottom: 1px solid #f0f1f3;
+  border-bottom: 1px solid #f1ede4;
 }
 .field-row span { flex: 1; }
 .group-list > .field-row:last-child,
 .subject-group:last-child .field-row:last-child { border-bottom: none; }
 
-.subject-group { border-bottom: 1px solid #f0f1f3; }
+.subject-group { border-bottom: 1px solid #f1ede4; }
 .subject-group:last-child { border-bottom: none; }
 .subject-row { border-bottom: none; }
 .subject-label { font-weight: 600; }
 .subject-row { cursor: pointer; }
-.subject-row:hover { background: #f5f7fb; }
+.subject-row:hover { background: #f6f1ea; }
 .expand-btn {
   background: none;
   border: none;
@@ -76,7 +86,27 @@ input[type="text"], select {
 
 .radio-row { display: flex; flex-direction: column; gap: 6px; }
 .radio-row label { display: flex; align-items: center; gap: 8px; font-weight: 400; font-size: 14px; }
-.radio-row.mode-row { flex-direction: row; gap: 16px; }
+
+/* Moi che do la 1 the rieng xep doc - tranh canh 3 nhan radio chen chuc 1 hang bi xuong dong xau
+   tren man hinh dien thoai hep, dong thoi nhin mem mai/de bam hon nhan radio tron nho. */
+.mode-cards { display: flex; flex-direction: column; gap: 8px; }
+.mode-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1.5px solid #e6e1d6;
+  border-radius: 14px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.mode-card:hover { background: #f6f1ea; }
+.mode-card.selected { border-color: #4a6fa5; background: #eef2f8; }
+.mode-card-icon { font-size: 18px; flex-shrink: 0; }
+.mode-card-label { flex: 1; }
+.mode-card input[type="radio"] { accent-color: #4a6fa5; margin: 0; flex-shrink: 0; }
 
 .checkbox-row { display: flex; align-items: center; gap: 8px; font-weight: 400; font-size: 14px; }
 .checkbox-row.small { font-size: 13px; gap: 6px; }
@@ -98,8 +128,8 @@ input[type="text"], select {
   display: inline-block;
   width: 14px;
   height: 14px;
-  border: 2px solid #d7dae0;
-  border-top-color: #2f6fed;
+  border: 2px solid #e2ded4;
+  border-top-color: #4a6fa5;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
   flex-shrink: 0;
@@ -115,17 +145,17 @@ input[type="text"], select {
   display: block;
   width: 100%;
   padding: 12px;
-  border-radius: 8px;
+  border-radius: 12px;
   border: none;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   margin-bottom: 14px;
 }
-.primary-btn { background: #2f6fed; color: #fff; }
-.primary-btn:hover { background: #2559c9; }
-.secondary-btn { background: #eef1f6; color: #1c1e21; }
-.secondary-btn:hover { background: #dfe3ea; }
+.primary-btn { background: #4a6fa5; color: #fff; }
+.primary-btn:hover { background: #3c5c88; }
+.secondary-btn { background: #f2ede3; color: #1c1e21; }
+.secondary-btn:hover { background: #e6dfd0; }
 
 #next-btn.wrong-result { background: #d33; }
 #next-btn.wrong-result:hover { background: #b52a2a; }
@@ -133,37 +163,33 @@ input[type="text"], select {
 #next-btn-label { display: block; font-size: 12px; font-weight: 500; opacity: 0.85; margin-top: 2px; }
 
 .quiz-progress { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #8a8d93; margin-bottom: 8px; }
+.quiz-progress-info { display: flex; align-items: center; gap: 12px; }
 
-.exit-float-btn {
-  position: fixed;
-  top: 16px;
-  /* Tren man hinh rong, .container (max-width 560px) nam giua man hinh - neo nut theo mep trai
-     cua khung noi dung (tru them 60px cho khoang cach) thay vi luon dinh mep trinh duyet, tranh
-     nhin lac long xa noi dung; tren dien thoai (100vw gan bang container) thi ve lai mep 16px. */
-  left: max(16px, calc((100vw - 560px) / 2 - 60px));
-  width: 44px;
-  height: 44px;
+/* Nam trong luong binh thuong cua trang (khong fixed) de cuon theo noi dung, khong bao gio de len
+   cau hoi ben duoi - nhung to hon hinh tron 32px de de bam tren dien thoai, khong con la link nho xiu. */
+.exit-btn {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: #fff;
   border: 1px solid #f3c2c2;
   color: #d33;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
-  z-index: 250;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.exit-float-btn:hover { background: #d33; color: #fff; }
+.exit-btn:hover { background: #d33; color: #fff; }
 
 .link-btn {
   display: inline-block;
   background: none;
   border: none;
-  color: #2f6fed;
+  color: #4a6fa5;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -176,8 +202,8 @@ input[type="text"], select {
 .mark-btn.marked { color: #d6a018; }
 
 .question-card {
-  background: #f5f7fb;
-  border-radius: 10px;
+  background: #f6f1ea;
+  border-radius: 16px;
   padding: 28px 16px;
   text-align: center;
   margin-bottom: 16px;
@@ -192,15 +218,15 @@ input[type="text"], select {
 .answers { display: grid; gap: 10px; margin-bottom: 16px; }
 .answer-btn {
   padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #d7dae0;
+  border-radius: 12px;
+  border: 1px solid #e2ded4;
   background: #fff;
   font-size: 15px;
   text-align: left;
   cursor: pointer;
   white-space: pre-line;
 }
-.answer-btn:hover { background: #f5f7fb; }
+.answer-btn:hover { background: #f6f1ea; }
 .answer-btn.correct { border-color: #f2b705; border-width: 2px; padding: 11px; }
 .answer-btn.wrong { border-color: #d33; border-width: 2px; padding: 11px; }
 .answer-btn[disabled] { cursor: default; }
@@ -210,16 +236,16 @@ input[type="text"], select {
 .matching-btn {
   position: relative;
   padding: 12px 12px 12px 32px;
-  border-radius: 8px;
-  border: 1px solid #d7dae0;
+  border-radius: 12px;
+  border: 1px solid #e2ded4;
   background: #fff;
   font-size: 14px;
   text-align: left;
   cursor: pointer;
   white-space: pre-line;
 }
-.matching-btn:hover { background: #f5f7fb; }
-.matching-btn.selected { border-color: #2f6fed; border-width: 2px; background: #eef4ff; padding: 11px 11px 11px 31px; }
+.matching-btn:hover { background: #f6f1ea; }
+.matching-btn.selected { border-color: #4a6fa5; border-width: 2px; background: #eef2f8; padding: 11px 11px 11px 31px; }
 .matching-btn.paired { border-color: #8a8d93; }
 .matching-btn.correct { border-color: #f2b705; border-width: 2px; padding: 11px 11px 11px 31px; }
 .matching-btn.wrong { border-color: #d33; border-width: 2px; padding: 11px 11px 11px 31px; }
@@ -234,7 +260,7 @@ input[type="text"], select {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #2f6fed;
+  background: #4a6fa5;
   color: #fff;
   font-size: 11px;
   font-weight: 700;
@@ -243,7 +269,7 @@ input[type="text"], select {
   justify-content: center;
 }
 
-.feedback { border-top: 1px solid #eee; padding-top: 14px; }
+.feedback { border-top: 1px solid #f1ede4; padding-top: 14px; }
 .feedback p { margin: 4px 0; font-size: 14px; white-space: pre-line; }
 
 #wrong-list-wrap ul { padding-left: 20px; font-size: 14px; }
@@ -253,8 +279,8 @@ input[type="text"], select {
 .result-stats { display: flex; gap: 10px; margin-bottom: 16px; }
 .result-stat {
   flex: 1;
-  background: #f5f7fb;
-  border-radius: 10px;
+  background: #f6f1ea;
+  border-radius: 14px;
   padding: 14px 10px;
   text-align: center;
 }
@@ -264,7 +290,7 @@ input[type="text"], select {
 .result-congrats {
   margin: 16px 0;
   padding: 14px 16px;
-  border-radius: 12px;
+  border-radius: 14px;
   background: linear-gradient(135deg, #fff7e0, #ffe9b3);
   border: 1px solid #f2c94c;
   text-align: center;
@@ -278,9 +304,9 @@ input[type="text"], select {
   right: 16px;
   width: 250px;
   background: #fff;
-  border-radius: 12px;
+  border-radius: 18px;
   padding: 16px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 24px rgba(60,45,20,0.1);
   font-size: 13px;
 }
 .lb-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
@@ -289,8 +315,8 @@ input[type="text"], select {
   padding: 4px 8px;
   font-size: 11px;
   border-radius: 20px;
-  border: 1px solid #d7dae0;
-  background: #f5f7fb;
+  border: 1px solid #e2ded4;
+  background: #f6f1ea;
   color: #565a61;
   max-width: 110px;
 }
@@ -302,8 +328,8 @@ input[type="text"], select {
   gap: 8px;
   padding: 7px 8px;
   margin: 0 -8px;
-  border-radius: 8px;
-  border-bottom: 1px solid #eee;
+  border-radius: 10px;
+  border-bottom: 1px solid #f1ede4;
 }
 .leaderboard-widget li:last-child { border-bottom: none; }
 
@@ -343,7 +369,7 @@ input[type="text"], select {
   color: inherit;
   text-align: left;
 }
-.leaderboard-widget .lb-name:hover { text-decoration: underline; color: #2f6fed; }
+.leaderboard-widget .lb-name:hover { text-decoration: underline; color: #4a6fa5; }
 .lb-lastactive { display: block; font-size: 10px; color: #a5a9b0; white-space: nowrap; }
 .lb-lastactive.online { color: #1a9c4a; font-weight: 600; }
 .lb-streak { display: block; font-size: 10px; color: #e8730f; font-weight: 600; white-space: nowrap; }
@@ -359,13 +385,13 @@ input[type="text"], select {
   padding: 6px;
   background: none;
   border: none;
-  border-top: 1px solid #eee;
-  color: #2f6fed;
+  border-top: 1px solid #f1ede4;
+  color: #4a6fa5;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
 }
-.lb-toggle-btn:hover { background: #f5f7fb; }
+.lb-toggle-btn:hover { background: #f6f1ea; }
 
 .modal-overlay {
   position: fixed;
@@ -379,7 +405,7 @@ input[type="text"], select {
 }
 .modal-box {
   background: #fff;
-  border-radius: 12px;
+  border-radius: 18px;
   padding: 18px;
   width: 100%;
   max-width: 420px;
@@ -405,7 +431,7 @@ input[type="text"], select {
 .history-table th, .history-table td {
   text-align: left;
   padding: 6px 8px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #f1ede4;
   white-space: nowrap;
 }
 .history-table th { color: #8a8d93; font-weight: 600; }
@@ -438,7 +464,7 @@ input[type="text"], select {
 .loading-ring-track { fill: none; stroke: #e5e7eb; stroke-width: 6; }
 .loading-ring-bar {
   fill: none;
-  stroke: #2f6fed;
+  stroke: #4a6fa5;
   stroke-width: 6;
   stroke-linecap: round;
   stroke-dasharray: 169.6;
@@ -453,7 +479,7 @@ input[type="text"], select {
   justify-content: center;
   font-size: 13px;
   font-weight: 700;
-  color: #2f6fed;
+  color: #4a6fa5;
 }
 
 @media (max-width: 700px) {
@@ -465,13 +491,21 @@ input[type="text"], select {
   .container, .leaderboard-widget { background: #1f2023; box-shadow: none; }
   .question-card { background: #26282c; }
   input[type="text"], select, .group-list, .answer-btn, .matching-btn { background: #26282c; border-color: #3a3c40; color: #e6e6e6; }
+  .mode-card { border-color: #3a3c40; }
+  .mode-card:hover { background: #26282c; }
+  .mode-card.selected { border-color: #7c9ccf; background: #1e2a3d; }
+  .mode-card input[type="radio"] { accent-color: #7c9ccf; }
+  .primary-btn { background: #5b7fb5; }
+  .primary-btn:hover { background: #4a6a99; }
   .secondary-btn { background: #2a2c30; color: #e6e6e6; }
   .secondary-btn:hover { background: #34363b; }
   .answer-btn:hover, .matching-btn:hover { background: #303236; }
-  .matching-btn.selected { background: #1e2a44; border-color: #5b8dfd; }
+  .matching-btn.selected { background: #1e2a44; border-color: #7c9ccf; }
   .matching-btn.paired { border-color: #6b6f76; }
+  .matching-badge { background: #7c9ccf; }
+  .link-btn, .leaderboard-widget .lb-name:hover, .lb-toggle-btn { color: #7c9ccf; }
   .muted, .question-reading, .matching-reading, .lb-acc, .loading-row, .field-hint { color: #9a9ca1; }
-  .spinner { border-color: #3a3c40; border-top-color: #5b8dfd; }
+  .spinner { border-color: #3a3c40; border-top-color: #7c9ccf; }
   .feedback { border-color: #3a3c40; }
   .field-row, .subject-group { border-color: #34363b; }
   .subject-row:hover { background: #26282c; }
@@ -494,11 +528,11 @@ input[type="text"], select {
   .result-stat-value { color: #e6e6e6; }
   .result-congrats { background: linear-gradient(135deg, #2e2a1a, #3a3116); border-color: #6b5c1e; }
   .app-version { color: #4a4c50; }
-  .exit-float-btn { background: #26282c; border-color: #4a2626; color: #ff6b6b; }
-  .exit-float-btn:hover { background: #d33; color: #fff; }
+  .exit-btn { background: #26282c; border-color: #4a2626; color: #ff6b6b; }
+  .exit-btn:hover { background: #d33; color: #fff; }
   .loading-overlay { background: rgba(20,21,23,0.82); }
   .loading-overlay-box p { color: #e6e6e6; }
   .loading-ring-track { stroke: #3a3c40; }
-  .loading-ring-bar { stroke: #5b8dfd; }
-  .loading-ring-percent { color: #5b8dfd; }
+  .loading-ring-bar { stroke: #7c9ccf; }
+  .loading-ring-percent { color: #7c9ccf; }
 }

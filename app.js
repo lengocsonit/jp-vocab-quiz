@@ -39,7 +39,7 @@ const el = {
   quizScreen: document.getElementById('quiz-screen'),
   resultScreen: document.getElementById('result-screen'),
 
-  exitQuizFloatBtn: document.getElementById('exit-quiz-float'),
+  exitQuizBtn: document.getElementById('exit-quiz-btn'),
   quizProgressText: document.getElementById('quiz-progress-text'),
   quizTimer: document.getElementById('quiz-timer'),
   autoAdvanceCheckbox: document.getElementById('auto-advance-checkbox'),
@@ -198,7 +198,7 @@ async function init() {
     leaderboardExpanded = !leaderboardExpanded;
     renderLeaderboard(lastLeaderboardList);
   });
-  el.exitQuizFloatBtn.addEventListener('click', exitQuiz);
+  el.exitQuizBtn.addEventListener('click', exitQuiz);
   el.toggleReadingBtn.addEventListener('click', toggleReading);
   el.markWordBtn.addEventListener('click', toggleMarkCurrentWord);
   el.autoAdvanceCheckbox.addEventListener('change', () => {
@@ -221,6 +221,7 @@ async function init() {
   document.querySelectorAll('input[name="mode"]').forEach(radio => {
     radio.addEventListener('change', onModeChange);
   });
+  syncModeCardSelection();
 
   // Tải song song, không chờ tuần tự — 3 lượt gọi này độc lập với nhau.
   // Chan thao tac cho den khi fieldCounts xong (can de biet co gi de chon) - leaderboard/goi y ten
@@ -353,7 +354,16 @@ function onModeChange() {
   el.countLabel.textContent = state.mode === 'test' ? 'Số câu muốn làm'
     : state.mode === 'matching' ? 'Số bộ ghép muốn làm'
     : 'Số từ muốn ôn';
+  syncModeCardSelection();
   renderFieldCheckboxes();
+}
+
+// To dam the "the" (mode-card) dang duoc chon - dung class thay vi CSS :has() de chac chan chay
+// duoc tren moi trinh duyet.
+function syncModeCardSelection() {
+  document.querySelectorAll('.mode-card').forEach(card => {
+    card.classList.toggle('selected', card.querySelector('input').checked);
+  });
 }
 
 async function fetchLeaderboardData(fieldFilter) {
@@ -1162,7 +1172,6 @@ function showScreen(name) {
   el.setupScreen.classList.toggle('hidden', name !== 'setup');
   el.quizScreen.classList.toggle('hidden', name !== 'quiz');
   el.resultScreen.classList.toggle('hidden', name !== 'result');
-  el.exitQuizFloatBtn.classList.toggle('hidden', name !== 'quiz');
   updateLeaderboardVisibility();
 }
 
