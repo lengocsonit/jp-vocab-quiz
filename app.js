@@ -178,7 +178,8 @@ function getAppVersion() {
   return match ? match[1] : '?';
 }
 
-const LEADERBOARD_COLLAPSED_COUNT = 5;
+const LEADERBOARD_COLLAPSED_COUNT = 3;
+const LEADERBOARD_MAX_COUNT = 10; // tren so nay khong hien nua, ke ca khi bam "Xem them"
 let leaderboardExpanded = false;
 let lastLeaderboardList = [];
 
@@ -435,8 +436,14 @@ function getStreakIcon(streak) {
 
 let hasLeaderboardData = false;
 
+// Huy chuong/hang dua theo scoreRank (tinh theo diem so tu backend) - doc lap voi vi tri thuc te
+// trong danh sach nay (danh sach nay dang sap theo thoi gian hoat dong gan nhat).
+const RANK_MEDALS = { 1: '🥇', 2: '🥈', 3: '🥉' };
+const RANK_CLASSES = { 1: 'rank-gold', 2: 'rank-silver', 3: 'rank-bronze' };
+
 function renderLeaderboard(list) {
-  lastLeaderboardList = list || [];
+  // Toi da 10 nguoi, ke ca khi mo rong "Xem them" - qua so nay khong hien nua
+  lastLeaderboardList = (list || []).slice(0, LEADERBOARD_MAX_COUNT);
   hasLeaderboardData = lastLeaderboardList.length > 0;
   if (!hasLeaderboardData) {
     el.leaderboardList.innerHTML = '';
@@ -444,14 +451,15 @@ function renderLeaderboard(list) {
     updateLeaderboardVisibility();
     return;
   }
-  const rankMedals = ['🥇', '🥈', '🥉'];
-  const rankClasses = ['rank-gold', 'rank-silver', 'rank-bronze'];
   const visibleList = leaderboardExpanded ? lastLeaderboardList : lastLeaderboardList.slice(0, LEADERBOARD_COLLAPSED_COUNT);
 
-  el.leaderboardList.innerHTML = visibleList.map((item, i) => `
-    <li class="${rankClasses[i] || ''}">
+  el.leaderboardList.innerHTML = visibleList.map((item) => {
+    const rank = item.scoreRank;
+    const medal = RANK_MEDALS[rank];
+    return `
+    <li class="${RANK_CLASSES[rank] || ''}">
       <span class="lb-left">
-        ${rankMedals[i] ? `<span class="lb-medal" title="Hạng ${i + 1}">${rankMedals[i]}</span>` : `<span class="lb-rank" title="Hạng ${i + 1}">${i + 1}</span>`}
+        ${medal ? `<span class="lb-medal" title="Hạng ${rank}">${medal}</span>` : `<span class="lb-rank" title="Hạng ${rank}">${rank}</span>`}
         <span class="lb-name-wrap">
           <button class="lb-name" data-name="${escapeHtml(item.name)}" title="Bấm để xem lịch sử làm bài">${escapeHtml(item.name)}</button>
           ${renderActivityStatus(item.lastActive)}
@@ -462,8 +470,8 @@ function renderLeaderboard(list) {
         <span class="lb-score" title="Cấp bậc: ${escapeHtml(getScoreTier(item.score).label)} — tổng điểm rèn luyện tích luỹ">${getScoreTier(item.score).icon} ${item.score}</span>
         <span class="lb-acc" title="Tỉ lệ trả lời đúng (tính trên tất cả lượt chơi)">${formatPercent(item.accuracy)}%</span>
       </span>
-    </li>
-  `).join('');
+    </li>`;
+  }).join('');
 
   if (lastLeaderboardList.length > LEADERBOARD_COLLAPSED_COUNT) {
     el.leaderboardToggle.classList.remove('hidden');

@@ -365,15 +365,22 @@ function getLeaderboard(fieldFilter) {
     };
   });
 
-  // Xep hang uu tien theo thoi gian hoat dong GAN NHAT (moi nhat len truoc), diem so chi dung de
-  // phan dinh khi trung thoi gian hoat dong - khong con la tieu chi chinh nhu truoc.
+  // Hang (dung de gan huy chuong vang/bac/dong) tinh theo DIEM SO - doc lap voi thu tu hien thi
+  // ben duoi, nen 1 nguoi co the la "Hang 1" nhung khong nhat thiet nam dau danh sach hien thi.
+  var byScore = list.slice().sort(function (a, b) { return b.score - a.score; });
+  var scoreRankByName = {};
+  byScore.forEach(function (item, i) { scoreRankByName[item.name] = i + 1; });
+  list.forEach(function (item) { item.scoreRank = scoreRankByName[item.name]; });
+
+  // Thu tu HIEN THI (tren xuong duoi) uu tien theo thoi gian hoat dong GAN NHAT, diem so chi dung
+  // de phan dinh khi trung thoi gian hoat dong.
   list.sort(function (a, b) {
     var timeA = a.lastActive ? new Date(a.lastActive).getTime() : 0;
     var timeB = b.lastActive ? new Date(b.lastActive).getTime() : 0;
     if (timeB !== timeA) return timeB - timeA;
     return b.score - a.score;
   });
-  return list; // tra ve toan bo, frontend tu gioi han hien Top 5 + nut "Xem them"
+  return list; // tra ve toan bo, frontend tu gioi han hien Top 3 + nut "Xem them" (toi da 10)
 }
 
 // Lịch sử tất cả các lượt chơi của 1 tên, moi nhat truoc.
