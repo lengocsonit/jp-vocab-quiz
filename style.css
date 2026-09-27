@@ -209,11 +209,29 @@ input[type="text"], select {
   text-align: center;
   margin-bottom: 16px;
 }
+.question-text-row { display: flex; align-items: center; justify-content: center; gap: 10px; }
 .question-text { font-size: 28px; font-weight: 700; white-space: pre-line; }
 .question-reading { font-size: 15px; color: #6b6f76; margin-top: 6px; white-space: pre-line; }
 
+.speak-btn {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid #e2ded4;
+  background: #fff;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.speak-btn:hover { background: #f6f1ea; }
+.speak-btn:active { transform: scale(0.94); }
+
 /* Cau hoi dai (che do Test) can gon nhe hon, khong dam/to/can giua nhu 1 tu ngan de de doc ca doan */
 .question-card.long-text { text-align: left; padding: 20px 18px; }
+.question-card.long-text .question-text-row { justify-content: flex-start; align-items: flex-start; }
 .question-card.long-text .question-text { font-size: 19px; font-weight: 500; line-height: 1.7; }
 
 .answers { display: grid; gap: 10px; margin-bottom: 16px; }
@@ -236,7 +254,7 @@ input[type="text"], select {
 .matching-col { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .matching-btn {
   position: relative;
-  padding: 12px 12px 12px 32px;
+  padding: 12px 34px 12px 32px;
   border-radius: 12px;
   border: 1px solid #e2ded4;
   background: #fff;
@@ -246,13 +264,28 @@ input[type="text"], select {
   white-space: pre-line;
 }
 .matching-btn:hover { background: #f6f1ea; }
-.matching-btn.selected { border-color: #4a6fa5; border-width: 2px; background: #eef2f8; padding: 11px 11px 11px 31px; }
+.matching-btn.selected { border-color: #4a6fa5; border-width: 2px; background: #eef2f8; padding: 11px 33px 11px 31px; }
 .matching-btn.paired { border-color: #8a8d93; }
-.matching-btn.correct { border-color: #f2b705; border-width: 2px; padding: 11px 11px 11px 31px; }
-.matching-btn.wrong { border-color: #d33; border-width: 2px; padding: 11px 11px 11px 31px; }
+.matching-btn.correct { border-color: #f2b705; border-width: 2px; padding: 11px 33px 11px 31px; }
+.matching-btn.wrong { border-color: #d33; border-width: 2px; padding: 11px 33px 11px 31px; }
 .matching-btn[disabled] { cursor: default; }
 .matching-left-text { display: block; font-size: 13px; }
 .matching-reading { display: block; font-size: 11px; color: #6b6f76; margin-top: 2px; }
+.matching-speak-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  cursor: pointer;
+}
+.matching-speak-btn:hover { background: rgba(0,0,0,0.06); }
 .matching-badge {
   position: absolute;
   left: 8px;
@@ -493,7 +526,8 @@ input[type="text"], select {
   body { background: #16171a; color: #e6e6e6; }
   .container, .leaderboard-widget { background: #1f2023; box-shadow: none; }
   .question-card { background: #26282c; }
-  input[type="text"], select, .group-list, .answer-btn, .matching-btn { background: #26282c; border-color: #3a3c40; color: #e6e6e6; }
+  input[type="text"], select, .group-list, .answer-btn, .matching-btn, .speak-btn { background: #26282c; border-color: #3a3c40; color: #e6e6e6; }
+  .speak-btn:hover { background: #303236; }
   .mode-card { border-color: #3a3c40; }
   .mode-card:hover { background: #26282c; }
   .mode-card.selected { border-color: #7c9ccf; background: #1e2a3d; }

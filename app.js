@@ -47,6 +47,7 @@ const el = {
   markWordBtn: document.getElementById('mark-word-btn'),
   questionCard: document.getElementById('question-card'),
   questionText: document.getElementById('question-text'),
+  speakBtn: document.getElementById('speak-btn'),
   questionReading: document.getElementById('question-reading'),
   revealBtn: document.getElementById('reveal-btn'),
   answers: document.getElementById('answers'),
@@ -203,6 +204,7 @@ async function init() {
   });
   el.exitQuizBtn.addEventListener('click', exitQuiz);
   el.toggleReadingBtn.addEventListener('click', toggleReading);
+  el.speakBtn.addEventListener('click', () => speakJapanese(el.speakBtn.dataset.text || ''));
   el.markWordBtn.addEventListener('click', toggleMarkCurrentWord);
   el.autoAdvanceCheckbox.addEventListener('change', () => {
     state.autoAdvance = el.autoAdvanceCheckbox.checked;
@@ -749,6 +751,7 @@ function renderQuestion() {
   el.nextBtn.classList.remove('wrong-result');
   el.nextBtnResult.textContent = '';
   el.nextBtnLabel.textContent = 'Câu tiếp theo';
+  el.speakBtn.classList.add('hidden');
 
   el.questionCard.classList.toggle('long-text', state.mode === 'test');
 
@@ -757,6 +760,7 @@ function renderQuestion() {
     el.toggleReadingBtn.classList.add('hidden');
     el.questionReading.textContent = '';
     el.questionText.textContent = item.word.question;
+    setSpeakText(item.word.question);
     renderTestAnswers(item);
     el.answers.classList.remove('hidden');
   } else if (state.mode === 'matching') {
@@ -774,6 +778,7 @@ function renderQuestion() {
     el.toggleReadingBtn.classList.remove('hidden');
     el.answers.classList.add('hidden');
     el.questionText.textContent = item.word.word;
+    setSpeakText(item.word.word);
     updateReadingDisplay();
     el.feedbackMeaning.textContent = item.word.meaning || '';
     el.feedbackExample.textContent = item.word.example ? `Ví dụ: ${item.word.example}` : '';
@@ -785,7 +790,9 @@ function renderQuestion() {
     el.revealBtn.classList.remove('hidden');
     el.toggleReadingBtn.classList.remove('hidden');
     el.answers.classList.add('hidden');
-    el.questionText.textContent = item.direction === 'jp2meaning' ? item.word.word : item.word.meaning;
+    const isJp2Meaning = item.direction === 'jp2meaning';
+    el.questionText.textContent = isJp2Meaning ? item.word.word : item.word.meaning;
+    if (isJp2Meaning) setSpeakText(item.word.word); // chi doc duoc khi dang hien tu tieng Nhat, khong doc nghia tieng Viet
     updateReadingDisplay();
   }
 
@@ -833,7 +840,11 @@ function renderMatchingPairs(item) {
   // Viet gon tren 1 dong (khong xuong dong/thut le trong template) vi nut nay dung white-space: pre-line
   // ke thua tu .matching-btn - neu de xuong dong/thut le trong source, cac dau xuong dong do se bi hieu
   // la line break that, lam khung nut phong to bat thuong so voi nut ben phai (chi co 1 dong text don).
-  el.matchingLeftCol.innerHTML = [0, 1, 2, 3].map(i => `<button type="button" class="matching-btn matching-left-btn" data-index="${i}"><span class="matching-left-text">${escapeHtml(data['left' + (i + 1)])}</span><span class="matching-reading${state.showReading ? '' : ' hidden'}">${escapeHtml(data['left' + (i + 1) + '_reading'] || '')}</span></button>`).join('');
+  el.matchingLeftCol.innerHTML = [0, 1, 2, 3].map(i => {
+    const word = data['left' + (i + 1)];
+    const speakSpan = TTS_SUPPORTED ? `<span class="matching-speak-btn" data-speak="${escapeHtml(word)}" title="Nghe phát âm">🔊</span>` : '';
+    return `<button type="button" class="matching-btn matching-left-btn" data-index="${i}"><span class="matching-left-text">${escapeHtml(word)}</span><span class="matching-reading${state.showReading ? '' : ' hidden'}">${escapeHtml(data['left' + (i + 1) + '_reading'] || '')}</span>${speakSpan}</button>`;
+  }).join('');
 
   el.matchingRightCol.innerHTML = rightOrder.map(origIndex => `
     <button type="button" class="matching-btn matching-right-btn" data-index="${origIndex}">${escapeHtml(data['right' + (origIndex + 1)])}</button>
@@ -841,6 +852,12 @@ function renderMatchingPairs(item) {
 
   el.matchingLeftCol.querySelectorAll('.matching-left-btn').forEach(btn => {
     btn.addEventListener('click', () => handleMatchingLeftClick(Number(btn.dataset.index)));
+  });
+  el.matchingLeftCol.querySelectorAll('.matching-speak-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation(); // tranh kich hoat luon click chon/ghep cua nut cha
+      speakJapanese(btn.dataset.speak);
+    });
   });
   el.matchingRightCol.querySelectorAll('.matching-right-btn').forEach(btn => {
     btn.addEventListener('click', () => handleMatchingRightClick(Number(btn.dataset.index)));
@@ -1004,6 +1021,30 @@ async function recordAnswerForPriority(word, isCorrect) {
   } catch (err) {
     // lỗi mạng thì thôi, không chặn người dùng làm tiếp
   }
+}
+
+// Doc phat am bang Web Speech API co san trong trinh duyet (Chrome/Edge co san giong tieng Nhat,
+// khong can API key hay backend gi ca - mien phi hoan toan). Neu trinh duyet khong ho tro thi cac
+// nut loa se khong bao gio duoc hien ra (xem TTS_SUPPORTED), khong lam gi ca khi bam nham.
+const TTS_SUPPORTED = 'speechSynthesis' in window;
+
+// Chi hien nut loa khi thuc su co chu tieng Nhat de doc (vd khong hien khi dang hien nghia tieng Viet)
+function setSpeakText(text) {
+  if (!TTS_SUPPORTED || !text) {
+    el.speakBtn.classList.add('hidden');
+    return;
+  }
+  el.speakBtn.dataset.text = text;
+  el.speakBtn.classList.remove('hidden');
+}
+
+function speakJapanese(text) {
+  if (!TTS_SUPPORTED || !text) return;
+  window.speechSynthesis.cancel(); // huy cau dang doc do (neu co) truoc khi doc cau moi, tranh chong tieng
+  const utterance = new SpeechSynthesisUtterance(text.replace(/_+/g, ''));
+  utterance.lang = 'ja-JP';
+  utterance.rate = 0.9;
+  window.speechSynthesis.speak(utterance);
 }
 
 function toggleReading() {
