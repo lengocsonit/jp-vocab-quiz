@@ -860,10 +860,10 @@ async function startQuiz() {
   el.wordListBtn.classList.toggle('hidden', !canShowWordList);
   el.wordListWrap.classList.add('hidden');
   el.wordListBtn.textContent = '📋 Xem danh sách từ';
-  // Checkbox "An tu & vi du" chi hop ly o On tu vung (Hoc bai da co checkbox An nghia rieng)
+  // Checkbox "An tu & vi du" chi hop ly o Hoc bai (On tu vung da co checkbox An nghia rieng)
   state.hideWordInList = false;
   el.hideWordCheckbox.checked = false;
-  el.hideWordRow.classList.toggle('hidden', state.mode !== 'vocab');
+  el.hideWordRow.classList.toggle('hidden', state.mode !== 'study');
   if (canShowWordList) renderWordListTable();
 
   startTimer();
@@ -1229,10 +1229,10 @@ function speakJapanese(text) {
 }
 
 // Bang xem truoc toan bo tu cua luot choi nay (id/tu/vi du/nghia), co scroll rieng khi danh sach dai.
-// Che do On tu vung co the tick "An tu & vi du" de chi con thay cot Nghia - tu kiem tra xem con nho
+// Che do Hoc bai co the tick "An tu & vi du" de chi con thay cot Nghia - tu kiem tra xem con nho
 // duoc tu tieng Nhat tuong ung khong truoc khi bam lai de doi chieu.
 function renderWordListTable() {
-  const hideWord = state.hideWordInList && state.mode === 'vocab';
+  const hideWord = state.hideWordInList && state.mode === 'study';
   el.wordListBody.innerHTML = state.quizQueue.map(item => `
     <tr><td>${escapeHtml(String(item.word.id))}</td><td>${hideWord ? '???' : escapeHtml(item.word.word)}</td><td>${hideWord ? '???' : escapeHtml(item.word.example || '')}</td><td>${escapeHtml(item.word.meaning)}</td></tr>
   `).join('');
