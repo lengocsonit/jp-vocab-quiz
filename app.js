@@ -15,6 +15,7 @@ const state = {
   fieldTally: {}, // { fieldName: { correct, total } }
   showReading: false,
   hideAnswer: false, // chi dung o che do Hoc bai: tick vao thi an nghia/vi du de tu on lai
+  hideWordInList: false, // chi dung o bang "Xem danh sach tu" cua On tu vung: tick vao thi an tu + vi du, chi de lai nghia de tu nho tu
   autoAdvance: true,
   quizStartTime: 0,
   timerInterval: null,
@@ -54,6 +55,8 @@ const el = {
   autoAdvanceCheckbox: document.getElementById('auto-advance-checkbox'),
   hideAnswerRow: document.getElementById('hide-answer-row'),
   hideAnswerCheckbox: document.getElementById('hide-answer-checkbox'),
+  hideWordRow: document.getElementById('hide-word-row'),
+  hideWordCheckbox: document.getElementById('hide-word-checkbox'),
   toggleReadingBtn: document.getElementById('toggle-reading-btn'),
   wordListBtn: document.getElementById('word-list-btn'),
   wordListWrap: document.getElementById('word-list-wrap'),
@@ -333,6 +336,10 @@ async function init() {
   el.hideAnswerCheckbox.addEventListener('change', () => {
     state.hideAnswer = el.hideAnswerCheckbox.checked;
     if (state.mode === 'study') el.feedback.classList.toggle('hidden', state.hideAnswer);
+  });
+  el.hideWordCheckbox.addEventListener('change', () => {
+    state.hideWordInList = el.hideWordCheckbox.checked;
+    renderWordListTable();
   });
   el.leaderboardList.addEventListener('click', (e) => {
     const nameBtn = e.target.closest('.lb-name');
@@ -853,6 +860,10 @@ async function startQuiz() {
   el.wordListBtn.classList.toggle('hidden', !canShowWordList);
   el.wordListWrap.classList.add('hidden');
   el.wordListBtn.textContent = '📋 Xem danh sách từ';
+  // Checkbox "An tu & vi du" chi hop ly o On tu vung (Hoc bai da co checkbox An nghia rieng)
+  state.hideWordInList = false;
+  el.hideWordCheckbox.checked = false;
+  el.hideWordRow.classList.toggle('hidden', state.mode !== 'vocab');
   if (canShowWordList) renderWordListTable();
 
   startTimer();
@@ -1217,10 +1228,13 @@ function speakJapanese(text) {
   window.speechSynthesis.speak(utterance);
 }
 
-// Bang xem truoc toan bo tu cua luot choi nay (id/tu/nghia), co scroll rieng khi danh sach dai.
+// Bang xem truoc toan bo tu cua luot choi nay (id/tu/vi du/nghia), co scroll rieng khi danh sach dai.
+// Che do On tu vung co the tick "An tu & vi du" de chi con thay cot Nghia - tu kiem tra xem con nho
+// duoc tu tieng Nhat tuong ung khong truoc khi bam lai de doi chieu.
 function renderWordListTable() {
+  const hideWord = state.hideWordInList && state.mode === 'vocab';
   el.wordListBody.innerHTML = state.quizQueue.map(item => `
-    <tr><td>${escapeHtml(String(item.word.id))}</td><td>${escapeHtml(item.word.word)}</td><td>${escapeHtml(item.word.meaning)}</td></tr>
+    <tr><td>${escapeHtml(String(item.word.id))}</td><td>${hideWord ? '???' : escapeHtml(item.word.word)}</td><td>${hideWord ? '???' : escapeHtml(item.word.example || '')}</td><td>${escapeHtml(item.word.meaning)}</td></tr>
   `).join('');
 }
 
