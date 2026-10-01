@@ -459,6 +459,21 @@ input[type="text"], select {
   color: #565a61;
   max-width: 110px;
 }
+.top-today-line {
+  margin: 0 0 10px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #fff7e0, #ffe9b3);
+  border: 1px solid #f2c94c;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.top-today-line b { font-weight: 700; }
+.top-today-line .top-today-gain { color: #1a9c4a; }
+
 .leaderboard-widget ol { margin: 0; padding: 0; list-style: none; }
 .leaderboard-widget li {
   display: flex;
@@ -652,6 +667,8 @@ input[type="text"], select {
   .quote-jp { color: #9db8de; }
   .quote-vi { color: #9a9ca1; }
   .greeting-banner { background: linear-gradient(135deg, #2e2a1a, #3a3116); border-color: #6b5c1e; }
+  .top-today-line { background: linear-gradient(135deg, #2e2a1a, #3a3116); border-color: #6b5c1e; }
+  .top-today-line .top-today-gain { color: #3ddc73; }
   .category-card { background: linear-gradient(160deg, #26282c, #1f2023); border-color: #3a3c40; }
   .category-card:hover { border-color: #6f9bff; }
   .category-card-count { color: #6f9bff; background: #1e2a3d; }

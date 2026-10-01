@@ -96,6 +96,7 @@ const el = {
   replayBtn: document.getElementById('replay-btn'),
 
   leaderboardWidget: document.getElementById('leaderboard-widget'),
+  topTodayLine: document.getElementById('top-today-line'),
   leaderboardList: document.getElementById('leaderboard-list'),
   leaderboardFilter: document.getElementById('leaderboard-filter'),
   leaderboardToggle: document.getElementById('leaderboard-toggle'),
@@ -555,6 +556,31 @@ async function loadLeaderboard(fieldFilter) {
   } catch (err) {
     // im lặng bỏ qua nếu leaderboard chưa sẵn sàng
   }
+
+  // "Top hom nay" LUON tinh tren TOAN BO linh vuc (khong phu thuoc category/Mon dang loc) - goi rieng,
+  // khong dung chung du lieu voi fetchLeaderboardData() vi ham do bi scope theo state.category.
+  try {
+    const res = await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=leaderboard`);
+    renderTopToday(await res.json());
+  } catch (err) {
+    el.topTodayLine.classList.add('hidden');
+  }
+}
+
+// Nguoi co diem kiem duoc TRONG NGAY HOM NAY cao nhat (todayGain), KHONG phai tong diem tich luy -
+// phai tinh tren list DAY DU tu backend (truoc khi renderLeaderboard cat con top 10 theo hoat dong
+// gan nhat), vi nguoi dang "top hom nay" chua chac nam trong top 10 do.
+function renderTopToday(list) {
+  const top = (list || []).reduce((best, item) => (
+    item.todayGain > 0 && (!best || item.todayGain > best.todayGain) ? item : best
+  ), null);
+
+  if (!top) {
+    el.topTodayLine.classList.add('hidden');
+    return;
+  }
+  el.topTodayLine.innerHTML = `🔥 Top hôm nay: <b>${escapeHtml(top.name)}</b> ${top.score}<span class="top-today-gain">(+${top.todayGain})</span>`;
+  el.topTodayLine.classList.remove('hidden');
 }
 
 // Cap bac theo tong diem tich luy, hien icon dep hon thay cho 1 icon cup phang duy nhat -
@@ -804,15 +830,21 @@ async function startQuiz() {
 
   const selectedFields = getSelectedFields() || getCategoryScopedFields();
 
+  // Khong con fallback ve URL khong loc field nua: neu list rong (truong hop hiem - category/che do
+  // nay khong co du lieu) thi coi nhu khong co cau hoi, TUYET DOI khong goi API khong loc (se keo ve
+  // du lieu TOAN BO he thong, dinh ca linh vuc khac - chinh la bug da gap truoc day).
+  if (selectedFields.length === 0) {
+    el.setupError.textContent = 'Không có dữ liệu cho lựa chọn này.';
+    return;
+  }
+
   el.startBtn.disabled = true;
   el.startBtn.textContent = 'Đang tải câu hỏi...';
   showLoadingOverlay('Đang tải câu hỏi...');
 
   let pool;
   try {
-    const url = selectedFields.length
-      ? `${CONFIG.APPS_SCRIPT_URL}?field=${encodeURIComponent(selectedFields.join(','))}`
-      : CONFIG.APPS_SCRIPT_URL;
+    const url = `${CONFIG.APPS_SCRIPT_URL}?field=${encodeURIComponent(selectedFields.join(','))}`;
     const res = await fetch(url);
     const data = await res.json();
     pool = state.mode === 'test'
