@@ -90,7 +90,6 @@ const el = {
   resultCongrats: document.getElementById('result-congrats'),
   resultPointsEarned: document.getElementById('result-points-earned'),
   resultStreakMessage: document.getElementById('result-streak-message'),
-  resultRankMessage: document.getElementById('result-rank-message'),
   wrongListWrap: document.getElementById('wrong-list-wrap'),
   wrongListTitle: document.getElementById('wrong-list-title'),
   wrongList: document.getElementById('wrong-list'),
@@ -1508,7 +1507,6 @@ async function finishQuiz() {
   el.resultAccuracy.textContent = `${formatPercent(accuracy)}%`;
 
   el.resultPointsEarned.textContent = `🎉 Bạn vừa ghi thêm ${state.correctCount} điểm rèn luyện!`;
-  el.resultRankMessage.textContent = 'Đang tính hạng...';
   el.resultCongrats.classList.remove('hidden');
 
   if (state.wrongList.length > 0) {
@@ -1556,21 +1554,18 @@ async function submitResult(durationSeconds) {
     loadLeaderboard(el.leaderboardFilter.value);
     loadNameSuggestions();
 
-    // Bao hang tong (khong phu thuoc bo loc dang chon o widget) de chuc mung + tao dong luc co gang tiep
+    // Bo thong bao xep hang #N (tinh theo thu tu hien thi/hoat dong gan day, khong phai theo diem so
+    // thuc su nen de gay hieu nham) - chi con bao streak de tao dong luc, van can allBoard de tra cuu
+    // streak hien tai cua nguoi choi.
     const allBoard = await fetchLeaderboardData('all');
-    const rankIndex = allBoard.findIndex(item => item.name === state.playerName);
-    el.resultRankMessage.textContent = rankIndex === -1
-      ? ''
-      : `🏅 Bạn đang xếp hạng #${rankIndex + 1} toàn hệ thống — cố gắng lên nhé!`;
-
-    const streak = rankIndex === -1 ? 0 : (allBoard[rankIndex].streak || 0);
+    const myEntry = allBoard.find(item => item.name === state.playerName);
+    const streak = myEntry ? (myEntry.streak || 0) : 0;
     el.resultStreakMessage.textContent = streak > 1
       ? `${getStreakIcon(streak)} Chuỗi ${streak} ngày liên tiếp — đừng để tắt lửa nhé!`
       : streak === 1
         ? '🔥 Bắt đầu chuỗi ngày học rồi đó, mai nhớ quay lại nhé!'
         : '';
   } catch (err) {
-    el.resultRankMessage.textContent = '';
     el.resultStreakMessage.textContent = '';
   }
 }
