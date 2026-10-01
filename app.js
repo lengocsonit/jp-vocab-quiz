@@ -162,8 +162,10 @@ function showLoadingOverlay(text) {
 // cho - CHI 1 cau/lan tai, khong xoay vong lien tuc trong cung 1 lan cho (de doc khong bi roi mat).
 // Moi lan goi ham nay (= moi lan hien loading overlay) se sang cau KE TIEP trong danh sach, nen cac
 // lan tai khac nhau se thay cau khac nhau.
-let loadingQuoteIndex = Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length);
+let loadingQuoteIndex = -1; // -1 = chua khoi tao - khoi tao tre (lazy) o lan goi dau, tranh dung toi
+                            // MOTIVATIONAL_QUOTES (khai bao ben duoi file) ngay luc nap script (TDZ error)
 function startLoadingQuoteRotation() {
+  if (loadingQuoteIndex === -1) loadingQuoteIndex = Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length);
   const q = MOTIVATIONAL_QUOTES[loadingQuoteIndex];
   el.loadingOverlayText.innerHTML = `<span class="loading-quote-jp">${escapeHtml(q.jp)}</span><span class="loading-quote-vi">${escapeHtml(q.vi)}</span>`;
   loadingQuoteIndex = (loadingQuoteIndex + 1) % MOTIVATIONAL_QUOTES.length;
