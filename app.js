@@ -126,11 +126,9 @@ const el = {
 const LOADING_RING_CIRCUMFERENCE = 169.6; // 2 * PI * 27 (r cua vong tron trong SVG)
 const LOADING_PROGRESS_CAP = 96;
 const LOADING_QUOTE_DELAY_MS = 1200;
-const LOADING_QUOTE_INTERVAL_MS = 2600;
 let loadingProgressTimer = null;
 let loadingProgressValue = 0;
 let loadingStallTimers = [];
-let loadingQuoteTimer = null;
 
 function setLoadingProgress(percent) {
   loadingProgressValue = percent;
@@ -141,8 +139,6 @@ function setLoadingProgress(percent) {
 function clearLoadingStallTimers() {
   loadingStallTimers.forEach(t => clearTimeout(t));
   loadingStallTimers = [];
-  if (loadingQuoteTimer) clearInterval(loadingQuoteTimer);
-  loadingQuoteTimer = null;
 }
 
 function showLoadingOverlay(text) {
@@ -161,19 +157,16 @@ function showLoadingOverlay(text) {
   loadingStallTimers = [setTimeout(startLoadingQuoteRotation, LOADING_QUOTE_DELAY_MS)];
 }
 
-// Thay vi bao "dang tai hoi lau, vui long doi..." nhu truoc, xoay vong qua cac cau cham ngon tieng
-// Nhat (dung chung danh sach MOTIVATIONAL_QUOTES voi man hinh chon linh vuc) de tao dong luc hoc tap
-// ngay trong luc cho, bat dau tu 1 cau ngau nhien de khong lap lai y het moi lan tai trang.
+// Thay vi bao "dang tai hoi lau, vui long doi..." nhu truoc, hien 1 cau cham ngon tieng Nhat (dung
+// chung danh sach MOTIVATIONAL_QUOTES voi man hinh chon linh vuc) de tao dong luc hoc tap trong luc
+// cho - CHI 1 cau/lan tai, khong xoay vong lien tuc trong cung 1 lan cho (de doc khong bi roi mat).
+// Moi lan goi ham nay (= moi lan hien loading overlay) se sang cau KE TIEP trong danh sach, nen cac
+// lan tai khac nhau se thay cau khac nhau.
+let loadingQuoteIndex = Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length);
 function startLoadingQuoteRotation() {
-  let i = Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length);
-  const renderQuote = () => {
-    const q = MOTIVATIONAL_QUOTES[i];
-    el.loadingOverlayText.innerHTML = `<span class="loading-quote-jp">${escapeHtml(q.jp)}</span><span class="loading-quote-vi">${escapeHtml(q.vi)}</span>`;
-    i = (i + 1) % MOTIVATIONAL_QUOTES.length;
-  };
-  renderQuote();
-  if (loadingQuoteTimer) clearInterval(loadingQuoteTimer);
-  loadingQuoteTimer = setInterval(renderQuote, LOADING_QUOTE_INTERVAL_MS);
+  const q = MOTIVATIONAL_QUOTES[loadingQuoteIndex];
+  el.loadingOverlayText.innerHTML = `<span class="loading-quote-jp">${escapeHtml(q.jp)}</span><span class="loading-quote-vi">${escapeHtml(q.vi)}</span>`;
+  loadingQuoteIndex = (loadingQuoteIndex + 1) % MOTIVATIONAL_QUOTES.length;
 }
 
 // Mo dan (opacity) roi moi that su an (them class hidden) thay vi cat phut - cho ca 2 truong hop
@@ -247,7 +240,7 @@ function startQuoteRotation() {
   setInterval(() => {
     quoteIndex = (quoteIndex + 1) % MOTIVATIONAL_QUOTES.length;
     showQuote(quoteIndex);
-  }, 6000);
+  }, 10000);
 }
 
 // Chao ngay khi quay lai (dua vao ten da luu) kem streak hien tai, lay tu bang xep hang TONG toan he
