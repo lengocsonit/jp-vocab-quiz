@@ -769,8 +769,18 @@ function bindFieldListEvents() {
 
 function getSelectedFields() {
   const allCheckbox = el.groupList.querySelector('input[value="__all__"]');
-  if (!allCheckbox || allCheckbox.checked) return null; // null = tất cả lĩnh vực
+  if (!allCheckbox || allCheckbox.checked) return null; // null = tất cả lĩnh vực trong category đang chọn
   return [...el.groupList.querySelectorAll('input[name="field"]:checked')].map(cb => cb.value);
+}
+
+// Khi tick "Tất cả" trong màn hình chọn lĩnh vực, "tất cả" phải hiểu là tất cả các bài THUỘC category
+// đang chọn (BJT/IT Passport/N5/Other), không phải tất cả mọi sheet trong toàn bộ hệ thống - nếu
+// không sẽ bị lẫn câu hỏi của category khác (bug đã gặp).
+function getCategoryScopedFields() {
+  const fieldsInCategory = state.category
+    ? allFieldsWithCounts.filter(f => getCategoryId(f.field) === state.category)
+    : allFieldsWithCounts;
+  return fieldsInCategory.filter(f => f.type === modeToSheetType(state.mode)).map(f => f.field);
 }
 
 async function startQuiz() {
@@ -783,7 +793,7 @@ async function startQuiz() {
     return;
   }
 
-  const selectedFields = getSelectedFields();
+  const selectedFields = getSelectedFields() || getCategoryScopedFields();
 
   el.startBtn.disabled = true;
   el.startBtn.textContent = 'Đang tải câu hỏi...';
@@ -791,7 +801,7 @@ async function startQuiz() {
 
   let pool;
   try {
-    const url = selectedFields
+    const url = selectedFields.length
       ? `${CONFIG.APPS_SCRIPT_URL}?field=${encodeURIComponent(selectedFields.join(','))}`
       : CONFIG.APPS_SCRIPT_URL;
     const res = await fetch(url);
