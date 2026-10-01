@@ -605,7 +605,9 @@ input[type="text"], select {
   0%, 100% { transform: translateY(0) rotate(-8deg); }
   50% { transform: translateY(-16px) rotate(8deg); }
 }
-.loading-overlay-box p { margin: 8px 0 0; font-weight: 600; font-size: 14px; color: #1c1e21; }
+.loading-overlay-box p { margin: 8px 0 0; font-weight: 600; font-size: 14px; color: #1c1e21; max-width: 260px; }
+.loading-quote-jp { display: block; }
+.loading-quote-vi { display: block; font-weight: 400; font-size: 12px; font-style: italic; color: #6b7280; margin-top: 3px; }
 
 .loading-ring-wrap { position: relative; width: 64px; height: 64px; margin: 4px auto; }
 .loading-ring { width: 64px; height: 64px; transform: rotate(-90deg); }
@@ -694,6 +696,7 @@ input[type="text"], select {
   .exit-btn:hover { background: #d33; color: #fff; }
   .loading-overlay { background: rgba(20,21,23,0.82); }
   .loading-overlay-box p { color: #e6e6e6; }
+  .loading-quote-vi { color: #9a9ca1; }
   .loading-ring-track { stroke: #3a3c40; }
   .loading-ring-bar { stroke: #6f9bff; }
   .loading-ring-percent { color: #6f9bff; }

@@ -122,16 +122,16 @@ const el = {
 // Apps Script Web App khong tra Content-Length). Chay dan cham lai khi gan toi LOADING_PROGRESS_CAP,
 // dung han o do (khong bao gio tu vuot qua) cho den khi thuc su co ket qua, luc do nhay thang len 100%.
 // Rieng % thoi khong du: neu mang qua cham, dung o gan cap qua lau van gay lo lang y het nhu dung o 90% -
-// nen kem theo doi chu trang thai theo moc thoi gian (LOADING_STALL_MESSAGES) de tran an nguoi dung.
+// nen sau 1 nhip ngan se chuyen dong chu trang thai sang xoay vong cac cau cham ngon tieng Nhat
+// (LOADING_QUOTE_DELAY_MS) de nguoi dung co dong luc trong luc cho, thay vi chi bao "doi chut" vo vi.
 const LOADING_RING_CIRCUMFERENCE = 169.6; // 2 * PI * 27 (r cua vong tron trong SVG)
 const LOADING_PROGRESS_CAP = 96;
-const LOADING_STALL_MESSAGES = [
-  { afterMs: 6000, text: 'Đang tải hơi lâu, vui lòng đợi thêm chút...' },
-  { afterMs: 15000, text: 'Mạng có vẻ chậm, hệ thống vẫn đang thử tải, đừng tắt trang nhé...' },
-];
+const LOADING_QUOTE_DELAY_MS = 1200;
+const LOADING_QUOTE_INTERVAL_MS = 2600;
 let loadingProgressTimer = null;
 let loadingProgressValue = 0;
 let loadingStallTimers = [];
+let loadingQuoteTimer = null;
 
 function setLoadingProgress(percent) {
   loadingProgressValue = percent;
@@ -142,6 +142,8 @@ function setLoadingProgress(percent) {
 function clearLoadingStallTimers() {
   loadingStallTimers.forEach(t => clearTimeout(t));
   loadingStallTimers = [];
+  if (loadingQuoteTimer) clearInterval(loadingQuoteTimer);
+  loadingQuoteTimer = null;
 }
 
 function showLoadingOverlay(text) {
@@ -157,9 +159,22 @@ function showLoadingOverlay(text) {
   }, 200);
 
   clearLoadingStallTimers();
-  loadingStallTimers = LOADING_STALL_MESSAGES.map(m => setTimeout(() => {
-    el.loadingOverlayText.textContent = m.text;
-  }, m.afterMs));
+  loadingStallTimers = [setTimeout(startLoadingQuoteRotation, LOADING_QUOTE_DELAY_MS)];
+}
+
+// Thay vi bao "dang tai hoi lau, vui long doi..." nhu truoc, xoay vong qua cac cau cham ngon tieng
+// Nhat (dung chung danh sach MOTIVATIONAL_QUOTES voi man hinh chon linh vuc) de tao dong luc hoc tap
+// ngay trong luc cho, bat dau tu 1 cau ngau nhien de khong lap lai y het moi lan tai trang.
+function startLoadingQuoteRotation() {
+  let i = Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length);
+  const renderQuote = () => {
+    const q = MOTIVATIONAL_QUOTES[i];
+    el.loadingOverlayText.innerHTML = `<span class="loading-quote-jp">${escapeHtml(q.jp)}</span><span class="loading-quote-vi">${escapeHtml(q.vi)}</span>`;
+    i = (i + 1) % MOTIVATIONAL_QUOTES.length;
+  };
+  renderQuote();
+  if (loadingQuoteTimer) clearInterval(loadingQuoteTimer);
+  loadingQuoteTimer = setInterval(renderQuote, LOADING_QUOTE_INTERVAL_MS);
 }
 
 // Mo dan (opacity) roi moi that su an (them class hidden) thay vi cat phut - cho ca 2 truong hop
