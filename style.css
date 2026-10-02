@@ -271,6 +271,38 @@ input[type="text"], select {
 .question-text { font-size: 28px; font-weight: 700; white-space: pre-line; }
 .question-reading { font-size: 15px; color: #6b6f76; margin-top: 6px; white-space: pre-line; }
 
+/* Che do Luyen nghe: anh minh hoa (tuy chon, bam vao de phong to) + trinh phat audio (bat buoc) -
+   anh dat TRUOC cau hoi (xem boi canh truoc), audio dat SAU (vua doc prompt vua nghe). */
+.question-image {
+  display: block;
+  max-width: 100%;
+  max-height: 220px;
+  margin: 0 auto 14px;
+  border-radius: 12px;
+  cursor: zoom-in;
+  object-fit: contain;
+}
+.audio-play-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 auto 14px;
+  padding: 10px 24px;
+  border-radius: 999px;
+  border: none;
+  background: #2f6fed;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.audio-play-btn:hover { background: #1d4fc4; }
+.audio-play-btn:active { transform: scale(0.97); }
+
+.lightbox-box { background: transparent; box-shadow: none; padding: 0; max-width: 92vw; max-height: 85vh; }
+.lightbox-box img { display: block; width: 100%; height: 100%; max-height: 85vh; object-fit: contain; border-radius: 10px; }
+
 /* Vong dem nguoc 30s chay quanh vien khung cau hoi (che do On tu vung/Test) - dung ky thuat
    conic-gradient + mask de ve 1 vien "cung tron" theo % con lai. --timer-progress duoc JS cap nhat
    TRUC TIEP moi khung hinh (requestAnimationFrame, dua tren thoi gian thuc te da troi qua) thay vi
@@ -352,6 +384,25 @@ input[type="text"], select {
 .answer-btn.correct { border-color: #f2b705; border-width: 2px; padding: 11px; }
 .answer-btn.wrong { border-color: #d33; border-width: 2px; padding: 11px; }
 .answer-btn[disabled] { cursor: default; }
+
+/* Che do Luyen nghe: dap an co nhan chu A/B/C/D rieng (giong dang de thi BJT that), gan voi THU TU
+   HIEN THI da xao tron (khong gan voi choice goc), text can giua chiem phan con lai cua nut. */
+.answer-btn-lettered { display: flex; align-items: center; gap: 14px; text-align: center; }
+.answer-letter {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #c7d2e3;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  color: #44536b;
+}
+.answer-btn-lettered .answer-text { flex: 1; }
+.answer-btn-lettered.correct .answer-letter, .answer-btn-lettered.wrong .answer-letter { border-color: inherit; }
 
 .matching-container { display: flex; gap: 10px; margin-bottom: 16px; }
 .matching-col { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
@@ -678,6 +729,9 @@ input[type="text"], select {
   .secondary-btn { background: #2a2c30; color: #e6e6e6; }
   .secondary-btn:hover { background: #34363b; }
   .answer-btn:hover, .matching-btn:hover { background: #303236; }
+  .answer-letter { border-color: #4a4c50; color: #c7cad1; }
+  .audio-play-btn { background: #3f6fe0; }
+  .audio-play-btn:hover { background: #2f56b8; }
   .matching-btn.selected { background: #1e2a44; border-color: #6f9bff; }
   .matching-btn.paired { border-color: #6b6f76; }
   .matching-badge { background: #6f9bff; }

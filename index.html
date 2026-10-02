@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="Ôn từ vựng">
 <title>🎌 Ôn từ vựng tiếng Nhật</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
-<link rel="stylesheet" href="style.css?v=53">
+<link rel="stylesheet" href="style.css?v=54">
 </head>
 <body>
 
@@ -58,6 +58,12 @@
         </table>
       </div>
     </div>
+  </div>
+</div>
+
+<div id="image-lightbox" class="modal-overlay hidden">
+  <div class="lightbox-box">
+    <img id="lightbox-img" src="" alt="Hình minh hoạ phóng to">
   </div>
 </div>
 
@@ -114,6 +120,11 @@
           <input type="radio" name="mode" value="test">
           <span class="mode-card-icon">📝</span>
           <span class="mode-card-label">Làm bài test</span>
+        </label>
+        <label class="mode-card">
+          <input type="radio" name="mode" value="listening">
+          <span class="mode-card-icon">🎧</span>
+          <span class="mode-card-label">Luyện nghe</span>
         </label>
         <label class="mode-card">
           <input type="radio" name="mode" value="matching">
@@ -185,8 +196,13 @@
       <div id="timer-ring" class="timer-ring"></div>
       <div id="timer-countdown" class="timer-countdown hidden">30</div>
       <button type="button" id="speak-btn" class="speak-btn hidden" title="Nghe phát âm">🔊</button>
+      <button type="button" id="audio-play-btn" class="audio-play-btn hidden">
+        <span id="audio-play-icon">▶</span> <span id="audio-play-label">Nghe audio</span>
+      </button>
+      <img id="question-image" class="question-image hidden" alt="Hình minh hoạ câu hỏi">
       <div id="question-text" class="question-text"></div>
       <div id="question-reading" class="question-reading"></div>
+      <audio id="question-audio" class="hidden"></audio>
     </div>
 
     <button id="mark-word-btn" class="link-btn mark-btn">☆ Đánh dấu ôn lại</button>
@@ -247,6 +263,6 @@
 </main>
 
 <script src="config.js?v=2"></script>
-<script src="app.js?v=64"></script>
+<script src="app.js?v=65"></script>
 </body>
 </html>

@@ -67,7 +67,14 @@ const el = {
   timerCountdown: document.getElementById('timer-countdown'),
   questionText: document.getElementById('question-text'),
   speakBtn: document.getElementById('speak-btn'),
+  questionImage: document.getElementById('question-image'),
+  audioPlayBtn: document.getElementById('audio-play-btn'),
+  audioPlayIcon: document.getElementById('audio-play-icon'),
+  audioPlayLabel: document.getElementById('audio-play-label'),
+  questionAudio: document.getElementById('question-audio'),
   questionReading: document.getElementById('question-reading'),
+  imageLightbox: document.getElementById('image-lightbox'),
+  lightboxImg: document.getElementById('lightbox-img'),
   revealBtn: document.getElementById('reveal-btn'),
   answers: document.getElementById('answers'),
   matchingContainer: document.getElementById('matching-container'),
@@ -359,6 +366,29 @@ async function init() {
   el.historyModal.addEventListener('click', (e) => {
     if (e.target === el.historyModal) closeHistoryModal();
   });
+  el.questionImage.addEventListener('click', () => {
+    el.lightboxImg.src = el.questionImage.src;
+    el.imageLightbox.classList.remove('hidden');
+  });
+  el.imageLightbox.addEventListener('click', () => {
+    el.imageLightbox.classList.add('hidden');
+    el.lightboxImg.src = '';
+  });
+  el.audioPlayBtn.addEventListener('click', () => {
+    if (el.questionAudio.paused) el.questionAudio.play(); else el.questionAudio.pause();
+  });
+  el.questionAudio.addEventListener('play', () => {
+    el.audioPlayIcon.textContent = '⏸';
+    el.audioPlayLabel.textContent = 'Đang phát...';
+  });
+  el.questionAudio.addEventListener('pause', () => {
+    el.audioPlayIcon.textContent = '▶';
+    el.audioPlayLabel.textContent = 'Nghe audio';
+  });
+  el.questionAudio.addEventListener('ended', () => {
+    el.audioPlayIcon.textContent = '▶';
+    el.audioPlayLabel.textContent = 'Nghe lại';
+  });
   document.querySelectorAll('input[name="mode"]').forEach(radio => {
     radio.addEventListener('change', onModeChange);
   });
@@ -524,6 +554,7 @@ function onModeChange() {
   state.mode = document.querySelector('input[name="mode"]:checked').value;
   el.directionField.classList.toggle('hidden', state.mode !== 'vocab');
   el.countLabel.textContent = state.mode === 'test' ? 'Số câu muốn làm'
+    : state.mode === 'listening' ? 'Số câu muốn nghe'
     : state.mode === 'matching' ? 'Số bộ ghép muốn làm'
     : state.mode === 'study' ? 'Số từ muốn học'
     : 'Số từ muốn ôn';
@@ -712,11 +743,11 @@ function renderFieldCheckboxes() {
   el.leaderboardFilter.innerHTML = '<option value="all">Tổng</option>' +
     subjectsForLeaderboard.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
 
-  const unit = state.mode === 'test' ? 'câu' : state.mode === 'matching' ? 'bộ' : 'từ';
+  const unit = state.mode === 'test' || state.mode === 'listening' ? 'câu' : state.mode === 'matching' ? 'bộ' : 'từ';
   const relevantFields = fieldsInCategory.filter(f => f.type === modeToSheetType(state.mode));
 
   if (relevantFields.length === 0) {
-    const modeLabel = state.mode === 'test' ? 'bộ test' : state.mode === 'matching' ? 'bộ ghép từ' : 'từ vựng';
+    const modeLabel = state.mode === 'test' ? 'bộ test' : state.mode === 'listening' ? 'bài luyện nghe' : state.mode === 'matching' ? 'bộ ghép từ' : 'từ vựng';
     el.groupList.innerHTML = `<p class="muted">Chưa có dữ liệu ${modeLabel}.</p>`;
     return;
   }
@@ -849,9 +880,11 @@ async function startQuiz() {
     const data = await res.json();
     pool = state.mode === 'test'
       ? data.filter(w => w.question && w.choice1)
-      : state.mode === 'matching'
-        ? data.filter(w => w.left1 && w.right1)
-        : data.filter(w => w.word && w.meaning);
+      : state.mode === 'listening'
+        ? data.filter(w => w.audio && w.choice1)
+        : state.mode === 'matching'
+          ? data.filter(w => w.left1 && w.right1)
+          : data.filter(w => w.word && w.meaning);
   } catch (err) {
     hideLoadingOverlay();
     el.startBtn.disabled = false;
@@ -868,11 +901,13 @@ async function startQuiz() {
     hideLoadingOverlay();
     el.setupError.textContent = state.mode === 'test'
       ? 'Cần ít nhất 4 câu hỏi trong lĩnh vực đã chọn.'
-      : state.mode === 'matching'
-        ? 'Lĩnh vực đã chọn chưa có bộ ghép từ nào.'
-        : state.mode === 'study'
-          ? 'Lĩnh vực đã chọn chưa có từ nào.'
-          : 'Cần ít nhất 4 từ trong lĩnh vực đã chọn để tạo câu hỏi trắc nghiệm.';
+      : state.mode === 'listening'
+        ? 'Cần ít nhất 4 câu luyện nghe trong lĩnh vực đã chọn.'
+        : state.mode === 'matching'
+          ? 'Lĩnh vực đã chọn chưa có bộ ghép từ nào.'
+          : state.mode === 'study'
+            ? 'Lĩnh vực đã chọn chưa có từ nào.'
+            : 'Cần ít nhất 4 từ trong lĩnh vực đã chọn để tạo câu hỏi trắc nghiệm.';
     return;
   }
 
@@ -969,10 +1004,30 @@ function renderQuestion() {
   el.nextBtnResult.textContent = '';
   el.nextBtnLabel.textContent = 'Câu tiếp theo';
   el.speakBtn.classList.add('hidden');
+  el.questionImage.classList.add('hidden');
+  el.questionImage.src = '';
+  el.questionAudio.pause();
+  el.questionAudio.removeAttribute('src');
+  el.audioPlayBtn.classList.add('hidden');
+  el.audioPlayIcon.textContent = '▶';
+  el.audioPlayLabel.textContent = 'Nghe audio';
 
   el.questionCard.classList.toggle('long-text', state.mode === 'test');
 
-  if (state.mode === 'test') {
+  if (state.mode === 'listening') {
+    el.revealBtn.classList.add('hidden');
+    el.toggleReadingBtn.classList.add('hidden');
+    el.questionReading.textContent = '';
+    el.questionText.textContent = item.word.question || '';
+    if (item.word.image) {
+      el.questionImage.src = toDriveDirectUrl(item.word.image);
+      el.questionImage.classList.remove('hidden');
+    }
+    el.questionAudio.src = toDriveDirectUrl(item.word.audio);
+    el.audioPlayBtn.classList.remove('hidden');
+    renderTestAnswers(item, { showLetters: true });
+    el.answers.classList.remove('hidden');
+  } else if (state.mode === 'test') {
     el.revealBtn.classList.add('hidden');
     el.toggleReadingBtn.classList.add('hidden');
     el.questionReading.textContent = '';
@@ -1016,9 +1071,9 @@ function renderQuestion() {
     updateReadingDisplay();
   }
 
-  // Dem nguoc 30s chi ap dung Ôn từ vựng va Làm bài test - Học bài khong co dap an nen khong ap dung,
-  // Ghép từ co co che cham diem khac (4 cap) nen cung khong ap dung.
-  if (state.mode === 'vocab' || state.mode === 'test') {
+  // Dem nguoc 30s ap dung Ôn từ vựng, Làm bài test va Luyện nghe - Học bài khong co dap an nen khong
+  // ap dung, Ghép từ co co che cham diem khac (4 cap) nen cung khong ap dung.
+  if (state.mode === 'vocab' || state.mode === 'test' || state.mode === 'listening') {
     startAnswerTimer();
   } else {
     clearAnswerTimer();
@@ -1029,15 +1084,24 @@ function renderQuestion() {
 
 // Vi tri hien thi 4 dap an duoc xao tron moi lan render (khong con giu nguyen thu tu trong Sheet
 // nhu truoc), nhung van cham diem dung theo chi so goc (data-choice-index) khop voi cot "correct".
-function renderTestAnswers(item) {
+// showLetters (che do Luyen nghe): gan nhan A/B/C/D theo THU TU HIEN THI da xao tron (giong dang de
+// thi BJT that), khong phai theo so thu tu choice goc trong Sheet.
+function renderTestAnswers(item, options) {
+  const showLetters = !!(options && options.showLetters);
   const data = item.word;
   const choices = shuffle([1, 2, 3, 4].map(n => ({ index: n, text: data['choice' + n] })));
-  choices.forEach(choice => {
+  const letters = ['A', 'B', 'C', 'D'];
+  choices.forEach((choice, i) => {
     const btn = document.createElement('button');
-    btn.className = 'answer-btn';
-    btn.textContent = choice.text;
     btn.dataset.choiceIndex = choice.index;
     btn.addEventListener('click', () => selectTestAnswer(choice.index, btn));
+    if (showLetters) {
+      btn.className = 'answer-btn answer-btn-lettered';
+      btn.innerHTML = `<span class="answer-letter">${letters[i]}</span><span class="answer-text">${escapeHtml(choice.text)}</span>`;
+    } else {
+      btn.className = 'answer-btn';
+      btn.textContent = choice.text;
+    }
     el.answers.appendChild(btn);
   });
 }
@@ -1469,7 +1533,7 @@ function handleAnswerTimeout() {
     const exampleText = item.word.example ? `Ví dụ: ${item.word.example}` : '';
     const exampleMeaningText = item.word.example_meaning ? `Nghĩa: ${item.word.example_meaning}` : '';
     finalizeAnswer(item.word, 0, 1, resultText, exampleText, exampleMeaningText);
-  } else if (state.mode === 'test') {
+  } else if (state.mode === 'test' || state.mode === 'listening') {
     const data = item.word;
     const correctIndex = Number(data.correct);
     const correctText = data['choice' + correctIndex] || '';
@@ -1507,12 +1571,14 @@ function exitQuiz() {
   if (!confirmed) return;
   clearAutoAdvanceTimer();
   clearAnswerTimer();
+  el.questionAudio.pause();
   stopTimer();
   showScreen('setup');
 }
 
 async function finishQuiz() {
   clearAnswerTimer();
+  el.questionAudio.pause();
   const elapsedMs = stopTimer();
 
   el.resultName.textContent = state.playerName;
@@ -1538,11 +1604,11 @@ async function finishQuiz() {
 
   if (state.wrongList.length > 0) {
     el.wrongListWrap.classList.remove('hidden');
-    el.wrongListTitle.textContent = state.mode === 'test' ? 'Các câu trả lời sai'
+    el.wrongListTitle.textContent = state.mode === 'test' || state.mode === 'listening' ? 'Các câu trả lời sai'
       : state.mode === 'matching' ? 'Các bộ ghép chưa đúng hết'
       : 'Các từ trả lời sai';
     el.wrongList.innerHTML = state.wrongList.map(w => {
-      if (state.mode === 'test') {
+      if (state.mode === 'test' || state.mode === 'listening') {
         const correctText = w['choice' + w.correct] || '';
         return `<li>${escapeHtml(w.question)} — Đáp án đúng: ${escapeHtml(correctText)}</li>`;
       }
@@ -1640,4 +1706,15 @@ function escapeHtml(str) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
+}
+
+// Che do Luyen nghe: anh/audio duoc luu bang link chia se Google Drive (dan truc tiep tu "Get link"
+// cua Drive, khong can format gi dac biet). Link chia se mac dinh (/file/d/ID/view hoac ?id=ID) KHONG
+// nhung truc tiep duoc trong the <img>/<audio> - phai doi sang dang "uc?export=view&id=ID" moi phat/
+// hien truc tiep duoc. Neu khong nhan dien duoc dang link Drive (vd da la link truc tiep san co o noi
+// khac) thi dung nguyen link goc.
+function toDriveDirectUrl(url) {
+  if (!url) return '';
+  const match = String(url).match(/\/d\/([a-zA-Z0-9_-]+)/) || String(url).match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  return match ? `https://drive.google.com/uc?export=view&id=${match[1]}` : String(url).trim();
 }
