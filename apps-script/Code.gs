@@ -371,11 +371,20 @@ function getLeaderboard(fieldFilter, categoryFilter) {
     if (categoryFilter && getCategoryFromField(field) !== categoryFilter) return;
     if (fieldFilter && getSubjectFromField(field) !== fieldFilter) return;
 
-    if (!totals[name]) totals[name] = { name: name, correct: 0, total: 0, lastActive: 0, todayGain: 0 };
+    if (!totals[name]) totals[name] = { name: name, correct: 0, total: 0, lastActive: 0, todayGain: 0, durationSeconds: 0, countedSessions: {} };
     var rowCorrect = Number(row[5]) || 0;
     totals[name].correct += rowCorrect;
     totals[name].total += Number(row[4]) || 0;
     if (toDateString(timestamp) === today) totals[name].todayGain += rowCorrect;
+
+    // 1 luot choi (cung 1 moc thoi gian) co the ghi nhieu dong (moi linh vuc/field 1 dong) nhung
+    // duration_seconds la THOI GIAN CA LUOT, duoc ghi LAP LAI tren moi dong cua luot do - neu cong don
+    // theo tung dong se bi tinh TRUNG LAP. Chi cong 1 lan cho moi (name, timestamp) nhat.
+    var sessionKey = timestamp instanceof Date ? timestamp.toISOString() : String(timestamp);
+    if (!totals[name].countedSessions[sessionKey]) {
+      totals[name].countedSessions[sessionKey] = true;
+      totals[name].durationSeconds += Number(row[7]) || 0;
+    }
 
     var ts = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime();
     if (ts && ts > totals[name].lastActive) totals[name].lastActive = ts;
@@ -387,6 +396,7 @@ function getLeaderboard(fieldFilter, categoryFilter) {
       name: t.name,
       score: t.correct,
       todayGain: t.todayGain,
+      durationSeconds: t.durationSeconds,
       lastActive: t.lastActive ? new Date(t.lastActive).toISOString() : null,
       streak: computeStreakFromDates(Object.keys(playDatesByName[name] || {})),
       accuracy: t.total > 0 ? Math.round((t.correct / t.total) * 1000) / 10 : 0
@@ -399,6 +409,13 @@ function getLeaderboard(fieldFilter, categoryFilter) {
   var scoreRankByName = {};
   byScore.forEach(function (item, i) { scoreRankByName[item.name] = i + 1; });
   list.forEach(function (item) { item.scoreRank = scoreRankByName[item.name]; });
+
+  // Hang theo TONG THOI GIAN LUYEN TAP (giay) - dung cho xep hang "Top thoi gian" ben frontend,
+  // cung co che voi scoreRank o tren.
+  var byDuration = list.slice().sort(function (a, b) { return b.durationSeconds - a.durationSeconds; });
+  var durationRankByName = {};
+  byDuration.forEach(function (item, i) { durationRankByName[item.name] = i + 1; });
+  list.forEach(function (item) { item.durationRank = durationRankByName[item.name]; });
 
   // Thu tu HIEN THI (tren xuong duoi) uu tien theo thoi gian hoat dong GAN NHAT, diem so chi dung
   // de phan dinh khi trung thoi gian hoat dong.

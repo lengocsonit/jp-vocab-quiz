@@ -585,6 +585,21 @@ input[type="text"], select {
 .lb-score { font-weight: 700; color: #d6a018; white-space: nowrap; }
 .lb-gain { color: #1a9c4a; font-weight: 700; font-size: 11px; }
 .leaderboard-widget .lb-acc { color: #8a8d93; font-size: 11px; }
+.lb-time { font-weight: 700; color: #2f6fed; white-space: nowrap; }
+
+.lb-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+.lb-tab {
+  flex: 1;
+  padding: 5px 0;
+  border-radius: 999px;
+  border: 1px solid #e2e8f3;
+  background: #fff;
+  color: #565a61;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.lb-tab.active { background: #2f6fed; border-color: #2f6fed; color: #fff; }
 
 .lb-toggle-btn {
   display: block;
@@ -747,6 +762,9 @@ input[type="text"], select {
   .lb-rank, .lb-lastactive { color: #6b6f76; }
   .lb-lastactive.online { color: #3ddc73; }
   .lb-gain { color: #3ddc73; }
+  .lb-time { color: #6f9bff; }
+  .lb-tab { background: #26282c; border-color: #3a3c40; color: #c7cad1; }
+  .lb-tab.active { background: #3f6fe0; border-color: #3f6fe0; color: #fff; }
   .mastered-btn.mastered { color: #3ddc73; }
   .lb-streak { color: #ff9142; }
   .leaderboard-widget li.rank-gold { background: linear-gradient(90deg, rgba(255, 200, 0, 0.12), transparent); }

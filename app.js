@@ -109,6 +109,7 @@ const el = {
   leaderboardList: document.getElementById('leaderboard-list'),
   leaderboardFilter: document.getElementById('leaderboard-filter'),
   leaderboardToggle: document.getElementById('leaderboard-toggle'),
+  leaderboardTabs: document.querySelectorAll('.lb-tab'),
 
   historyModal: document.getElementById('history-modal'),
   historyModalTitle: document.getElementById('history-modal-title'),
@@ -315,6 +316,8 @@ const LEADERBOARD_COLLAPSED_COUNT = 3;
 const LEADERBOARD_MAX_COUNT = 10; // tren so nay khong hien nua, ke ca khi bam "Xem them"
 let leaderboardExpanded = false;
 let lastLeaderboardList = [];
+let fullLeaderboardList = []; // ban day du (khong cat top 10) - can de doi sang "Top thoi gian" khong phai goi lai API
+let leaderboardSortMode = 'score'; // 'score' | 'time'
 
 init();
 
@@ -335,7 +338,16 @@ async function init() {
   });
   el.leaderboardToggle.addEventListener('click', () => {
     leaderboardExpanded = !leaderboardExpanded;
-    renderLeaderboard(lastLeaderboardList);
+    renderLeaderboard(fullLeaderboardList);
+  });
+  el.leaderboardTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      if (tab.dataset.sort === leaderboardSortMode) return;
+      leaderboardSortMode = tab.dataset.sort;
+      el.leaderboardTabs.forEach(t => t.classList.toggle('active', t === tab));
+      leaderboardExpanded = false;
+      renderLeaderboard(fullLeaderboardList);
+    });
   });
   el.exitQuizBtn.addEventListener('click', exitQuiz);
   el.backToCategoryBtn.addEventListener('click', goToCategoryScreen);
@@ -660,9 +672,18 @@ let hasLeaderboardData = false;
 const RANK_MEDALS = { 1: '🥇', 2: '🥈', 3: '🥉' };
 const RANK_CLASSES = { 1: 'rank-gold', 2: 'rank-silver', 3: 'rank-bronze' };
 
+// che do 'time': sap theo TONG THOI GIAN LUYEN TAP giam dan (durationRank) - khac che do 'score'
+// (mac dinh) la sap theo hoat dong gan nhat (giu nguyen thu tu backend tra ve, chi gan huy chuong
+// theo scoreRank). Dung lai FULL list (khong phai ban da cat top 10) de khong bo sot ai top thoi gian
+// nhung lau roi chua choi lai (giong bug tung gap voi "Top hom nay").
 function renderLeaderboard(list) {
+  fullLeaderboardList = list || [];
+  const sourceList = leaderboardSortMode === 'time'
+    ? fullLeaderboardList.slice().sort((a, b) => (b.durationSeconds || 0) - (a.durationSeconds || 0))
+    : fullLeaderboardList;
+
   // Toi da 10 nguoi, ke ca khi mo rong "Xem them" - qua so nay khong hien nua
-  lastLeaderboardList = (list || []).slice(0, LEADERBOARD_MAX_COUNT);
+  lastLeaderboardList = sourceList.slice(0, LEADERBOARD_MAX_COUNT);
   hasLeaderboardData = lastLeaderboardList.length > 0;
   if (!hasLeaderboardData) {
     el.leaderboardList.innerHTML = '';
@@ -673,8 +694,12 @@ function renderLeaderboard(list) {
   const visibleList = leaderboardExpanded ? lastLeaderboardList : lastLeaderboardList.slice(0, LEADERBOARD_COLLAPSED_COUNT);
 
   el.leaderboardList.innerHTML = visibleList.map((item) => {
-    const rank = item.scoreRank;
+    const rank = leaderboardSortMode === 'time' ? item.durationRank : item.scoreRank;
     const medal = RANK_MEDALS[rank];
+    const rightContent = leaderboardSortMode === 'time'
+      ? `<span class="lb-time" title="Tổng thời gian đã luyện tập (tính trên tất cả lượt chơi)">⏱ ${formatDurationHuman(item.durationSeconds || 0)}</span>`
+      : `<span class="lb-score" title="Cấp bậc: ${escapeHtml(getScoreTier(item.score).label)} — tổng điểm rèn luyện tích luỹ">${getScoreTier(item.score).icon} ${item.score}${item.todayGain > 0 ? ` <span class="lb-gain" title="Điểm kiếm được hôm nay">(+${item.todayGain})</span>` : ''}</span>
+        <span class="lb-acc" title="Tỉ lệ trả lời đúng (tính trên tất cả lượt chơi)">${formatPercent(item.accuracy)}%</span>`;
     return `
     <li class="${RANK_CLASSES[rank] || ''}">
       <span class="lb-left">
@@ -686,8 +711,7 @@ function renderLeaderboard(list) {
         </span>
       </span>
       <span class="lb-right">
-        <span class="lb-score" title="Cấp bậc: ${escapeHtml(getScoreTier(item.score).label)} — tổng điểm rèn luyện tích luỹ">${getScoreTier(item.score).icon} ${item.score}${item.todayGain > 0 ? ` <span class="lb-gain" title="Điểm kiếm được hôm nay">(+${item.todayGain})</span>` : ''}</span>
-        <span class="lb-acc" title="Tỉ lệ trả lời đúng (tính trên tất cả lượt chơi)">${formatPercent(item.accuracy)}%</span>
+        ${rightContent}
       </span>
     </li>`;
   }).join('');
@@ -1766,6 +1790,15 @@ function buildQuizSelection(items, count, isPriorityFn) {
 // Chuan hoa hien thi % luon co 1 chu so thap phan (vd "96.0%" thay vi luc "96%" luc "92.7%" lung tung)
 function formatPercent(n) {
   return Number(n).toFixed(1);
+}
+
+// Hien thoi gian ren luyen tich luy gon, de doc (vd "45 phút", "2h30p") thay vi hien nguyen so giay.
+function formatDurationHuman(totalSeconds) {
+  const totalMinutes = Math.round(totalSeconds / 60);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) return `${minutes} phút`;
+  return `${hours}h${String(minutes).padStart(2, '0')}p`;
 }
 
 function escapeHtml(str) {
