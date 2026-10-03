@@ -753,8 +753,10 @@ function renderFieldCheckboxes() {
     ? allFieldsWithCounts.filter(f => getCategoryId(f.field) === state.category)
     : allFieldsWithCounts;
 
-  // Bộ lọc xếp hạng liệt kê theo MÔN (gộp điểm mọi bài cùng môn), không phụ thuộc chế độ đang chọn
-  const subjectsForLeaderboard = [...new Set(fieldsInCategory.map(f => parseFieldName(f.field).subject))];
+  // Bộ lọc xếp hạng liệt kê theo MÔN (gộp điểm mọi bài cùng môn), không phụ thuộc chế độ đang chọn -
+  // sắp xếp tự nhiên (vd "Bài 2" trước "Bài 10") thay vì theo thứ tự tab trong Sheet (lộn xộn).
+  const subjectsForLeaderboard = [...new Set(fieldsInCategory.map(f => parseFieldName(f.field).subject))]
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
   el.leaderboardFilter.innerHTML = '<option value="all">Tổng</option>' +
     subjectsForLeaderboard.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
 
@@ -780,10 +782,15 @@ function renderFieldCheckboxes() {
     lessons.sort((a, b) => a.lesson.localeCompare(b.lesson, undefined, { numeric: true, sensitivity: 'base' }));
   });
 
+  // Sắp xếp luôn các MÔN (dòng gộp cấp ngoài) theo thứ tự tự nhiên - mặc định Map giữ nguyên thứ tự
+  // tab trong Sheet (thường lộn xộn, vd "01, 03, 02" tuỳ lúc tạo tab), gây cảm giác danh sách bị xáo trộn vô lý.
+  const sortedGroups = [...groups.entries()].sort((a, b) =>
+    a[0].localeCompare(b[0], undefined, { numeric: true, sensitivity: 'base' }));
+
   const totalCount = relevantFields.reduce((sum, f) => sum + f.count, 0);
   let html = `<label class="field-row field-all"><input type="checkbox" value="__all__" checked><span>Tất cả (${totalCount} ${unit})</span></label>`;
 
-  groups.forEach((lessons, subject) => {
+  sortedGroups.forEach(([subject, lessons]) => {
     if (lessons.length === 1) {
       const l = lessons[0];
       html += `<label class="field-row"><input type="checkbox" name="field" value="${escapeHtml(l.field)}"><span>${escapeHtml(subject)} (${l.count} ${unit})</span></label>`;
