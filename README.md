@@ -94,6 +94,7 @@ Repo này đã sẵn sàng cho GitHub Pages:
   - Một từ vào danh sách ưu tiên theo 2 cách: **tự động** khi trả lời sai, hoặc **thủ công** bấm nút "☆ Đánh dấu ôn lại" ở mỗi câu.
   - Trả lời **đúng liên tiếp 2 lần** một từ đang trong danh sách ưu tiên → tự động gỡ khỏi danh sách (coi như đã thuộc). Trả lời **sai** bất kỳ lúc nào → về lại từ đầu (cần đúng thêm 2 lần liên tiếp nữa).
   - Ở các lượt chơi sau, từ trong danh sách ưu tiên được ưu tiên chọn ra nhiều hơn, nhưng **tối đa chỉ chiếm 30% số câu** trong 1 lượt chơi — tránh việc chúng chiếm hết cả bài, phần còn lại luôn là từ bình thường được chọn ngẫu nhiên.
+- **Đánh dấu "đã thuộc, đừng hiện lại"** (nút "✅ Đã thuộc, đừng hiện lại" cạnh nút "Đánh dấu ôn lại", có ở mọi chế độ trừ Ghép từ), lưu riêng theo từng tên vào tab `MasteredWords` (tự tạo). Khác với danh sách ưu tiên ở trên (chỉ TĂNG khả năng xuất hiện), từ/câu được đánh dấu ở đây sẽ **bị loại hẳn khỏi các lượt chơi sau** của đúng người đó — người khác vẫn gặp bình thường, không ảnh hưởng gì nhau. Chỉ áp dụng từ **lượt chơi tiếp theo** trở đi (không làm biến mất từ đang xem dở trong lượt hiện tại). Bấm lại nút đó bất kỳ lúc nào để bỏ đánh dấu, cho từ/câu đó xuất hiện trở lại.
 
 ## Cấu trúc thư mục
 

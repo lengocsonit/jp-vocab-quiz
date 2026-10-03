@@ -257,8 +257,10 @@ input[type="text"], select {
 .link-btn:hover { text-decoration: underline; }
 .link-btn:disabled { opacity: 0.6; cursor: default; text-decoration: none; }
 
-.mark-btn { display: block; margin-bottom: 12px; color: #8a8d93; }
+.mark-btn-row { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-bottom: 12px; }
+.mark-btn, .mastered-btn { display: block; margin-bottom: 0; padding-bottom: 0; color: #8a8d93; }
 .mark-btn.marked { color: #d6a018; }
+.mastered-btn.mastered { color: #1a9c4a; }
 
 .question-card {
   position: relative;
@@ -745,6 +747,7 @@ input[type="text"], select {
   .lb-rank, .lb-lastactive { color: #6b6f76; }
   .lb-lastactive.online { color: #3ddc73; }
   .lb-gain { color: #3ddc73; }
+  .mastered-btn.mastered { color: #3ddc73; }
   .lb-streak { color: #ff9142; }
   .leaderboard-widget li.rank-gold { background: linear-gradient(90deg, rgba(255, 200, 0, 0.12), transparent); }
   .leaderboard-widget li.rank-silver { background: linear-gradient(90deg, rgba(180, 180, 190, 0.14), transparent); }

@@ -10,10 +10,11 @@
 
 var HISTORY_SHEET = 'History';
 var MARKED_SHEET = 'MarkedWords';
+var MASTERED_SHEET = 'MasteredWords';
 var VISITS_SHEET = 'Visits';
 // 'Streaks': tab con lai tu 1 phien ban cu (da bo, streak gio tinh thang tu History) - giu trong danh
 // sach nay de neu ai da lo tao tab do thi no van khong bi hien nham thanh 1 linh vuc tren web.
-var RESERVED_SHEETS = ['History', 'MarkedWords', 'Streaks', 'Visits'];
+var RESERVED_SHEETS = ['History', 'MarkedWords', 'MasteredWords', 'Streaks', 'Visits'];
 var STREAK_GRACE_DAYS = 2; // cach ngay hien tai <= so nay van tinh la con chuoi, qua so nay moi reset ve 1
 var FIELD_COLUMNS = ['id', 'word', 'reading', 'meaning', 'example', 'example_meaning'];
 var TEST_COLUMNS = ['id', 'question', 'choice1', 'choice2', 'choice3', 'choice4', 'correct', 'explanation'];
@@ -181,6 +182,7 @@ function doGet(e) {
   if (action === 'names') return jsonResponse(getAllNames());
   if (action === 'history') return jsonResponse(getHistoryForName(e.parameter.name));
   if (action === 'markedWords') return jsonResponse(getMarkedWordsForName(e.parameter.name));
+  if (action === 'masteredWords') return jsonResponse(getMasteredWordsForName(e.parameter.name));
   if (action === 'version') return jsonResponse({ version: getVersion() });
   if (action === 'visit') return jsonResponse(recordVisit());
   return jsonResponse(getWords(e.parameter.field));
@@ -191,6 +193,9 @@ function doPost(e) {
 
   if (data.type === 'toggleMark') {
     return jsonResponse(toggleMark(data.name, data.field, data.wordId));
+  }
+  if (data.type === 'toggleMastered') {
+    return jsonResponse(toggleMastered(data.name, data.field, data.wordId));
   }
   if (data.type === 'recordAnswer') {
     return jsonResponse(recordAnswerForPriority(data.name, data.field, data.wordId, !!data.correct));
@@ -505,6 +510,48 @@ function toggleMark(name, field, wordId) {
 
   sheet.appendRow([name, field, wordId, new Date(), 0]);
   return { marked: true };
+}
+
+// Sheet luu danh sach tu "da thuoc, khong muon gap lai" theo tung ten, tu tao neu chua co.
+// Cot: name | field | word_id | updated_at
+// Rieng theo tung nguoi choi (name) - 1 nguoi an di khong anh huong nguoi khac. Tu trong danh sach nay
+// se bi LOC KHOI pool cau hoi ngay tu dau (xem getWords trong doGet), khac voi MarkedWords (chi tang
+// xac suat xuat hien, khong loai bo hoan toan).
+function getMasteredSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(MASTERED_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(MASTERED_SHEET);
+    sheet.appendRow(['name', 'field', 'word_id', 'updated_at']);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+// Bat/tat danh dau "da thuoc" 1 tu cho 1 ten. Da co -> go ra (hien lai binh thuong); chua co -> them vao (an di).
+function toggleMastered(name, field, wordId) {
+  var sheet = getMasteredSheet();
+  var values = sheet.getDataRange().getValues();
+  var rowIndex = findMarkedRow(values, name, field, wordId);
+
+  if (rowIndex !== -1) {
+    sheet.deleteRow(rowIndex + 1);
+    return { mastered: false };
+  }
+
+  sheet.appendRow([name, field, wordId, new Date()]);
+  return { mastered: true };
+}
+
+// Danh sach {field, wordId} da duoc 1 ten danh dau "da thuoc" - dung de loc khoi pool cau hoi phia frontend.
+function getMasteredWordsForName(name) {
+  var sheet = getMasteredSheet();
+  var values = sheet.getDataRange().getValues();
+  values.shift(); // bo header
+
+  return values
+    .filter(function (row) { return row[0] === name; })
+    .map(function (row) { return { field: row[1], wordId: String(row[2]) }; });
 }
 
 // Ghi nhan ket qua tra loi 1 tu de cap nhat danh sach uu tien.

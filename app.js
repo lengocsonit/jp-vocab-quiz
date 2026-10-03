@@ -21,6 +21,7 @@ const state = {
   timerInterval: null,
   autoAdvanceTimer: null,
   markedWords: new Set(), // key = `${field}|${wordId}`
+  masteredWords: new Set(), // key = `${field}|${wordId}` - da thuoc, khong muon gap lai (rieng theo tung nguoi choi)
 };
 
 const el = {
@@ -62,6 +63,7 @@ const el = {
   wordListWrap: document.getElementById('word-list-wrap'),
   wordListBody: document.getElementById('word-list-body'),
   markWordBtn: document.getElementById('mark-word-btn'),
+  masteredWordBtn: document.getElementById('mastered-word-btn'),
   questionCard: document.getElementById('question-card'),
   timerRing: document.getElementById('timer-ring'),
   timerCountdown: document.getElementById('timer-countdown'),
@@ -341,6 +343,7 @@ async function init() {
   el.wordListBtn.addEventListener('click', toggleWordList);
   el.speakBtn.addEventListener('click', () => speakJapanese(el.speakBtn.dataset.text || ''));
   el.markWordBtn.addEventListener('click', toggleMarkCurrentWord);
+  el.masteredWordBtn.addEventListener('click', toggleMasteredCurrentWord);
   el.autoAdvanceCheckbox.addEventListener('change', () => {
     state.autoAdvance = el.autoAdvanceCheckbox.checked;
     if (!state.autoAdvance && state.autoAdvanceTimer) {
@@ -480,6 +483,18 @@ async function loadMarkedWords(name) {
     const res = await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=markedWords&name=${encodeURIComponent(name)}`);
     const marked = await res.json();
     return new Set(marked.map(m => `${m.field}|${m.wordId}`));
+  } catch (err) {
+    return new Set();
+  }
+}
+
+// Lay danh sach tu (field+id) ma "name" nay da danh dau "da thuoc, khong muon gap lai" - rieng theo
+// tung nguoi choi, dung de loc khoi pool cau hoi ngay khi bat dau 1 luot choi moi (xem startQuiz()).
+async function loadMasteredWords(name) {
+  try {
+    const res = await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=masteredWords&name=${encodeURIComponent(name)}`);
+    const mastered = await res.json();
+    return new Set(mastered.map(m => `${m.field}|${m.wordId}`));
   } catch (err) {
     return new Set();
   }
@@ -896,6 +911,11 @@ async function startQuiz() {
   el.startBtn.disabled = false;
   el.startBtn.textContent = 'Bắt đầu';
 
+  // Loc bo cac tu/cau nguoi choi nay da danh dau "da thuoc, khong muon gap lai" - phai lam TRUOC khi
+  // kiem tra du so luong toi thieu, de khong bi tinh nham nhung tu da bi an vao so luong con lai.
+  state.masteredWords = await loadMasteredWords(name);
+  pool = pool.filter(w => !state.masteredWords.has(wordMarkKey(w)));
+
   const minRequired = (state.mode === 'matching' || state.mode === 'study') ? 1 : 4;
   if (pool.length < minRequired) {
     hideLoadingOverlay();
@@ -1080,6 +1100,9 @@ function renderQuestion() {
   }
 
   updateMarkButtonDisplay();
+  // Nut "da thuoc, dung hien lai" khong hop voi Ghep tu (1 "tu" o day la ca bo 4 cap, khong phai 1 muc rieng le)
+  el.masteredWordBtn.classList.toggle('hidden', state.mode === 'matching');
+  if (state.mode !== 'matching') updateMasteredButtonDisplay();
 }
 
 // Vi tri hien thi 4 dap an duoc xao tron moi lan render (khong con giu nguyen thu tu trong Sheet
@@ -1290,6 +1313,43 @@ async function toggleMarkCurrentWord() {
     // lỗi mạng thì thôi, không chặn người dùng làm tiếp
   } finally {
     el.markWordBtn.disabled = false;
+  }
+}
+
+function updateMasteredButtonDisplay() {
+  const item = state.quizQueue[state.currentIndex];
+  if (!item) return;
+  const mastered = state.masteredWords.has(wordMarkKey(item.word));
+  el.masteredWordBtn.textContent = mastered ? '✔️ Đã ẩn (bấm để hiện lại)' : '✅ Đã thuộc, đừng hiện lại';
+  el.masteredWordBtn.classList.toggle('mastered', mastered);
+}
+
+// Danh dau "da thuoc" chi anh huong TU LAN CHOI SAU (pool duoc loc o startQuiz) - khong lam bien mat
+// tu dang xem trong luot choi hien tai, giong cach "Danh dau on lai" cung khong doi queue dang chay.
+async function toggleMasteredCurrentWord() {
+  const item = state.quizQueue[state.currentIndex];
+  if (!item) return;
+  const key = wordMarkKey(item.word);
+  const willMaster = !state.masteredWords.has(key);
+
+  el.masteredWordBtn.disabled = true;
+  try {
+    await fetch(CONFIG.APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        type: 'toggleMastered',
+        name: state.playerName,
+        field: item.word.field,
+        wordId: item.word.id,
+      }),
+    });
+    if (willMaster) state.masteredWords.add(key); else state.masteredWords.delete(key);
+    updateMasteredButtonDisplay();
+  } catch (err) {
+    // lỗi mạng thì thôi, không chặn người dùng làm tiếp
+  } finally {
+    el.masteredWordBtn.disabled = false;
   }
 }
 
