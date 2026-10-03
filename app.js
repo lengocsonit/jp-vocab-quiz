@@ -319,6 +319,22 @@ let lastLeaderboardList = [];
 let fullLeaderboardList = []; // ban day du (khong cat top 10) - can de doi sang "Top thoi gian" khong phai goi lai API
 let leaderboardSortMode = 'score'; // 'score' | 'time'
 
+function setLeaderboardSortMode(mode) {
+  if (mode === leaderboardSortMode) return;
+  leaderboardSortMode = mode;
+  el.leaderboardTabs.forEach(t => t.classList.toggle('active', t.dataset.sort === mode));
+  leaderboardExpanded = false;
+  renderLeaderboard(fullLeaderboardList);
+}
+
+// It ai tu bam doi tab "Diem"/"Thoi gian" nen tu dong doi luan phien moi 15s de ca 2 kieu xep hang
+// deu duoc moi nguoi thay qua, khong can thao tac gi.
+function startLeaderboardTabRotation() {
+  setInterval(() => {
+    setLeaderboardSortMode(leaderboardSortMode === 'score' ? 'time' : 'score');
+  }, 15000);
+}
+
 init();
 
 async function init() {
@@ -341,13 +357,7 @@ async function init() {
     renderLeaderboard(fullLeaderboardList);
   });
   el.leaderboardTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      if (tab.dataset.sort === leaderboardSortMode) return;
-      leaderboardSortMode = tab.dataset.sort;
-      el.leaderboardTabs.forEach(t => t.classList.toggle('active', t === tab));
-      leaderboardExpanded = false;
-      renderLeaderboard(fullLeaderboardList);
-    });
+    tab.addEventListener('click', () => setLeaderboardSortMode(tab.dataset.sort));
   });
   el.exitQuizBtn.addEventListener('click', exitQuiz);
   el.backToCategoryBtn.addEventListener('click', goToCategoryScreen);
@@ -418,6 +428,7 @@ async function init() {
   loadNameSuggestions();
   loadVisitStats();
   startQuoteRotation();
+  startLeaderboardTabRotation();
 }
 
 // Ghi nhan 1 luot truy cap (moi lan tai trang chu goi 1 lan) va hien tong so + so luot hom nay.
@@ -1793,8 +1804,10 @@ function formatPercent(n) {
 }
 
 // Hien thoi gian ren luyen tich luy gon, de doc (vd "45 phút", "2h30p") thay vi hien nguyen so giay.
+// LUON lam tron XUONG theo phut (vd 30 phut 40s -> "30 phút", khong lam tron len 31) - tranh cam giac
+// "ao" diem/thoi gian khi nguoi dung tu cong nham.
 function formatDurationHuman(totalSeconds) {
-  const totalMinutes = Math.round(totalSeconds / 60);
+  const totalMinutes = Math.floor(totalSeconds / 60);
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
   if (hours === 0) return `${minutes} phút`;
